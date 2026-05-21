@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useUser, useAuth } from '@clerk/clerk-react';
+import { useUser, useAuth } from '@/context/AuthContext';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/mvpblocks/footer-newsletter';
 import { Button } from '@/components/ui/button';

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth } from '@/context/AuthContext';
 import axios from 'axios';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/mvpblocks/footer-newsletter';

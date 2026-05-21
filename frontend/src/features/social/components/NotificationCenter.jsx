@@ -3,7 +3,7 @@ import { Bell, Heart, UserPlus, MessageSquare, Check, Trash2, Clock } from 'luci
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useSocket } from '@/context/appContext';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth } from '@/context/AuthContext';
 import axios from 'axios';
 
 const NotificationCenter = () => {

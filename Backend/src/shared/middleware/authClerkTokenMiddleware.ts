@@ -1,22 +1,11 @@
 import { NextFunction, Request, Response } from "express";
-import JWT from "jsonwebtoken";
 import { getReasonPhrase, StatusCodes } from "http-status-codes";
 import User, { IUser } from "../database/models/userModel";
 import logger from "../utils/logger";
-
-// Interface for Clerk JWT Payload
-interface ClerkJWTPayload {
-    sub: string; // Subject (Clerk User ID)
-    exp: number; // Expiration time
-    iat: number; // Issued at time
-    iss: string; // Issuer
-    azp: string; // Authorized party
-    sid: string; // Session ID
-    [key: string]: any;
-}
+import admin from "../config/firebase";
 
 /**
- * Middleware to protect routes using Clerk Authentication.
+ * Middleware to protect routes using Firebase Authentication.
  * Verifies the Bearer token and attaches the user object to the request.
  */
 export const protect = async (req: Request, res: Response, next: NextFunction): Promise<void | Response> => {
@@ -45,52 +34,51 @@ export const protect = async (req: Request, res: Response, next: NextFunction): 
 
         // 3. Extract Token
         const token = authHeader.split(" ")[1];
-        // logger.debug("🎫 Token received: " + token.substring(0, 20) + "...");
 
-        // 4. Decode Token (Verification handled by Clerk Middleware at app level, this manual decode extracts ID)
+        // 4. Verify Firebase Token
         let clerkUserId: string;
-        try {
-            const decoded = JWT.decode(token) as ClerkJWTPayload;
-            // logger.debug({
-            //     msg: "📋 Decoded token payload:",
-            //     sub: decoded?.sub,
-            //     iss: decoded?.iss,
-            //     exp: decoded?.exp
-            // });
+        let decodedToken: admin.auth.DecodedIdToken;
 
-            if (!decoded || !decoded.sub) {
-                logger.warn("❌ Invalid token payload - no 'sub' field");
+        try {
+            decodedToken = await admin.auth().verifyIdToken(token);
+            if (!decodedToken || !decodedToken.uid) {
+                logger.warn("❌ Invalid token payload - no 'uid' field");
                 return res.status(StatusCodes.UNAUTHORIZED).json({
                     status: "Failed",
                     message: "Invalid token payload.",
                 });
             }
-
-            clerkUserId = decoded.sub;
-            // logger.debug("🆔 Extracted Clerk User ID: " + clerkUserId);
-
+            clerkUserId = decodedToken.uid;
         } catch (decodeError) {
             logger.error("❌ Token decode error:", decodeError);
             return res.status(StatusCodes.UNAUTHORIZED).json({
                 status: "Failed",
-                message: "Invalid token format.",
+                message: "Invalid token format or expired token.",
             });
         }
 
-        // 5. Sync with Local Database
-        // Find user by Clerk ID
-        // logger.debug("🔍 Searching for user with clerkUserId: " + clerkUserId);
-        const user: IUser | null = await User.findOne({ clerkUserId });
+        // 5. Sync with Local Database & JIT Provisioning
+        let user: IUser | null = await User.findOne({ clerkUserId });
 
         if (!user) {
-            logger.warn("❌ User not found in database with clerkUserId: " + clerkUserId);
-            return res.status(StatusCodes.NOT_FOUND).json({
-                status: "Failed",
-                message: "User not found.",
-            });
-        }
+            logger.info("🆕 User not found in database. Auto-creating from Firebase token...");
+            
+            // Generate a safe, unique username
+            const uniqueSuffix = Math.random().toString(36).substring(2, 8);
+            let baseName = decodedToken.name || (decodedToken.email ? decodedToken.email.split('@')[0] : 'traveler');
+            let safeUsername = baseName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + '_' + uniqueSuffix;
 
-        // logger.debug("✅ User found: " + (user.email || user.username));
+            user = new User({
+                clerkUserId,
+                email: decodedToken.email || `${clerkUserId}@placeholder.com`,
+                username: safeUsername,
+                fullname: decodedToken.name || '',
+                profilepicture: decodedToken.picture || '',
+                role: 'user'
+            });
+            await user.save();
+            logger.info("✅ User auto-created successfully!");
+        }
 
         // 6. Attach User to Request Object for downstream use
         req.user = {
@@ -116,6 +104,57 @@ export const protect = async (req: Request, res: Response, next: NextFunction): 
 };
 
 /**
+ * Middleware that ONLY verifies the Firebase Token.
+ * It does NOT check if the user exists in the database.
+ * Used for registration/sync endpoints.
+ */
+export const verifyFirebaseToken = async (req: Request, res: Response, next: NextFunction): Promise<void | Response> => {
+    try {
+        if (!req.headers?.authorization || !req.headers.authorization.startsWith("Bearer ")) {
+            return res.status(StatusCodes.UNAUTHORIZED).json({
+                status: "Failed",
+                message: "Authentication failed. No token provided.",
+            });
+        }
+
+        const token = req.headers.authorization.split(" ")[1];
+        
+        try {
+            const decodedToken = await admin.auth().verifyIdToken(token);
+            if (!decodedToken || !decodedToken.uid) {
+                return res.status(StatusCodes.UNAUTHORIZED).json({
+                    status: "Failed",
+                    message: "Invalid token payload.",
+                });
+            }
+            
+            // Attach minimal info to request for the controller
+            req.user = {
+                _id: "",
+                clerkUserId: decodedToken.uid,
+                role: "user",
+                email: decodedToken.email || "",
+                username: "",
+                isBanned: false,
+                banReason: "",
+            };
+            
+            next();
+        } catch (error) {
+            return res.status(StatusCodes.UNAUTHORIZED).json({
+                status: "Failed",
+                message: "Invalid token format or expired token.",
+            });
+        }
+    } catch (error) {
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            status: "Failed",
+            message: "Internal server error during token verification.",
+        });
+    }
+};
+
+/**
  * Middleware that optionally extracts user ID but doesn't block the request.
  * Useful for public routes that change behavior if a user is logged in.
  */
@@ -126,10 +165,10 @@ export const optionalProtect = async (req: Request, res: Response, next: NextFun
         }
 
         const token = req.headers.authorization.split(" ")[1];
-        const decoded = JWT.decode(token) as ClerkJWTPayload;
+        const decodedToken = await admin.auth().verifyIdToken(token);
 
-        if (decoded && decoded.sub) {
-            const user: IUser | null = await User.findOne({ clerkUserId: decoded.sub });
+        if (decodedToken && decodedToken.uid) {
+            const user: IUser | null = await User.findOne({ clerkUserId: decodedToken.uid });
             if (user) {
                 req.user = {
                     _id: user._id.toString(),
@@ -149,3 +188,4 @@ export const optionalProtect = async (req: Request, res: Response, next: NextFun
 };
 
 export default protect;
+

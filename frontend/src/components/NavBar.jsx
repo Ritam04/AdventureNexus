@@ -1,4 +1,4 @@
-import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from '@clerk/clerk-react'; // Clerk components for auth UI
+import { useAuth } from '@/context/AuthContext'; // Custom Firebase Auth context
 import { 
     Menu, X, Sun, Moon, Search, Compass, ChevronDown, 
     Sparkles, MapPin, Globe, Award, TrendingUp,
@@ -14,7 +14,7 @@ import NotificationCenter from '@/features/social/components/NotificationCenter'
 import { Button } from '@/components/ui/button';
 
 function NavBar() {
-    const { user } = useUser();
+    const { user, isSignedIn, logout } = useAuth();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const navigate = useNavigate();
@@ -147,18 +147,23 @@ function NavBar() {
                         ))}
 
                         <div className="border-t border-border pt-4 mt-4 space-y-3">
-                            <SignedOut>
-                                <SignInButton mode="modal">
+                            {!isSignedIn ? (
+                                <Link to="/login" onClick={toggleMobileMenu}>
                                     <Button variant="ghost" className="w-full justify-center text-foreground hover:bg-accent">
                                         Sign In
                                     </Button>
-                                </SignInButton>
-                            </SignedOut>
-                            <SignedIn>
-                                <div className="flex items-center justify-center">
-                                    <UserButton />
+                                </Link>
+                            ) : (
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex items-center justify-center gap-2 mb-2 text-sm">
+                                        <UserIcon size={16} />
+                                        <span>{user?.email}</span>
+                                    </div>
+                                    <Button variant="destructive" onClick={() => { logout(); toggleMobileMenu(); }} className="w-full">
+                                        Sign Out
+                                    </Button>
                                 </div>
-                            </SignedIn>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -240,23 +245,45 @@ function NavBar() {
 
                     {/* Social & Auth Actions */}
                     <div className="flex items-center gap-2 sm:gap-4">
-                        <SignedIn>
-                            <div className="hidden sm:flex items-center gap-2 border-r border-white/5 pr-4 mr-2">
-                                <Link to="/chat">
-                                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/5 relative">
-                                        <MessageSquare size={18} className="text-white/60" />
-                                        <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-blue-500 rounded-full border border-black animate-pulse"></span>
-                                    </Button>
-                                </Link>
-                                <NotificationCenter />
+                        {isSignedIn ? (
+                            <div className="flex items-center gap-4">
+                                <div className="hidden sm:flex items-center gap-2 border-r border-white/5 pr-4 mr-2">
+                                    <Link to="/chat">
+                                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/5 relative">
+                                            <MessageSquare size={18} className="text-white/60" />
+                                            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-blue-500 rounded-full border border-black animate-pulse"></span>
+                                        </Button>
+                                    </Link>
+                                    <NotificationCenter />
+                                </div>
+                                <div className="relative group/user">
+                                    <button className="flex items-center gap-2 rounded-xl border border-white/10 hover:border-white/20 transition-colors bg-white/5 p-1 pr-3">
+                                        <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center overflow-hidden">
+                                            {user?.imageUrl ? (
+                                                <img src={user.imageUrl} alt="Profile" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <UserIcon size={16} className="text-emerald-500" />
+                                            )}
+                                        </div>
+                                        <span className="text-xs font-black uppercase tracking-wider text-white hidden sm:block">
+                                            {user?.username || 'User'}
+                                        </span>
+                                    </button>
+                                    <div className="absolute top-full right-0 mt-2 w-48 bg-[#0A0A0A]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-2 shadow-2xl opacity-0 invisible group-hover/user:opacity-100 group-hover/user:visible transition-all">
+                                        <Link to="/profile" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors">
+                                            <UserIcon size={14} /> Profile
+                                        </Link>
+                                        <button onClick={logout} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-colors mt-1">
+                                            <X size={14} /> Sign Out
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <UserButton appearance={{ elements: { avatarBox: "w-9 h-9 rounded-xl border border-white/10" } }} />
-                        </SignedIn>
-                        <SignedOut>
-                            <SignInButton mode="modal">
+                        ) : (
+                            <Link to="/login">
                                 <Button variant="ghost" className="text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white">Sign In</Button>
-                            </SignInButton>
-                        </SignedOut>
+                            </Link>
+                        )}
 
                         <Link to="/search" className="hidden sm:block">
                             <Button className="h-10 px-6 bg-white text-black hover:bg-white/90 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(255,255,255,0.2)]">

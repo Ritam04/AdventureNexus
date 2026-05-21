@@ -27,3 +27,6 @@ build/
 ps_output.txt
 git_push_out.txt
 app.log
+
+# Firebase Service Account
+adventurenexus-2d97a-firebase-adminsdk-fbsvc-164c18e6bb.json

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'; // React hooks
-import { useAuth, RedirectToSignIn } from '@clerk/clerk-react'; // Clerk auth hooks and components
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext'; // Clerk auth hooks and components
 import { useAppContext } from '../context/appContext'; // Global app context
 
 // Define props for the ProtectedRoute component
@@ -26,9 +27,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     // (Note: Currently empty, could add a spinner here)
 
 
-    // If the user is not signed in, redirect them to the Clerk sign-in page
-    if (!isSignedIn) {
-        return <RedirectToSignIn redirectUrl="/" />;
+    // If the user is not signed in, redirect them to the home page or login page
+    if (!isSignedIn && isLoaded) {
+        return <Navigate to="/" replace />;
     }
 
     // If authenticated, render the protected content (children)

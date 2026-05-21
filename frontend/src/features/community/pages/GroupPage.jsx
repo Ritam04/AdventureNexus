@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth, useUser } from '@clerk/clerk-react';
+import { useAuth, useUser } from '@/context/AuthContext';
 import { useAppContext, useSocket } from '@/context/appContext';
 import { ArrowLeft, Users, Shield, Lock, Globe, Plus, MessageSquare, Heart, X, Sparkles, Send, MessageCircle, Settings, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

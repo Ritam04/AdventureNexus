@@ -2,13 +2,12 @@ import { NextFunction, Request, Response } from 'express';
 import User from '../../../shared/database/models/userModel';
 import createHttpError from 'http-errors';
 import logger from '../../../shared/utils/logger';
-import { clerkClient } from '@clerk/express';
 import cloudinary from '../../../shared/services/cloudinaryService';
 import fs from 'fs';
 
 /**
  * Controller to update User Profile.
- * Updates both Clerk data and MongoDB custom fields.
+ * Updates MongoDB custom fields.
  */
 export const updateProfile = async (
     req: Request,
@@ -16,7 +15,7 @@ export const updateProfile = async (
     next: NextFunction
 ) => {
     try {
-        const clerkUserId = req.auth()?.userId;
+        const clerkUserId = req.user?.clerkUserId;
         if (!clerkUserId) {
             return next(createHttpError(401, 'Unauthorized'));
         }
@@ -31,29 +30,18 @@ export const updateProfile = async (
             gender,
             country,
             preferences,
-            isPrivate
+            isPrivate,
+            username
         } = req.body;
-
-        // 1. Update Clerk if firstName/lastName provided
-        if (firstName || lastName) {
-            try {
-                await clerkClient.users.updateUser(clerkUserId, {
-                    firstName,
-                    lastName,
-                });
-                logger.info(`✅ Clerk user ${clerkUserId} updated`);
-            } catch (clerkError: any) {
-                logger.error(`❌ Clerk update failed: ${clerkError.message}`);
-                // Continue with DB update even if Clerk fails (or could return error)
-            }
-        }
 
         // 2. Update MongoDB
         const updateData: any = {};
         if (fullname !== undefined) updateData.fullname = fullname;
         if (bio !== undefined) updateData.bio = bio;
         if (coverImage !== undefined) updateData.coverImage = coverImage;
-        if (phonenumber !== undefined) updateData.phonenumber = phonenumber;
+        if (phonenumber !== undefined) {
+            updateData.phonenumber = phonenumber === '' ? null : Number(phonenumber);
+        }
         if (gender !== undefined) updateData.gender = gender;
         if (country !== undefined) updateData.country = country;
         if (preferences !== undefined) updateData.preferences = preferences;
@@ -62,6 +50,7 @@ export const updateProfile = async (
         // Also sync names if they changed
         if (firstName !== undefined) updateData.firstName = firstName;
         if (lastName !== undefined) updateData.lastName = lastName;
+        if (username !== undefined) updateData.username = username;
 
         // 3. Handle Image Upload to Cloudinary
         if (req.file) {
@@ -107,6 +96,9 @@ export const updateProfile = async (
 
     } catch (error: any) {
         logger.error('Error updating profile:', error);
+        if (error.code === 11000 && error.keyPattern?.username) {
+            return next(createHttpError(400, 'Username already exists. Please choose another one.'));
+        }
         return next(createHttpError(500, 'Failed to update profile'));
     }
 };

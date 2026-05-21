@@ -6,7 +6,7 @@ import {
     Zap, ArrowLeft, MoreVertical, ShieldAlert, Loader2, MapPin,
     Lock, ShieldCheck, AlertTriangle
 } from 'lucide-react';
-import { useAuth, useUser } from '@clerk/clerk-react';
+import { useAuth, useUser } from '@/context/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

@@ -7,37 +7,10 @@ import CommunityComment from '../../../shared/database/models/communityCommentMo
 import ExperienceComment from '../../../shared/database/models/experienceCommentModel';
 import GroupMembership from '../../../shared/database/models/groupMembershipModel';
 import logger from '../../../shared/utils/logger';
-import { clerkClient } from '@clerk/express';
 
-/**
- * Helper to get MongoDB User by clerkUserId, syncing from Clerk in real-time if not found
- */
 const getUserByClerkIdWithSync = async (clerkUserId: string) => {
     let user = await User.findOne({ clerkUserId });
-    if (!user) {
-        logger.info(`🔍 Auth user ${clerkUserId} not in DB, syncing from Clerk...`);
-        try {
-            const clerkUser = await clerkClient.users.getUser(clerkUserId);
-            if (clerkUser) {
-                user = await User.findOneAndUpdate(
-                    { clerkUserId },
-                    {
-                        clerkUserId: clerkUser.id,
-                        email: clerkUser.emailAddresses[0]?.emailAddress,
-                        username: clerkUser.username || clerkUser.externalAccounts[0]?.username || `traveler_${clerkUser.id.substring(0, 5)}`,
-                        firstName: clerkUser.firstName,
-                        lastName: clerkUser.lastName,
-                        fullname: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || clerkUser.username || 'Traveler',
-                        profilepicture: clerkUser.imageUrl,
-                    },
-                    { upsert: true, new: true }
-                );
-                logger.info(`✅ Auth user synced successfully.`);
-            }
-        } catch (clerkError: any) {
-            logger.error(`❌ Auth user Clerk sync failed: ${clerkError.message}`);
-        }
-    }
+    // JIT Provisioning handles Firebase sync in the protect middleware before reaching controllers.
     return user;
 };
 

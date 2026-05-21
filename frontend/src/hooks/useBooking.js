@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth } from '@/context/AuthContext';
 import { experiencesService } from '../services/experiencesService';
 import toast from 'react-hot-toast';
 

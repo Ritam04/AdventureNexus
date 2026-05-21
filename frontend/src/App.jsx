@@ -56,6 +56,9 @@ import AdminLogin from './admin/pages/Login';
 import AdminProtectedRoute from './admin/components/AdminProtectedRoute';
 import { Navigate } from 'react-router-dom';
 
+import LoginPage from './features/user/pages/LoginPage';
+import SignUpPage from './features/user/pages/SignUpPage';
+
 // App content component that uses the context
 const AppContent = () => {
   const { pathname } = useLocation();
@@ -94,9 +97,15 @@ const AppContent = () => {
       {/* Define all application routes */}
       <Routes>
         {/* --- Public Routes (Accessible by everyone) --- */}
+        <Route path='/login' element={<LoginPage />} />
+        <Route path='/signup' element={<SignUpPage />} />
         <Route path='/works' element={<HowItWorks />} />
         <Route path='/about' element={<AboutPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        } />
         <Route path="/inspiration" element={<TripInspirationPage />} />
         <Route path='/hotels' element={<AccommodationsPage />} />
         <Route path='/flights' element={<FlightsPage />} />

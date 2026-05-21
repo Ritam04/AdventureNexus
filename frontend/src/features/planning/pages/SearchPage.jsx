@@ -60,7 +60,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
-import { useAuth } from "@clerk/clerk-react"
+import { useAuth } from '@/context/AuthContext';
 import { format, addDays } from "date-fns";
 
 // Fix for default Leaflet marker icon not showing

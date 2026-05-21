@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useUser, SignedIn } from '@clerk/clerk-react';
+import { useUser } from '@/context/AuthContext';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/mvpblocks/footer-newsletter';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
     User, Mail, Phone, MapPin, Calendar, Camera, Edit3, Trash2,
     Heart, Globe, Shield, MessageSquare, Compass, Users, Sparkles,
-    Lock, Unlock, Award, CheckCircle, ArrowRight, Loader2, Info
+    Lock, Unlock, Award, CheckCircle, ArrowRight, Loader2, Info, X
 } from 'lucide-react';
 import { useProfile } from '../../../hooks/useProfile';
 import toast from 'react-hot-toast';

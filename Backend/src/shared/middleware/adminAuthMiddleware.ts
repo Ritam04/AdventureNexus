@@ -17,7 +17,8 @@ export const protectAdmin = (req: Request, res: Response, next: NextFunction) =>
             } else {
                 res.status(StatusCodes.FORBIDDEN).json({ message: 'Not authorized as admin' });
             }
-        } catch (error) {
+        } catch (error: any) {
+            console.error('Admin Auth Token Verification Error:', error.message);
             res.status(StatusCodes.UNAUTHORIZED).json({ message: 'Not authorized, token failed' });
         }
     } else {

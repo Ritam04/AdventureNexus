@@ -3,7 +3,7 @@ import userProfile, {
     CustomRequestUserProfileController,
 } from '../controllers/userProfileController';
 import { updateProfile } from '../controllers/updateProfileController';
-import { protect } from '../../../shared/middleware/authClerkTokenMiddleware';
+import { protect, verifyFirebaseToken } from '../../../shared/middleware/authClerkTokenMiddleware';
 import { upload } from '../../../shared/middleware/multer';
 import {
     getUserDashboardProfile,
@@ -14,13 +14,17 @@ import {
     getUserDashboardGroups
 } from '../controllers/profileDashboardController';
 import { uploadPublicKey, getPublicKey } from '../controllers/e2eeKeyController';
+import { registerUser } from '../controllers/registerController';
 
 const route: Router = express.Router();
 
-// Current logged in user profile (Clerk session sync)
+// Current logged in user profile (Firebase session sync)
 route.get('/profile', protect, (req, res, next) => {
     userProfile(req as CustomRequestUserProfileController, res, next);
 });
+
+// Register user from Firebase
+route.post('/register', verifyFirebaseToken, registerUser);
 
 // Update profile
 route.patch('/profile', protect, upload.single('image'), updateProfile);

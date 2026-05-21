@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { MapPin, Plane, Hotel, Calendar, Compass, Camera } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth } from '@/context/AuthContext';
 
 // BentoGridItemProps interface defines the shape of the data for each grid item
 interface BentoGridItemProps {

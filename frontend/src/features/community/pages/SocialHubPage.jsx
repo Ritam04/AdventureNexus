@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth, useUser } from '@clerk/clerk-react';
+import { useAuth, useUser } from '@/context/AuthContext';
 import { useSocket } from '@/context/appContext';
 import { Compass, Users, Map, Globe, Search, Bell, Sparkles, X, Heart, MessageSquare, Lock, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';

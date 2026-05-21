@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth, useUser } from '@clerk/clerk-react';
+import { useAuth, useUser } from '@/context/AuthContext';
 import { profileService } from '../services/profileService';
 import { experiencesService } from '../services/experiencesService';
 import toast from 'react-hot-toast';
@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 export const useProfile = () => {
     const { getToken } = useAuth();
     const { user: clerkUser } = useUser();
-    const clerkUserId = clerkUser?.id;
+    const clerkUserId = clerkUser?.clerkUserId || clerkUser?.id || clerkUser?._id;
 
     const [profile, setProfile] = useState(null);
     const [stats, setStats] = useState({
