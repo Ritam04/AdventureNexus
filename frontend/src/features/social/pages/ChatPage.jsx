@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Send, Image as ImageIcon, Paperclip, Smile, Search, 
     Phone, Video, Info, User, Users, CheckCheck, Check,
-    Zap, ArrowLeft, MoreVertical, ShieldAlert, Loader2, MapPin
+    Zap, ArrowLeft, MoreVertical, ShieldAlert, Loader2, MapPin,
+    Lock, ShieldCheck, AlertTriangle
 } from 'lucide-react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -11,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useSocket } from '@/context/appContext';
 import { communityService } from '@/services/communityService';
+import { useE2EE } from '@/lib/e2ee/useE2EE';
 import toast from 'react-hot-toast';
 import NavBar from '@/components/NavBar';
 
@@ -20,6 +22,9 @@ const ChatPage = () => {
     const { socket } = useSocket();
     const location = useLocation();
     const navigate = useNavigate();
+
+    // E2EE Hook — handles key generation, encryption, and decryption
+    const { isReady: e2eeReady, encrypt, decrypt, decryptBatch } = useE2EE(clerkUserId, getToken);
 
     const [conversations, setConversations] = useState([]);
     const [activeConversation, setActiveConversation] = useState(null);
@@ -70,7 +75,7 @@ const ChatPage = () => {
         }
     }, [clerkUserId, location.state]);
 
-    // 2. Fetch Messages when Active Conversation changes
+    // 2. Fetch Messages when Active Conversation changes — decrypt E2EE messages
     useEffect(() => {
         const fetchChatHistory = async () => {
             if (!activeConversation) return;
@@ -81,7 +86,17 @@ const ChatPage = () => {
                 
                 const res = await communityService.getChatMessages(activeConversation._id, token);
                 if (res.success) {
-                    setMessages(res.data);
+                    // Decrypt E2EE messages client-side
+                    if (e2eeReady) {
+                        const decryptedMessages = await decryptBatch(res.data);
+                        setMessages(decryptedMessages);
+                    } else {
+                        // E2EE not ready yet — show raw (encrypted messages will show lock icon)
+                        setMessages(res.data.map(m => ({
+                            ...m,
+                            _displayContent: m.isEncrypted ? '🔒 Encrypted message' : m.content
+                        })));
+                    }
                     setTimeout(scrollToBottom, 100);
                 }
             } catch (error) {
@@ -90,7 +105,7 @@ const ChatPage = () => {
         };
 
         fetchChatHistory();
-    }, [activeConversation]);
+    }, [activeConversation, e2eeReady]);
 
     // 3. Setup Socket Event Receivers
     useEffect(() => {
@@ -107,14 +122,26 @@ const ChatPage = () => {
                 return;
             }
 
-            // Handle incoming message
+            // Handle incoming message — decrypt E2EE messages in real-time
             if (activeConversation && data && data.conversationId === activeConversation._id) {
                 if (!data.message) return;
-                setMessages(prev => {
-                    const cleanPrev = prev.filter(Boolean);
-                    const isDuplicate = cleanPrev.some(m => m && m._id === data.message._id);
-                    if (isDuplicate) return cleanPrev;
-                    return [...cleanPrev, data.message];
+
+                // Decrypt incoming E2EE message
+                const processMessage = async (msg) => {
+                    if (msg.isEncrypted && e2eeReady) {
+                        const decryptedContent = await decrypt(msg);
+                        return { ...msg, _displayContent: decryptedContent };
+                    }
+                    return { ...msg, _displayContent: msg.content };
+                };
+
+                processMessage(data.message).then(decryptedMsg => {
+                    setMessages(prev => {
+                        const cleanPrev = prev.filter(Boolean);
+                        const isDuplicate = cleanPrev.some(m => m && m._id === decryptedMsg._id);
+                        if (isDuplicate) return cleanPrev;
+                        return [...cleanPrev, decryptedMsg];
+                    });
                 });
                 
                 // If we are currently looking at this active conversation, mark this incoming message as read!
@@ -186,7 +213,7 @@ const ChatPage = () => {
         };
     }, [socket]);
 
-    // 4. Send Message Handler
+    // 4. Send Message Handler — ENCRYPTS before sending
     const handleSend = async (e) => {
         e.preventDefault();
         if (!newMessage.trim() || !activeConversation) return;
@@ -197,19 +224,45 @@ const ChatPage = () => {
 
         try {
             const token = await getToken();
-            const res = await communityService.sendChatMessage(activeConversation._id, originalText, token);
+
+            // Determine recipient for encryption
+            const recipient = getRecipientProfile(activeConversation);
+            let encryptedPayload = { content: originalText, nonce: '', isEncrypted: false };
+
+            // Encrypt if E2EE is ready and we have a 1-on-1 conversation
+            if (e2eeReady && recipient && !activeConversation.isGroup) {
+                const encrypted = await encrypt(originalText, recipient.clerkUserId);
+                if (encrypted && encrypted.isEncrypted) {
+                    encryptedPayload = encrypted;
+                }
+            }
+
+            const res = await communityService.sendChatMessage(
+                activeConversation._id,
+                encryptedPayload.content,
+                token,
+                { nonce: encryptedPayload.nonce, isEncrypted: encryptedPayload.isEncrypted }
+            );
+
             if (res.success) {
+                // Store plaintext locally for our own sent messages
+                const displayMsg = {
+                    ...res.data,
+                    _displayContent: originalText,
+                    _decryptedContent: originalText,
+                };
+
                 setMessages(prev => {
                     const isDuplicate = prev.some(m => m._id === res.data._id);
                     if (isDuplicate) return prev;
-                    return [...prev, res.data];
+                    return [...prev, displayMsg];
                 });
                 setTimeout(scrollToBottom, 50);
 
-                // Update sidebar preview
+                // Update sidebar preview — show plaintext for own messages
                 setConversations(prev => prev.map(conv => 
                     conv._id === activeConversation._id 
-                    ? { ...conv, lastMessage: res.data } 
+                    ? { ...conv, lastMessage: { ...res.data, _displayContent: originalText } } 
                     : conv
                 ));
             }
@@ -321,8 +374,9 @@ const ChatPage = () => {
                                                 {formatMessageTime(conv.lastMessage?.createdAt || conv.updatedAt)}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-white/40 truncate font-medium">
-                                            {conv.lastMessage?.content || "Tap to open Travel Line"}
+                                        <p className="text-xs text-white/40 truncate font-medium flex items-center gap-1">
+                                            {conv.lastMessage?.isEncrypted && <Lock size={9} className="text-emerald-500/50 shrink-0" />}
+                                            {conv.lastMessage?._displayContent || (conv.lastMessage?.isEncrypted ? 'Encrypted message' : conv.lastMessage?.content) || "Tap to open Travel Line"}
                                         </p>
                                     </div>
                                 </button>
@@ -401,8 +455,18 @@ const ChatPage = () => {
 
                         {/* WhatsApp-like Message scroll workspace */}
                         <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar bg-[radial-gradient(circle_at_50%_0%,rgba(59,130,246,0.02),transparent_50%)]">
+                            {/* E2EE Banner */}
+                            <div className="flex items-center justify-center gap-2 py-3 px-5 mx-auto w-fit rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
+                                <Lock size={12} className="text-emerald-400" />
+                                <span className="text-[9px] text-emerald-400/70 font-black uppercase tracking-widest">
+                                    Messages are end-to-end encrypted. No one outside of this chat can read them.
+                                </span>
+                            </div>
+
                             {messages.map((msg, i) => {
                                 const isMe = msg.senderClerkUserId === clerkUserId;
+                                const displayContent = msg._displayContent || msg.content;
+                                const isEncryptedMsg = msg.isEncrypted;
                                 return (
                                     <motion.div
                                         key={msg._id || i}
@@ -412,9 +476,12 @@ const ChatPage = () => {
                                     >
                                         <div className="max-w-[70%] space-y-1">
                                             <div className={`p-4 rounded-3xl text-sm leading-relaxed ${isMe ? 'bg-gradient-to-r from-emerald-600/30 to-teal-500/20 text-emerald-100 border border-emerald-500/20 rounded-tr-none shadow-[0_4px_20px_rgba(16,185,129,0.05)]' : 'bg-white/[0.02] text-white border border-white/5 rounded-tl-none'}`}>
-                                                <p>{msg.content}</p>
+                                                <p>{displayContent}</p>
                                             </div>
                                             <div className={`flex items-center gap-1.5 text-[9px] text-white/20 font-black uppercase tracking-widest ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                                {isEncryptedMsg && (
+                                                    <Lock size={9} className="text-emerald-500/60" title="End-to-end encrypted" />
+                                                )}
                                                 <span>{formatMessageTime(msg.createdAt)}</span>
                                                 {isMe && (
                                                     msg.status === 'seen' ? (
@@ -433,15 +500,16 @@ const ChatPage = () => {
                             <div ref={messagesEndRef} />
                         </div>
 
-                        {/* WhatsApp Message text input */}
+                        {/* WhatsApp Message text input — E2EE encrypted */}
                         <div className="p-4 bg-[#07090e] border-t border-white/5">
                             <form onSubmit={handleSend} className="flex items-center gap-3 max-w-5xl mx-auto">
                                 <div className="flex-1 relative">
+                                    <Lock size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500/40" />
                                     <Input 
                                         value={newMessage}
                                         onChange={(e) => setNewMessage(e.target.value)}
-                                        placeholder="Secure message terminal..." 
-                                        className="bg-white/[0.01] border-white/5 rounded-2xl h-14 pl-6 pr-12 focus-visible:ring-primary/40 focus-visible:ring-2 text-white placeholder-white/20 text-sm font-medium"
+                                        placeholder={e2eeReady ? "End-to-end encrypted message..." : "Initializing encryption..."}
+                                        className="bg-white/[0.01] border-white/5 rounded-2xl h-14 pl-10 pr-12 focus-visible:ring-emerald-500/40 focus-visible:ring-2 text-white placeholder-white/20 text-sm font-medium"
                                         disabled={isSending}
                                     />
                                     <Button type="button" variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full text-white/20 hover:text-white/60 hover:bg-transparent">
@@ -456,16 +524,28 @@ const ChatPage = () => {
                                     {isSending ? <Loader2 className="animate-spin" size={20} /> : <Send size={20} />}
                                 </Button>
                             </form>
+                            {e2eeReady && (
+                                <div className="flex items-center justify-center gap-1.5 mt-2">
+                                    <ShieldCheck size={10} className="text-emerald-500/50" />
+                                    <span className="text-[8px] text-emerald-500/40 font-black uppercase tracking-[0.2em]">E2EE Active — NaCl Box (X25519 + XSalsa20-Poly1305)</span>
+                                </div>
+                            )}
                         </div>
                     </>
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center space-y-6 text-center px-8 bg-[#040508]">
-                        <div className="w-20 h-20 rounded-[2rem] bg-gradient-to-br from-primary/20 to-indigo-600/20 border border-primary/20 flex items-center justify-center animate-bounce shadow-xl shadow-primary/5">
-                            <Zap size={36} className="text-primary fill-primary/30" />
+                        <div className="w-20 h-20 rounded-[2rem] bg-gradient-to-br from-emerald-500/20 to-teal-600/20 border border-emerald-500/20 flex items-center justify-center shadow-xl shadow-emerald-500/5">
+                            <ShieldCheck size={36} className="text-emerald-400 animate-pulse" />
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             <h2 className="text-3xl font-black text-white tracking-tighter italic">NEXUS SECURE TERMINAL</h2>
                             <p className="text-white/30 text-xs font-bold uppercase tracking-wider max-w-xs mx-auto">Select a traveler connection to initiate end-to-end encrypted messaging.</p>
+                            <div className="flex items-center justify-center gap-2 mt-4">
+                                <Lock size={12} className="text-emerald-500/60" />
+                                <span className="text-[9px] text-emerald-500/50 font-black uppercase tracking-widest">
+                                    {e2eeReady ? 'Encryption keys ready — NaCl X25519' : 'Generating encryption keys...'}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 )}

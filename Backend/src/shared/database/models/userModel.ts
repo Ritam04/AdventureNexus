@@ -32,6 +32,7 @@ export interface IUser extends Document {
     lastActive?: Date;      // Last active timestamp
     isBanned?: boolean;     // Ban status
     banReason?: string;     // Reason for the ban
+    e2eePublicKey?: string; // E2EE public key (X25519, base64)
     createdAt: Date;        // Timestamp
     updatedAt: Date;        // Timestamp
 }
@@ -111,6 +112,7 @@ const userSchema = new Schema<IUser>(
         onlineStatus: { type: String, enum: ['online', 'offline'], default: 'offline' },
         isBanned: { type: Boolean, default: false },
         banReason: { type: String, default: "" },
+        e2eePublicKey: { type: String, default: "" },
         lastActive: { type: Date, default: Date.now },
     },
     {

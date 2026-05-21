@@ -216,11 +216,26 @@ export const communityService = {
         return response.data;
     },
 
-    sendChatMessage: async (conversationId, content, token) => {
-        const response = await axios.post(`${api_url}/api/v1/messaging/message`, { conversationId, content }, {
+    sendChatMessage: async (conversationId, content, token, { nonce = '', isEncrypted = false } = {}) => {
+        const response = await axios.post(`${api_url}/api/v1/messaging/message`, { conversationId, content, nonce, isEncrypted }, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
+        });
+        return response.data;
+    },
+
+    // --- E2EE Key Exchange APIs ---
+    uploadPublicKey: async (publicKey, token) => {
+        const response = await axios.post(`${api_url}/api/v1/users/e2ee/public-key`, { publicKey }, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    },
+
+    getPublicKey: async (clerkUserId, token) => {
+        const response = await axios.get(`${api_url}/api/v1/users/e2ee/public-key/${clerkUserId}`, {
+            headers: { Authorization: `Bearer ${token}` }
         });
         return response.data;
     },

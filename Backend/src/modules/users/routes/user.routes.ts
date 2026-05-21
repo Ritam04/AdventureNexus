@@ -13,6 +13,7 @@ import {
     getUserDashboardLikes,
     getUserDashboardGroups
 } from '../controllers/profileDashboardController';
+import { uploadPublicKey, getPublicKey } from '../controllers/e2eeKeyController';
 
 const route: Router = express.Router();
 
@@ -24,6 +25,10 @@ route.get('/profile', protect, (req, res, next) => {
 // Update profile
 route.patch('/profile', protect, upload.single('image'), updateProfile);
 route.put('/update', protect, upload.single('image'), updateProfile);
+
+// E2EE Key Exchange
+route.post('/e2ee/public-key', protect, uploadPublicKey);
+route.get('/e2ee/public-key/:clerkUserId', protect, getPublicKey);
 
 // Social control center and dashboard content routes
 route.get('/:clerkUserId/profile', protect, getUserDashboardProfile);

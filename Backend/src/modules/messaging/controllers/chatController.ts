@@ -74,7 +74,7 @@ export const getOrCreateConversation = async (req: Request, res: Response) => {
  */
 export const sendMessage = async (req: Request, res: Response) => {
     try {
-        const { conversationId, content, type = 'text' } = req.body;
+        const { conversationId, content, type = 'text', nonce = '', isEncrypted = false } = req.body;
         const senderClerkUserId = (req as any).user?.clerkUserId;
 
         const conversation = await Conversation.findById(conversationId);
@@ -85,10 +85,14 @@ export const sendMessage = async (req: Request, res: Response) => {
         // Check if recipient is online to set status as 'delivered'
         const recipientsOnline = conversation.participants.some(pId => pId !== senderClerkUserId && isUserOnline(pId));
 
+        // Server stores content as-is (ciphertext when E2EE is active)
+        // Server NEVER decrypts — it acts as a blind relay
         const message = new Message({
             conversationId,
             senderClerkUserId,
             content,
+            nonce,
+            isEncrypted,
             type,
             status: recipientsOnline ? 'delivered' : 'sent'
         });
