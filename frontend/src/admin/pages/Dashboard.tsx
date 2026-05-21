@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Activity, RefreshCw, Play, Square, AlertTriangle } from 'lucide-react';
+import { Shield, Activity, RefreshCw, Play, Square, AreaChart as ChartIcon, Eye } from 'lucide-react';
 import { useAdminMetrics } from '../hooks/useAdminMetrics';
 import { useRealtimeEvents } from '../hooks/useRealtimeEvents';
 import MetricsGrid from '../components/MetricsGrid';
@@ -48,7 +48,6 @@ const Dashboard: React.FC = () => {
         try {
             const res = await api.post('/simulator/toggle');
             setSimulatorActive(res.data.data.active);
-            // Refresh systems immediately to capture initial mock signals
             setTimeout(() => {
                 refreshMetrics();
                 refreshEvents();
@@ -72,7 +71,7 @@ const Dashboard: React.FC = () => {
                     <div className="absolute inset-0 border-4 border-emerald-500/10 rounded-full"></div>
                     <div className="absolute inset-0 border-4 border-t-emerald-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
                 </div>
-                <div className="flex flex-col items-center gap-1">
+                <div className="flex flex-col items-center gap-1 font-mono">
                     <span className="text-xs font-black tracking-widest text-emerald-400 uppercase animate-pulse">Initializing Observability Tunnel...</span>
                     <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">AdventureNexus Command Center</span>
                 </div>
@@ -82,12 +81,12 @@ const Dashboard: React.FC = () => {
 
     if (metricsError || eventsError) {
         return (
-            <div className="flex flex-col items-center justify-center h-[70vh] text-white gap-4 bg-red-950/15 border border-red-500/10 rounded-3xl p-8 max-w-lg mx-auto">
+            <div className="flex flex-col items-center justify-center h-[70vh] text-white gap-4 bg-red-950/15 border border-red-500/10 rounded-3xl p-8 max-w-lg mx-auto font-mono">
                 <div className="p-4 rounded-full bg-red-500/10 text-red-500 border border-red-500/20">
                     <Shield className="w-10 h-10" />
                 </div>
                 <h3 className="text-lg font-black tracking-wider uppercase text-red-400">Observability Connection Failure</h3>
-                <p className="text-xs text-gray-400 font-medium text-center leading-relaxed">
+                <p className="text-[10px] text-gray-400 font-medium text-center leading-relaxed">
                     The admin client was unable to establish a secure stream with the AdventureNexus Core endpoints. Please ensure the backend is running.
                 </p>
                 <button
@@ -109,14 +108,14 @@ const Dashboard: React.FC = () => {
         >
             {/* Header telemetry info */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/5 pb-6">
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-1.5 font-mono">
                     <div className="flex items-center gap-2">
                         <div className={`w-2.5 h-2.5 rounded-full ${simulatorActive ? 'bg-indigo-500 animate-ping' : 'bg-emerald-500 animate-pulse'}`}></div>
-                        <h1 className="text-3xl font-black text-white tracking-tight uppercase font-mono">
+                        <h1 className="text-3xl font-black text-white tracking-tight uppercase">
                             Core Observability <span className="text-emerald-400 font-sans">Panel</span>
                         </h1>
                     </div>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest font-mono">
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
                         Master node terminal session // live stream logs & system health
                     </p>
                 </div>
@@ -154,61 +153,120 @@ const Dashboard: React.FC = () => {
             {/* TOP Grid: Live Metrics MetricsGrid */}
             {metrics && <MetricsGrid metrics={metrics} />}
 
-            {/* MIDDLE Grid: Charts & Telemetry + Sidebar Feed */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Visualizations (Left + Center Columns) */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Registration Trends Chart */}
-                        {timeSeries && (
-                            <ChartCard
-                                title="24-Hour Traveler Ingestion"
-                                subtitle="Adventures Registrations"
-                                type="line"
-                                data={timeSeries.hourlyRegistrations}
-                                dataKey="registrations"
-                                xKey="hour"
-                                color="#3b82f6"
-                                glow="rgba(59, 130, 246, 0.4)"
-                                gradientId="regGrad"
-                            />
-                        )}
+            {/* GRAFANA PANEL TITLE */}
+            <div className="flex items-center gap-2 border-b border-white/5 pb-2 pt-4 font-mono">
+                <ChartIcon className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs font-black uppercase text-gray-400 tracking-widest">Ecosystem Metrics / Grafana Visualization Panels</span>
+            </div>
 
-                        {/* Community post volume Chart */}
-                        {timeSeries && (
-                            <ChartCard
-                                title="Weekly Social Feed Volume"
-                                subtitle="Community Posts Ingestion"
-                                type="bar"
-                                data={timeSeries.dailyPosts}
-                                dataKey="count"
-                                xKey="date"
-                                color="#8b5cf6"
-                                glow="rgba(139, 92, 246, 0.4)"
-                                gradientId="postGrad"
-                            />
-                        )}
-                    </div>
+            {/* 7 SEPARATE CHART PANELS (HIGH-DENSITY GRAFANA GRID) */}
+            {timeSeries && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 font-mono">
+                    {/* PANEL 1: User Registrations */}
+                    <ChartCard
+                        title="Operator Registration Ingestion"
+                        subtitle="24h Ingestion Velocity"
+                        type="area"
+                        data={timeSeries.hourlyRegistrations}
+                        dataKey="registrations"
+                        xKey="hour"
+                        color="#10b981"
+                        glow="rgba(16, 185, 129, 0.4)"
+                        gradientId="regGrad"
+                    />
 
-                    {/* Latency telemetric chart (wide width) */}
-                    {timeSeries && (
+                    {/* PANEL 2: Community Posts */}
+                    <ChartCard
+                        title="Social Post Ingestion Rate"
+                        subtitle="7-Day Feed Volume"
+                        type="bar"
+                        data={timeSeries.dailyPosts}
+                        dataKey="count"
+                        xKey="date"
+                        color="#8b5cf6"
+                        glow="rgba(139, 92, 246, 0.4)"
+                        gradientId="postGrad"
+                    />
+
+                    {/* PANEL 3: Experiences Shared */}
+                    <ChartCard
+                        title="Shared Travel Experience Dispatches"
+                        subtitle="7-Day Expeditions Volume"
+                        type="line"
+                        data={timeSeries.dailyExperiences}
+                        dataKey="count"
+                        xKey="date"
+                        color="#ec4899"
+                        glow="rgba(236, 72, 153, 0.4)"
+                        gradientId="expGrad"
+                    />
+
+                    {/* PANEL 4: Comments Created */}
+                    <ChartCard
+                        title="Ecosystem Engagement (Comments)"
+                        subtitle="7-Day Conversation Metrics"
+                        type="line"
+                        data={timeSeries.dailyComments}
+                        dataKey="count"
+                        xKey="date"
+                        color="#06b6d4"
+                        glow="rgba(6, 182, 212, 0.4)"
+                        gradientId="commentGrad"
+                    />
+
+                    {/* PANEL 5: Likes/Reactions */}
+                    <ChartCard
+                        title="Reactions & Appraisals Tracked"
+                        subtitle="7-Day Appreciation Density"
+                        type="area"
+                        data={timeSeries.dailyLikes}
+                        dataKey="count"
+                        xKey="date"
+                        color="#f43f5e"
+                        glow="rgba(244, 63, 94, 0.4)"
+                        gradientId="likeGrad"
+                    />
+
+                    {/* PANEL 6: Group Membership Joins */}
+                    <ChartCard
+                        title="Nexus Group Join Ingestions"
+                        subtitle="7-Day Memberships Activity"
+                        type="bar"
+                        data={timeSeries.dailyGroups}
+                        dataKey="count"
+                        xKey="date"
+                        color="#f59e0b"
+                        glow="rgba(245, 158, 11, 0.4)"
+                        gradientId="groupGrad"
+                    />
+
+                    {/* PANEL 7: API Latency */}
+                    <div className="md:col-span-2">
                         <ChartCard
-                            title="Average Telemetry API Response Times"
-                            subtitle="Core Server Latency Ingestion (ms)"
+                            title="Master Core Telemetry API Latency"
+                            subtitle="Core Server Response Rates (ms)"
                             type="area"
                             data={timeSeries.apiLatency}
                             dataKey="value"
                             xKey="date"
-                            color="#10b981"
-                            glow="rgba(16, 185, 129, 0.4)"
+                            color="#3b82f6"
+                            glow="rgba(59, 130, 246, 0.4)"
                             gradientId="latencyGrad"
                         />
-                    )}
+                    </div>
+                </div>
+            )}
+
+            {/* MIDDLE Grid: Live Activity Feed Sidebar & Systems */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-mono">
+                {/* Live Activity Logs Feed (2 Columns) */}
+                <div className="lg:col-span-2">
+                    <LiveActivityFeed events={events} loading={eventsLoading} />
                 </div>
 
-                {/* Live activity logs Feed (Right Column Sidebar) */}
+                {/* System health panel (1 Column) */}
                 <div className="lg:col-span-1">
-                    <LiveActivityFeed events={events} loading={eventsLoading} />
+                    {systemHealth && <SystemHealthPanel health={systemHealth} />}
                 </div>
             </div>
 
@@ -217,17 +275,9 @@ const Dashboard: React.FC = () => {
                 <ToxicityRadar />
             </div>
 
-            {/* BOTTOM Grid: Health + Audit Log Trail */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* System health panel */}
-                <div className="lg:col-span-1">
-                    {systemHealth && <SystemHealthPanel health={systemHealth} />}
-                </div>
-
-                {/* Incidents audit log panel */}
-                <div className="lg:col-span-2">
-                    <SystemLogsPanel />
-                </div>
+            {/* BOTTOM Grid: Audit Log Trail */}
+            <div className="grid grid-cols-1 gap-6 font-mono">
+                <SystemLogsPanel />
             </div>
         </motion.div>
     );

@@ -20,6 +20,11 @@ import {
     getModerationAlerts,
     resolveModerationAlert
 } from '../controllers/adminDashboard.controller';
+import {
+    runAiModeration,
+    getModerationReports,
+    resolveModerationReport
+} from '../controllers/adminModeration.controller';
 import { broadcastMessage } from '../controllers/adminCommunication.controller';
 import {
     getSystemSettings,
@@ -74,5 +79,10 @@ router.post('/simulator/toggle', toggleSimulator);
 // Content Toxicity Moderation Shield
 router.get('/moderation', getModerationAlerts);
 router.post('/moderation/resolve', resolveModerationAlert);
+
+// Deep AI Content Moderation Shield
+router.post('/moderation/ai/run', runAiModeration);
+router.get('/moderation/ai/reports', getModerationReports);
+router.post('/moderation/ai/resolve', resolveModerationReport);
 
 export default router;

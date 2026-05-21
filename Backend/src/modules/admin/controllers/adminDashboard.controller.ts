@@ -315,6 +315,9 @@ export const getDashboardMetrics = async (req: Request, res: Response) => {
 
         const totalLikes = (communityLikes[0]?.total || 0) + (experienceLikes[0]?.total || 0);
 
+        const { getOnlineUsersCount } = await import('../../../shared/socket/socket');
+        const onlineUsersCount = getOnlineUsersCount();
+
         res.status(StatusCodes.OK).json({
             success: true,
             data: {
@@ -324,7 +327,8 @@ export const getDashboardMetrics = async (req: Request, res: Response) => {
                 experiencesCreatedToday,
                 commentsCount: totalComments,
                 likesCount: totalLikes,
-                groupJoins
+                groupJoins,
+                onlineUsersCount
             }
         });
     } catch (error: any) {
@@ -371,7 +375,55 @@ export const getDashboardTimeSeries = async (req: Request, res: Response) => {
             { $sort: { _id: 1 } }
         ]);
 
-        // 3. API Latency Trends
+        // 3. Daily Experiences shared (last 7 days)
+        const dailyExperiences = await ExperiencePost.aggregate([
+            { $match: { createdAt: { $gte: last7Days } } },
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        // 4. Daily Comments created (last 7 days)
+        const dailyComments = await CommunityComment.aggregate([
+            { $match: { createdAt: { $gte: last7Days } } },
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        // 5. Daily Likes recorded (last 7 days)
+        const dailyLikes = await ActivityLog.aggregate([
+            { $match: { activityType: 'like_given', createdAt: { $gte: last7Days } } }, // Map comment/likes activity securely
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        // 6. Daily Group joins (last 7 days)
+        const dailyGroups = await GroupMembership.aggregate([
+            { $match: { createdAt: { $gte: last7Days } } },
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        // 7. API Latency Trends
         const latencyTrends = await ApiLog.aggregate([
             { $match: { timestamp: { $gte: last7Days } } },
             {
@@ -383,11 +435,27 @@ export const getDashboardTimeSeries = async (req: Request, res: Response) => {
             { $sort: { _id: 1 } }
         ]);
 
+        // Generate fill-in date mapper for empty records to keep charts flawless
+        const getMergedSeries = (aggData: any[]) => {
+            const result = [];
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+                const dateStr = date.toISOString().split('T')[0];
+                const match = aggData.find(d => d._id === dateStr);
+                result.push({ date: dateStr, count: match ? match.count : 0 }); // Strictly 0 if no record!
+            }
+            return result;
+        };
+
         res.status(StatusCodes.OK).json({
             success: true,
             data: {
                 hourlyRegistrations: formattedHourly,
-                dailyPosts: dailyPosts.map(d => ({ date: d._id, count: d.count })),
+                dailyPosts: getMergedSeries(dailyPosts),
+                dailyExperiences: getMergedSeries(dailyExperiences),
+                dailyComments: getMergedSeries(dailyComments),
+                dailyLikes: getMergedSeries(dailyLikes),
+                dailyGroups: getMergedSeries(dailyGroups),
                 apiLatency: latencyTrends.map(l => ({ date: l._id, value: Math.round(l.avgDuration) }))
             }
         });

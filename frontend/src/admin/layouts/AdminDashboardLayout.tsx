@@ -14,7 +14,8 @@ import {
     Search,
     Settings,
     History,
-    Activity
+    Activity,
+    Shield
 } from 'lucide-react';
 
 const DashboardLayout: React.FC = () => {
@@ -31,6 +32,7 @@ const DashboardLayout: React.FC = () => {
         { to: '/admin/users', icon: Users, label: 'Community' },
         { to: '/admin/plans', icon: Map, label: 'Travel Plans' },
         { to: '/admin/reviews', icon: MessageSquare, label: 'Reviews' },
+        { to: '/admin/moderation', icon: Shield, label: 'AI Moderation' },
         { to: '/admin/audit', icon: History, label: 'Audit Trails' },
         { to: '/admin/analytics', icon: Activity, label: 'API Analytics' },
         { to: '/admin/settings', icon: Settings, label: 'Settings' },

@@ -10,11 +10,16 @@ export interface ObservabilityMetrics {
     commentsCount: number;
     likesCount: number;
     groupJoins: number;
+    onlineUsersCount: number;
 }
 
 export interface TimeSeriesData {
     hourlyRegistrations: { hour: string; registrations: number }[];
     dailyPosts: { date: string; count: number }[];
+    dailyExperiences: { date: string; count: number }[];
+    dailyComments: { date: string; count: number }[];
+    dailyLikes: { date: string; count: number }[];
+    dailyGroups: { date: string; count: number }[];
     apiLatency: { date: string; value: number }[];
 }
 
@@ -75,18 +80,33 @@ export const useAdminMetrics = () => {
             setSystemHealth(data);
         });
 
-        // 2. Stream activity logs to dynamically update Metrics Cards (Datadog Style)
+        // 2. Stream online operators connectivity
+        socket.on('user:online', () => {
+            setMetrics((prev) => {
+                if (!prev) return null;
+                return { ...prev, onlineUsersCount: prev.onlineUsersCount + 1 };
+            });
+        });
+
+        socket.on('user:offline', () => {
+            setMetrics((prev) => {
+                if (!prev) return null;
+                return { ...prev, onlineUsersCount: Math.max(0, prev.onlineUsersCount - 1) };
+            });
+        });
+
+        // 3. Stream activity logs to dynamically update Metrics Cards (Datadog Style)
         socket.on('activity:new', (activity: { activityType: string }) => {
             setMetrics((prev) => {
                 if (!prev) return null;
                 const updated = { ...prev };
                 
-                if (activity.activityType === 'user:joined') {
+                if (activity.activityType === 'user_created') {
                     updated.totalUsers += 1;
                     updated.activeUsers += 1;
-                } else if (activity.activityType === 'post:created') {
+                } else if (activity.activityType === 'create_experience_post') {
                     updated.postsCreatedToday += 1;
-                } else if (activity.activityType === 'comment:created') {
+                } else if (activity.activityType === 'comment_added') {
                     updated.commentsCount += 1;
                 } else if (activity.activityType === 'like:added') {
                     updated.likesCount += 1;
@@ -99,6 +119,8 @@ export const useAdminMetrics = () => {
 
         return () => {
             socket.off('system:metrics:update');
+            socket.off('user:online');
+            socket.off('user:offline');
             socket.off('activity:new');
         };
     }, [socket]);

@@ -48,6 +48,7 @@ import AdminDashboard from './admin/pages/Dashboard';
 import AdminUsers from './admin/pages/Users';
 import AdminPlans from './admin/pages/Plans';
 import AdminReviews from './admin/pages/Reviews';
+import AdminModeration from './admin/pages/Moderation';
 import AdminAuditLogs from './admin/pages/AuditLogs';
 import AdminSettings from './admin/pages/Settings';
 import AdminApiAnalytics from './admin/pages/ApiAnalytics';
@@ -157,6 +158,7 @@ const AppContent = () => {
                   <Route path="users" element={<AdminUsers />} />
                   <Route path="plans" element={<AdminPlans />} />
                   <Route path="reviews" element={<AdminReviews />} />
+                  <Route path="moderation" element={<AdminModeration />} />
                   <Route path="audit" element={<AdminAuditLogs />} />
                   <Route path="settings" element={<AdminSettings />} />
                   <Route path="analytics" element={<AdminApiAnalytics />} />

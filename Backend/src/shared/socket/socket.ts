@@ -161,3 +161,7 @@ export const sendRealtimeGroupMessage = (groupId: string, message: any) => {
 export const isUserOnline = (userId: string): boolean => {
     return onlineUsers.has(userId);
 };
+
+export const getOnlineUsersCount = (): number => {
+    return onlineUsers.size;
+};
