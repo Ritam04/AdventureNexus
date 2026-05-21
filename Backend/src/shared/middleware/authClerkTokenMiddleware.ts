@@ -99,6 +99,8 @@ export const protect = async (req: Request, res: Response, next: NextFunction): 
             role: user.role || "user",
             email: user.email,
             username: user.username,
+            isBanned: user.isBanned || false,
+            banReason: user.banReason || "",
         };
 
         logger.info("✅ Auth Middleware: User authenticated successfully");
@@ -135,6 +137,8 @@ export const optionalProtect = async (req: Request, res: Response, next: NextFun
                     role: user.role || "user",
                     email: user.email,
                     username: user.username,
+                    isBanned: user.isBanned || false,
+                    banReason: user.banReason || "",
                 };
             }
         }

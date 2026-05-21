@@ -179,9 +179,6 @@ const AppContent = () => {
 
       {/* Floating Chat Assistant - Available on all pages */}
       <ChatAssistant />
-
-      {/* Global Social Hub for Notifications & Messaging */}
-      <SocialHub />
     </>
   );
 };

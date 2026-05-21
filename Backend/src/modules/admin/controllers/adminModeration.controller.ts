@@ -5,6 +5,7 @@ import CommunityPost from '../../../shared/database/models/communityPostModel';
 import CommunityComment from '../../../shared/database/models/communityCommentModel';
 import Review from '../../../shared/database/models/reviewModel';
 import ModerationReport, { ModerationType, ModerationSeverity } from '../../../shared/database/models/moderationReportModel';
+import Notification from '../../../shared/database/models/notificationModel';
 import { analyzeContent } from '../services/aiModerator';
 import { getIO } from '../../../shared/socket/socket';
 import logger from '../../../shared/utils/logger';
@@ -228,8 +229,37 @@ export const resolveModerationReport = async (req: Request, res: Response) => {
                 await CommunityComment.findByIdAndDelete(report.entityId);
                 logger.info(`Moderator deleted comment ID ${report.entityId} based on AI report ${reportId}`);
             } else if (report.type === ModerationType.USER) {
-                await User.findByIdAndDelete(report.entityId);
-                logger.info(`Moderator banned/deleted user ID ${report.entityId} based on AI report ${reportId}`);
+                const userToBan = await User.findById(report.entityId);
+                if (userToBan) {
+                    userToBan.isBanned = true;
+                    userToBan.banReason = report.reason || "Violation of community guidelines";
+                    await userToBan.save();
+                    logger.info(`Moderator successfully banned user ID ${report.entityId} based on AI report ${reportId}`);
+
+                    // Send persistent notification to the banned user
+                    try {
+                        await Notification.create({
+                            recipientClerkUserId: userToBan.clerkUserId,
+                            senderClerkUserId: 'admin_security',
+                            type: 'account_ban',
+                            relatedId: reportId,
+                            isRead: false
+                        });
+
+                        // Emit real-time notification socket event
+                        const io = getIO();
+                        if (io) {
+                            io.to(userToBan.clerkUserId).emit('notification', {
+                                type: 'account_ban',
+                                reason: userToBan.banReason,
+                                message: `Your account has been restricted: ${userToBan.banReason}`,
+                                createdAt: new Date()
+                            });
+                        }
+                    } catch (notifErr: any) {
+                        logger.error(`Error sending ban notification: ${notifErr.message}`);
+                    }
+                }
             } else if (report.type === ModerationType.REVIEW) {
                 await Review.findByIdAndDelete(report.entityId);
                 logger.info(`Moderator deleted traveler review ID ${report.entityId} based on AI report ${reportId}`);

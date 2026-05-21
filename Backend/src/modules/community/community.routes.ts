@@ -6,6 +6,7 @@ import { getPostById } from './controllers/getPostByIdController';
 import { toggleLike } from './controllers/toggleLikeController';
 import { addComment, deleteComment } from './controllers/addCommentController';
 import { protect, optionalProtect } from '../../shared/middleware/authClerkTokenMiddleware';
+import { checkBanned } from '../../shared/middleware/checkBannedMiddleware';
 import { upload } from '../../shared/middleware/multer';
 import { toggleSavePost } from './controllers/toggleSavePostController';
 import { updatePost, deletePost } from './controllers/updatePostController';
@@ -45,9 +46,9 @@ route.get('/posts', getPosts);
  * @desc Create a new community post with optional images
  * @access Private
  */
-route.post('/posts', protect, upload.array('images', 5), createPost);
-route.put('/posts/:id', protect, updatePost);
-route.delete('/posts/:id', protect, deletePost);
+route.post('/posts', protect, checkBanned, upload.array('images', 5), createPost);
+route.put('/posts/:id', protect, checkBanned, updatePost);
+route.delete('/posts/:id', protect, checkBanned, deletePost);
 
 /**
  * @route GET /api/v1/community/posts/:id
@@ -61,22 +62,22 @@ route.get('/posts/:id', getPostById);
  * @desc Save or bookmark a community post
  * @access Private
  */
-route.post('/posts/:id/save', protect, toggleSavePost);
+route.post('/posts/:id/save', protect, checkBanned, toggleSavePost);
 
 /**
  * @route POST /api/v1/community/like
  * @desc Toggle like on a post or comment
  * @access Private
  */
-route.post('/like', protect, toggleLike);
+route.post('/like', protect, checkBanned, toggleLike);
 
 /**
  * @route POST /api/v1/community/comments
  * @desc Add a comment to a post
  * @access Private
  */
-route.post('/comments', protect, addComment);
-route.delete('/comments/:id', protect, deleteComment);
+route.post('/comments', protect, checkBanned, addComment);
+route.delete('/comments/:id', protect, checkBanned, deleteComment);
 
 /**
  * @route GET /api/v1/community/events

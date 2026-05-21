@@ -10,6 +10,7 @@ export enum NotificationType {
     FRIEND_REQUEST = 'friend_request',
     FRIEND_ACCEPTED = 'friend_accepted',
     GROUP_INVITE = 'group_invite',
+    ACCOUNT_BAN = 'account_ban',
 }
 
 export interface INotification extends Document {
