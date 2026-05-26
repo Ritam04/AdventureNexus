@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
 import {
   MapPin,
@@ -66,6 +70,16 @@ const MyTripsPage = () => {
   const inrFormat = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
   const [editingItem, setEditingItem] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [shareMessage, setShareMessage] = useState("");
+  const [isSharing, setIsSharing] = useState(false);
+  
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [settingsForm, setSettingsForm] = useState({
+    title: '',
+    isPublic: false,
+    notifications: true
+  });
 
   // Enhanced document states for file uploads and management
   const [uploadingDocument, setUploadingDocument] = useState(false);
@@ -150,10 +164,12 @@ const MyTripsPage = () => {
         if (myPlansRes.ok) {
             const myPlansData = await myPlansRes.json();
             if (myPlansData.status === 'Success') {
+              const cleanTitle = (title) => title ? title.replace(/^["']+|["']+$/g, '') : 'Untitled Trip';
+              
               const transformedTrips = (myPlansData.data || []).map(plan => {
                 if (!plan) return null;
                 return {
-                  id: plan._id, title: plan.name || 'Untitled Trip', destination: plan.to || 'Unknown Destination', startDate: plan.date || new Date().toISOString(),
+                  id: plan._id, title: cleanTitle(plan.name), destination: plan.to || 'Unknown Destination', startDate: plan.date || new Date().toISOString(),
                   totalDays: plan.days || 1, status: new Date(plan.date || new Date()) > new Date() ? 'upcoming' : 'completed',
                   budget: plan.budget || 20000, spent: plan.cost || Math.floor((plan.budget || 20000) * 0.4), travelers: plan.travelers || 1,
                   image: plan.image_url || 'https://images.unsplash.com/photo-1488085061387-422e29b40080?w=400',
@@ -169,10 +185,12 @@ const MyTripsPage = () => {
         if (likedRes.ok) {
             const likedData = await likedRes.json();
             if (likedData.success && likedData.likedPlans) {
+              const cleanTitle = (title) => title ? title.replace(/^["']+|["']+$/g, '') : 'Untitled Trip';
+
               const transformedLiked = (likedData.likedPlans || []).map(plan => {
                 if (!plan) return null;
                 return {
-                  id: plan._id, title: plan.name || 'Untitled Target', destination: plan.to || 'Unknown Destination', startDate: plan.date || new Date().toISOString(),
+                  id: plan._id, title: cleanTitle(plan.name), destination: plan.to || 'Unknown Destination', startDate: plan.date || new Date().toISOString(),
                   totalDays: plan.days || 1, status: new Date(plan.date || new Date()) > new Date() ? 'upcoming' : 'completed',
                   budget: plan.budget || 30000, spent: plan.cost || Math.floor((plan.budget || 30000) * 0.3), travelers: plan.travelers || 1,
                   image: plan.image_url || 'https://images.unsplash.com/photo-1488085061387-422e29b40080?w=400',
@@ -463,11 +481,15 @@ const MyTripsPage = () => {
     }
   };
 
-  const handleShareTrip = async (trip) => {
-    const message = window.prompt("Write something about your trip to share with the community:");
-    if (message === null) return;
+  const openShareModal = () => {
+    setShareMessage("");
+    setIsShareModalOpen(true);
+  };
 
+  const submitShareTrip = async () => {
+    if (!selectedTrip) return;
     try {
+        setIsSharing(true);
         const token = await getToken();
         if (!token) {
            toast.error('Please sign in to share your trip');
@@ -476,10 +498,10 @@ const MyTripsPage = () => {
 
         const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com');
         const formData = new FormData();
-        formData.append('title', `My Trip: ${trip.title}`);
-        formData.append('content', message || `I planned a trip to ${trip.destination}! Check it out.`);
+        formData.append('title', `My Trip: ${selectedTrip.title}`);
+        formData.append('content', shareMessage || `I planned a trip to ${selectedTrip.destination}! Check it out.`);
         formData.append('category', 'Trip Sharing');
-        formData.append('tripId', trip.id);
+        formData.append('tripId', selectedTrip.id);
 
         const res = await fetch(`${backendUrl}/api/v1/community/posts`, {
             method: 'POST',
@@ -491,13 +513,32 @@ const MyTripsPage = () => {
 
         if (res.ok) {
             toast.success("Trip successfully shared to the community feed!");
+            setIsShareModalOpen(false);
         } else {
             toast.error("Failed to share trip.");
         }
     } catch (error) {
         console.error("Error sharing trip:", error);
         toast.error("An error occurred while sharing.");
+    } finally {
+        setIsSharing(false);
     }
+  };
+
+  const openSettingsModal = () => {
+    if (selectedTrip) {
+      setSettingsForm({
+        title: selectedTrip.title,
+        isPublic: selectedTrip.status !== 'private',
+        notifications: true
+      });
+      setIsSettingsModalOpen(true);
+    }
+  };
+
+  const saveSettings = () => {
+    toast.success("Trip settings updated successfully!");
+    setIsSettingsModalOpen(false);
   };
 
   const getStatusColor = (status) => {
@@ -783,13 +824,18 @@ const MyTripsPage = () => {
               </Button>
               <div className="flex space-x-2">
                 <Button 
-                  onClick={() => handleShareTrip(selectedTrip)}
+                  onClick={openShareModal}
                   variant="outline" size="sm" className="text-primary border-primary/20 hover:bg-primary/10 transition-colors"
                 >
                   <Share2 size={16} className="mr-2" />
                   Share to Community
                 </Button>
-                <Button variant="outline" size="sm" className="text-muted-foreground border-border hover:bg-muted transition-colors">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={openSettingsModal}
+                  className="text-muted-foreground border-border hover:bg-muted transition-colors"
+                >
                   <Settings size={16} className="mr-2" />
                   Settings
                 </Button>
@@ -1078,6 +1124,85 @@ const MyTripsPage = () => {
         )}
       </div>
       <Footer />
+
+      {/* Share to Community Modal */}
+      <Dialog open={isShareModalOpen} onOpenChange={setIsShareModalOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-[#09090b] border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle>Share to Community</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Write something about your trip to {selectedTrip?.destination} to share with fellow travelers.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Textarea
+              value={shareMessage}
+              onChange={(e) => setShareMessage(e.target.value)}
+              placeholder={`I planned an amazing trip to ${selectedTrip?.destination}! Check it out.`}
+              className="col-span-4 bg-background/50 border-white/10 text-white min-h-[100px]"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsShareModalOpen(false)} className="border-white/10 text-white hover:bg-white/10">
+              Cancel
+            </Button>
+            <Button onClick={submitShareTrip} disabled={isSharing} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              {isSharing ? 'Sharing...' : 'Share Trip'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Trip Settings Modal */}
+      <Dialog open={isSettingsModalOpen} onOpenChange={setIsSettingsModalOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-[#09090b] border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle>Trip Settings</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Manage preferences and visibility for this trip.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="title" className="text-white">Trip Name</Label>
+              <Input
+                id="title"
+                value={settingsForm.title}
+                onChange={(e) => setSettingsForm({ ...settingsForm, title: e.target.value })}
+                className="bg-background/50 border-white/10 text-white focus-visible:ring-primary"
+              />
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-white/10 p-4 bg-white/5">
+              <div className="space-y-0.5">
+                <Label className="text-base text-white">Public Visibility</Label>
+                <p className="text-sm text-muted-foreground">Allow others to see this trip on your profile.</p>
+              </div>
+              <Switch
+                checked={settingsForm.isPublic}
+                onCheckedChange={(checked) => setSettingsForm({ ...settingsForm, isPublic: checked })}
+              />
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-white/10 p-4 bg-white/5">
+              <div className="space-y-0.5">
+                <Label className="text-base text-white">Trip Notifications</Label>
+                <p className="text-sm text-muted-foreground">Receive reminders and updates.</p>
+              </div>
+              <Switch
+                checked={settingsForm.notifications}
+                onCheckedChange={(checked) => setSettingsForm({ ...settingsForm, notifications: checked })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsSettingsModalOpen(false)} className="border-white/10 text-white hover:bg-white/10">
+              Cancel
+            </Button>
+            <Button onClick={saveSettings} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -176,7 +176,7 @@ function NavBar() {
                         scrolled ? 'scale-95' : 'scale-100'
                     }`}
                 >
-                    <div className="flex items-center gap-4 lg:gap-8">
+                    <div className="flex items-center gap-4 lg:gap-8 flex-1">
                         <Link to="/" className="flex items-center gap-2 group">
                             <AnimatedLogo size={32} />
                             <span className="hidden lg:block font-black text-white tracking-tighter text-lg group-hover:text-primary transition-colors">AdventureNexus</span>
@@ -244,7 +244,7 @@ function NavBar() {
                     </div>
 
                     {/* Social & Auth Actions */}
-                    <div className="flex items-center gap-2 sm:gap-4">
+                    <div className="flex items-center gap-2 sm:gap-4 flex-1 justify-end">
                         {isSignedIn ? (
                             <div className="flex items-center gap-4">
                                 <div className="hidden sm:flex items-center gap-2 border-r border-white/5 pr-4 mr-2">
@@ -286,7 +286,7 @@ function NavBar() {
                         )}
 
                         <Link to="/search" className="hidden sm:block">
-                            <Button className="h-10 px-6 bg-white text-black hover:bg-white/90 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+                            <Button className="h-10 px-6 bg-white text-black hover:bg-white/90 rounded-full text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(255,255,255,0.2)]">
                                 Plan Trip
                             </Button>
                         </Link>

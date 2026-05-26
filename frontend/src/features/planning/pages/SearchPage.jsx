@@ -485,6 +485,9 @@ const SearchPage = () => {
           return newSet;
         });
 
+        // Also remove the plan from the full objects array so it disappears from the tab instantly
+        setLikedPlansData((prev) => prev.filter(plan => plan._id !== planId));
+
         toast.success("Removed from liked plans");
       } else {
         // Like
@@ -497,6 +500,19 @@ const SearchPage = () => {
         );
 
         setLikedPlans((prev) => new Set([...prev, planId]));
+
+        // Try to find the plan object in searchResults to add it to likedPlansData
+        const fullPlan = searchResults.find(p => p._id === planId);
+        if (fullPlan) {
+          setLikedPlansData((prev) => {
+            // Check if it's already there to prevent duplicates
+            if (!prev.some(p => p._id === planId)) {
+              return [...prev, fullPlan];
+            }
+            return prev;
+          });
+        }
+
         toast.success("Added to liked plans");
       }
     } catch (error) {
@@ -945,7 +961,7 @@ const SearchPage = () => {
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
                               <h3 className="text-xl font-bold text-card-foreground mb-2 font-outfit group-hover:text-primary transition-colors">
-                                {result.name}
+                                {result.name?.replace(/^["']+|["']+$/g, '')}
                               </h3>
                               <div className="flex items-center gap-3 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1">
@@ -1135,7 +1151,7 @@ const SearchPage = () => {
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
                               <h3 className="text-xl font-bold text-card-foreground mb-2 font-outfit group-hover:text-primary transition-colors">
-                                {result.name}
+                                {result.name?.replace(/^["']+|["']+$/g, '')}
                               </h3>
                               <div className="flex items-center gap-3 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1">

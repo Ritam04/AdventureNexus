@@ -165,8 +165,8 @@ export const getLikedPlans = async (req: Request, res: Response) => {
         }
 
         // Find user and populate liked plans
-        const user = await User.findOne({ firebaseUid: userId })
-            .populate('likedPlans');
+        // Find user and fetch liked plans
+        const user = await User.findOne({ firebaseUid: userId });
 
         if (!user) {
             return res.status(404).json({
@@ -175,9 +175,15 @@ export const getLikedPlans = async (req: Request, res: Response) => {
             });
         }
 
+        let likedPlans = [];
+        if (user.likedPlans && user.likedPlans.length > 0) {
+            // Find all plans that match the IDs in user.likedPlans
+            likedPlans = await Plan.find({ _id: { $in: user.likedPlans } });
+        }
+
         return res.status(200).json({
             success: true,
-            likedPlans: user.likedPlans || []
+            likedPlans: likedPlans || []
         });
     } catch (error: any) {
         logger.error(`Error getting liked plans: ${error.message}`);

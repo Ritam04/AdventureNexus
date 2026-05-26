@@ -111,13 +111,13 @@ export const PostCard = memo(({
             {discussion.tripId && (
                 <div 
                   className="mb-6 p-4 sm:p-5 rounded-2xl border border-primary/20 bg-primary/5 flex items-center justify-between cursor-pointer hover:bg-primary/10 transition-colors shadow-inner" 
-                  onClick={() => navigate(`/plan/${discussion.tripId._id}`)}
+                  onClick={() => navigate(`/shared-plan/${discussion.tripId._id}`)}
                 >
                     <div className="flex flex-col min-w-0 pr-2">
                         <span className="text-[8px] sm:text-[10px] uppercase tracking-widest text-primary font-black mb-1">Shared Trip</span>
-                        <span className="font-black text-sm sm:text-lg text-foreground/90 truncate">{discussion.tripId.title || 'Adventure Trip'}</span>
+                        <span className="font-black text-sm sm:text-lg text-foreground/90 truncate">{discussion.tripId.name || 'Adventure Trip'}</span>
                         <span className="text-[10px] sm:text-sm font-bold text-muted-foreground mt-1 truncate">
-                            {discussion.tripId.destinations?.length || 0} Destinations • {discussion.tripId.budget?.currency || '$'} {discussion.tripId.budget?.amount || '0'}
+                            {discussion.tripId.to ? '1' : '0'} Destinations • {discussion.tripId.budget_breakdown?.currency || '$'} {discussion.tripId.budget || '0'}
                         </span>
                     </div>
                     <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">

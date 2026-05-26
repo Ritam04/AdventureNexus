@@ -88,7 +88,13 @@ const ChatPage = () => {
                 if (res.success) {
                     // Decrypt E2EE messages client-side
                     if (e2eeReady) {
-                        const decryptedMessages = await decryptBatch(res.data);
+                        const recipient = getRecipientProfile(activeConversation);
+                        const recipientUid = recipient ? recipient.firebaseUid : '';
+                        const decoratedMessages = res.data.map(m => ({
+                            ...m,
+                            _recipientFirebaseUid: recipientUid
+                        }));
+                        const decryptedMessages = await decryptBatch(decoratedMessages);
                         setMessages(decryptedMessages);
                     } else {
                         // E2EE not ready yet — show raw (encrypted messages will show lock icon)
@@ -128,11 +134,14 @@ const ChatPage = () => {
 
                 // Decrypt incoming E2EE message
                 const processMessage = async (msg) => {
-                    if (msg.isEncrypted && e2eeReady) {
-                        const decryptedContent = await decrypt(msg);
-                        return { ...msg, _displayContent: decryptedContent };
+                    const recipient = getRecipientProfile(activeConversation);
+                    const decoratedMsg = { ...msg, _recipientFirebaseUid: recipient ? recipient.firebaseUid : '' };
+                    
+                    if (decoratedMsg.isEncrypted && e2eeReady) {
+                        const decryptedContent = await decrypt(decoratedMsg);
+                        return { ...decoratedMsg, _displayContent: decryptedContent };
                     }
-                    return { ...msg, _displayContent: msg.content };
+                    return { ...decoratedMsg, _displayContent: decoratedMsg.content };
                 };
 
                 processMessage(data.message).then(decryptedMsg => {

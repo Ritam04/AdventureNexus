@@ -110,7 +110,7 @@ export const getPosts = async (req: Request, res: Response) => {
         
         populatedPosts = await CommunityPost.populate(populatedPosts, {
             path: 'tripId',
-            select: 'title destinations startDate endDate budget'
+            select: 'name to date budget budget_breakdown'
         });
 
         return res.status(StatusCodes.OK).json({
