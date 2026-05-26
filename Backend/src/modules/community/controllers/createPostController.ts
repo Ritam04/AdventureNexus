@@ -38,8 +38,12 @@ export const createPost = async (req: Request, res: Response) => {
 
         // Upload images if any
         const imageUrls: string[] = [];
-        if (images && Array.isArray(images)) {
-            imageUrls.push(...images);
+        if (images) {
+            if (Array.isArray(images)) {
+                imageUrls.push(...images);
+            } else if (typeof images === 'string') {
+                imageUrls.push(images);
+            }
         }
 
         if (req.files && Array.isArray(req.files)) {

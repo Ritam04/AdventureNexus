@@ -11,6 +11,7 @@ export interface ITravelStory extends Document {
     commentsCount: number;
     createdAt: Date;
     updatedAt: Date;
+    expiresAt: Date;
 }
 
 const travelStorySchema = new Schema<ITravelStory>(
@@ -23,7 +24,8 @@ const travelStorySchema = new Schema<ITravelStory>(
         images: [{ type: String }],
         likes: [{ type: String, ref: 'User' }],
         commentsCount: { type: Number, default: 0 },
-        createdAt: { type: Date, default: Date.now, expires: 86400 }, // Auto-delete after 24 hours (86400 seconds)
+        createdAt: { type: Date, default: Date.now },
+        expiresAt: { type: Date, index: { expires: 0 } }, // Dynamic TTL index
     },
     { timestamps: true }
 );

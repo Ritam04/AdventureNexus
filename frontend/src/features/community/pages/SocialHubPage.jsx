@@ -57,7 +57,8 @@ export const SocialHubPage = () => {
     content: '',
     category: 'General',
     tags: '',
-    images: ''
+    images: '',
+    files: []
   });
 
   // --- API DATA FETCHING ---
@@ -359,20 +360,34 @@ export const SocialHubPage = () => {
       const tagsArray = composerData.tags.split(',').map(t => t.trim()).filter(Boolean);
       const imagesArray = composerData.images.split(',').map(t => t.trim()).filter(Boolean);
 
-      const postPayload = {
-        title: composerData.title,
-        content: composerData.content,
-        category: composerData.category,
-        tags: tagsArray,
-        destinationTags: tagsArray,
-        images: imagesArray
-      };
+      let postPayload;
+      if (composerData.files && composerData.files.length > 0) {
+        postPayload = new FormData();
+        postPayload.append('title', composerData.title);
+        postPayload.append('content', composerData.content);
+        postPayload.append('category', composerData.category);
+        if (tagsArray.length > 0) {
+            postPayload.append('tags', JSON.stringify(tagsArray));
+            postPayload.append('destinationTags', JSON.stringify(tagsArray));
+        }
+        imagesArray.forEach(img => postPayload.append('images', img));
+        Array.from(composerData.files).forEach(file => postPayload.append('images', file));
+      } else {
+        postPayload = {
+          title: composerData.title,
+          content: composerData.content,
+          category: composerData.category,
+          tags: tagsArray,
+          destinationTags: tagsArray,
+          images: imagesArray
+        };
+      }
 
       const res = await communityService.createPost(postPayload, token);
       if (res.success) {
         toast.success("Post created successfully!");
         setIsCreatePostOpen(false);
-        setComposerData({ title: '', content: '', category: 'General', tags: '', images: '' });
+        setComposerData({ title: '', content: '', category: 'General', tags: '', images: '', files: [] });
         fetchFeedData(); // Refresh feed
         fetchTrendingTags(); // Refresh trending tags dynamically!
       }
@@ -799,8 +814,20 @@ export const SocialHubPage = () => {
                     placeholder="https://image1.jpg, https://image2.jpg" 
                     value={composerData.images}
                     onChange={(e) => setComposerData(prev => ({ ...prev, images: e.target.value }))}
-                    className="bg-muted/50 border-white/5 rounded-2xl h-12 text-sm font-medium"
+                    className="bg-muted/50 border-white/5 rounded-2xl h-12 text-sm font-medium mb-4"
                   />
+                  
+                  <label className="text-xs uppercase tracking-widest font-black text-muted-foreground block mb-2">Or Upload Images</label>
+                  <Input 
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={(e) => setComposerData(prev => ({ ...prev, files: e.target.files }))}
+                    className="bg-muted/50 border-white/5 rounded-2xl h-12 text-sm font-medium pt-2.5 cursor-pointer file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary/20 file:text-primary hover:file:bg-primary/30"
+                  />
+                  {composerData.files && composerData.files.length > 0 && (
+                      <p className="text-xs text-primary mt-2">{composerData.files.length} file(s) selected</p>
+                  )}
                 </div>
                 <Button type="submit" className="w-full h-12 rounded-2xl font-black uppercase tracking-widest text-xs mt-6">
                   Publish Adventure

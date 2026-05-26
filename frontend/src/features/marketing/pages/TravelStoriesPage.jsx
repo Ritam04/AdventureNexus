@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import toast from 'react-hot-toast';
 import { io } from 'socket.io-client';
 
@@ -38,7 +39,7 @@ const TravelStoriesPage = () => {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
 
     // New Story State
-    const [newStory, setNewStory] = useState({ title: '', content: '', location: '', images: [] });
+    const [newStory, setNewStory] = useState({ title: '', content: '', location: '', images: [], durationInMinutes: 1440 });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const fetchStories = async () => {
@@ -90,7 +91,7 @@ const TravelStoriesPage = () => {
             if (res.success) {
                 toast.success('Your story has been shared with the Nexus!');
                 setIsCreateOpen(false);
-                setNewStory({ title: '', content: '', location: '', images: [] });
+                setNewStory({ title: '', content: '', location: '', images: [], durationInMinutes: 1440 });
                 fetchStories();
             }
         } catch (error) {
@@ -196,6 +197,24 @@ const TravelStoriesPage = () => {
                                             onChange={(e) => setNewStory({ ...newStory, images: [e.target.value] })}
                                         />
                                     </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Story Duration (Auto-Delete)</label>
+                                    <Select 
+                                        value={newStory.durationInMinutes.toString()} 
+                                        onValueChange={(val) => setNewStory({ ...newStory, durationInMinutes: parseInt(val) })}
+                                    >
+                                        <SelectTrigger className="h-14 rounded-xl border-border bg-background">
+                                            <SelectValue placeholder="Select duration" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="5">5 Minutes</SelectItem>
+                                            <SelectItem value="60">1 Hour</SelectItem>
+                                            <SelectItem value="360">6 Hours</SelectItem>
+                                            <SelectItem value="1440">24 Hours</SelectItem>
+                                            <SelectItem value="10080">7 Days</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">The Journey Details</label>

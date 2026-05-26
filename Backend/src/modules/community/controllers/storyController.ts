@@ -8,7 +8,7 @@ import logger from '../../../shared/utils/logger';
  */
 export const createStory = async (req: Request, res: Response) => {
     try {
-        const { title, content, location, images } = req.body;
+        const { title, content, location, images, durationInMinutes } = req.body;
         const userId = req.user?._id;
         const firebaseUid = (req as any).user?.firebaseUid;
 
@@ -25,7 +25,8 @@ export const createStory = async (req: Request, res: Response) => {
             title,
             content,
             location,
-            images: images || []
+            images: images || [],
+            expiresAt: new Date(Date.now() + (durationInMinutes || 1440) * 60 * 1000) // Default to 24 hours (1440 mins) if not provided
         });
 
         logger.info(`New travel story created: ${newStory._id} by ${firebaseUid}`);
