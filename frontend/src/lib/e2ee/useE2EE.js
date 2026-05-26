@@ -28,8 +28,39 @@ export const useE2EE = (firebaseUid, getToken) => {
     const [error, setError] = useState(null);
     const keysRef = useRef(null);
 
+    const resetE2EE = useCallback(async () => {
+        if (!firebaseUid) return false;
+        try {
+            setIsReady(false);
+            // 1. Delete key pair from IndexedDB
+            await deleteKeyPair(firebaseUid);
+            keysRef.current = null;
+
+            // 2. Generate new key pair
+            const newKeys = generateKeyPair();
+
+            // 3. Store new key pair in IndexedDB
+            await storeKeyPair(firebaseUid, newKeys.publicKey, newKeys.secretKey);
+            keysRef.current = newKeys;
+
+            // 4. Upload new public key to server
+            const token = await getToken();
+            await communityService.uploadPublicKey(newKeys.publicKey, token);
+            console.log('[E2EE] Key pair successfully regenerated and uploaded to server!');
+
+            setIsReady(true);
+            toast.success("E2EE keys regenerated. New messages will be secure!");
+            return true;
+        } catch (err) {
+            console.error('[E2EE] Reset E2EE error:', err);
+            setError('Failed to reset encryption keys');
+            toast.error("Failed to reset encryption keys.");
+            return false;
+        }
+    }, [firebaseUid, getToken]);
+
     // ──────────────────────────────────────
-    // INITIALIZATION: Generate + Upload Keys
+    // INITIALIZATION: Generate + Upload + Sync Keys
     // ──────────────────────────────────────
 
     useEffect(() => {
@@ -43,6 +74,19 @@ export const useE2EE = (firebaseUid, getToken) => {
                 if (existingKeys) {
                     keysRef.current = existingKeys;
                     setIsReady(true);
+                    
+                    // Verify that the server has our correct public key
+                    try {
+                        const token = await getToken();
+                        const res = await communityService.getPublicKey(firebaseUid, token);
+                        if (!res.success || res.data?.e2eePublicKey !== existingKeys.publicKey) {
+                            console.log('[E2EE] Server public key missing or mismatched. Uploading/Syncing...');
+                            await communityService.uploadPublicKey(existingKeys.publicKey, token);
+                            console.log('[E2EE] Server public key synced successfully.');
+                        }
+                    } catch (syncErr) {
+                        console.warn('[E2EE] Failed to verify public key with server:', syncErr.message);
+                    }
                     return;
                 }
 
@@ -70,7 +114,7 @@ export const useE2EE = (firebaseUid, getToken) => {
         };
 
         initializeKeys();
-    }, [firebaseUid]);
+    }, [firebaseUid, getToken]);
 
     // ──────────────────────────────────────
     // FETCH RECIPIENT PUBLIC KEY
@@ -213,6 +257,7 @@ export const useE2EE = (firebaseUid, getToken) => {
         decrypt,
         decryptBatch,
         getRecipientPublicKey,
+        resetE2EE,
         myPublicKey: keysRef.current?.publicKey || null,
     };
 };

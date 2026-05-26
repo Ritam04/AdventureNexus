@@ -10,6 +10,12 @@ import { useAuth, useUser } from '@/context/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { 
+    DropdownMenu, 
+    DropdownMenuTrigger, 
+    DropdownMenuContent, 
+    DropdownMenuItem 
+} from '@/components/ui/dropdown-menu';
 import { useSocket } from '@/context/appContext';
 import { communityService } from '@/services/communityService';
 import { useE2EE } from '@/lib/e2ee/useE2EE';
@@ -24,7 +30,7 @@ const ChatPage = () => {
     const navigate = useNavigate();
 
     // E2EE Hook — handles key generation, encryption, and decryption
-    const { isReady: e2eeReady, encrypt, decrypt, decryptBatch } = useE2EE(firebaseUid, getToken);
+    const { isReady: e2eeReady, encrypt, decrypt, decryptBatch, resetE2EE } = useE2EE(firebaseUid, getToken);
 
     const [conversations, setConversations] = useState([]);
     const [activeConversation, setActiveConversation] = useState(null);
@@ -456,7 +462,43 @@ const ChatPage = () => {
                                         >
                                             <User size={18} />
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/5 text-white/40"><MoreVertical size={18} /></Button>
+                                        
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/5 text-white/40 hover:text-white">
+                                                    <MoreVertical size={18} />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="bg-[#0b0e14] border-white/10 text-white min-w-[200px] p-2 rounded-2xl">
+                                                <DropdownMenuItem 
+                                                    className="flex items-center gap-2 hover:bg-white/5 cursor-pointer text-xs py-2.5 px-3 rounded-xl focus:bg-white/5 focus:text-white"
+                                                    onClick={() => navigate(`/user/profile/${recipient?.firebaseUid}`)}
+                                                >
+                                                    <User size={14} className="text-white/40" />
+                                                    <span>View Profile</span>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem 
+                                                    className="flex items-center gap-2 hover:bg-red-500/10 hover:text-red-400 cursor-pointer text-xs py-2.5 px-3 rounded-xl focus:bg-red-500/10 focus:text-red-400"
+                                                    onClick={async () => {
+                                                        const confirmed = window.confirm(
+                                                            "Are you sure you want to reset your encryption keys? \n\n" +
+                                                            "WARNING: This will generate a new secure key pair. " +
+                                                            "Past encrypted messages in this session will no longer be readable, " +
+                                                            "but it will solve any key mismatches for future messages. Continue?"
+                                                        );
+                                                        if (confirmed) {
+                                                            const success = await resetE2EE();
+                                                            if (success) {
+                                                                window.location.reload();
+                                                            }
+                                                        }
+                                                    }}
+                                                >
+                                                    <AlertTriangle size={14} className="text-red-400" />
+                                                    <span>Reset Encryption Keys</span>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </div>
                                 </div>
                             );
