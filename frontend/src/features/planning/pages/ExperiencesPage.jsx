@@ -103,11 +103,11 @@ const ExperiencesPage = () => {
     e?.stopPropagation();
     try {
       const token = await getToken();
-      const clerkId = user?.id;
+      const firebaseUid = user?.id;
       setPosts(prev => prev.map(p => {
         if (p._id !== postId) return p;
-        const liked = p.likes?.includes(clerkId);
-        return { ...p, likes: liked ? p.likes.filter(l => l !== clerkId) : [...(p.likes || []), clerkId] };
+        const liked = p.likes?.includes(firebaseUid);
+        return { ...p, likes: liked ? p.likes.filter(l => l !== firebaseUid) : [...(p.likes || []), firebaseUid] };
       }));
       await experiencesService.toggleLike(postId, token);
     } catch (err) { fetchFeed(); }
@@ -118,11 +118,11 @@ const ExperiencesPage = () => {
     e?.stopPropagation();
     try {
       const token = await getToken();
-      const clerkId = user?.id;
+      const firebaseUid = user?.id;
       setPosts(prev => prev.map(p => {
         if (p._id !== postId) return p;
-        const saved = p.saves?.includes(clerkId);
-        return { ...p, saves: saved ? p.saves.filter(s => s !== clerkId) : [...(p.saves || []), clerkId] };
+        const saved = p.saves?.includes(firebaseUid);
+        return { ...p, saves: saved ? p.saves.filter(s => s !== firebaseUid) : [...(p.saves || []), firebaseUid] };
       }));
       await experiencesService.toggleSave(postId, token);
       toast.success('Updated!');
@@ -187,7 +187,7 @@ const ExperiencesPage = () => {
     }
   };
 
-  const clerkId = user?.id;
+  const firebaseUid = user?.id;
   const sortTabs = [
     { key: 'latest', label: 'Latest', icon: Clock },
     { key: 'popular', label: 'Popular', icon: TrendingUp },
@@ -258,8 +258,8 @@ const ExperiencesPage = () => {
           <div className="space-y-6">
             {posts.map(post => {
               const u = getUserDisplay(post);
-              const isLiked = post.likes?.includes(clerkId);
-              const isSaved = post.saves?.includes(clerkId);
+              const isLiked = post.likes?.includes(firebaseUid);
+              const isSaved = post.saves?.includes(firebaseUid);
               return (
                 <motion.div key={post._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-[#090A0F]/80 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden hover:border-indigo-500/10 transition-all cursor-pointer" onClick={() => openDetail(post)}>
                   {/* User Header */}
@@ -317,7 +317,7 @@ const ExperiencesPage = () => {
                       <button onClick={e => handleShare(post, e)} className="flex items-center gap-1.5 text-xs font-bold text-white/40 hover:text-white ml-auto transition-all">
                         <Share2 size={16} />
                       </button>
-                      {post.clerkUserId === clerkId && (
+                      {post.firebaseUid === firebaseUid && (
                         <button onClick={e => handleDelete(post._id, e)} className="flex items-center gap-1.5 text-xs font-bold text-white/40 hover:text-rose-500 transition-all border-l border-white/5 pl-3">
                           <Trash2 size={16} />
                         </button>
@@ -548,7 +548,7 @@ const ExperiencesPage = () => {
               <div className="sticky top-0 z-10 bg-[#07080C]/90 backdrop-blur-xl border-b border-white/5 px-6 py-4 flex items-center gap-3">
                 <button onClick={() => setSelectedPost(null)} className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white"><ChevronLeft size={18} /></button>
                 <span className="text-xs font-black uppercase tracking-widest text-white/60">Experience Detail</span>
-                {selectedPost.clerkUserId === clerkId && (
+                {selectedPost.firebaseUid === firebaseUid && (
                   <button onClick={e => handleDelete(selectedPost._id, e)} className="ml-auto flex items-center gap-1.5 px-4 py-2 rounded-full border border-rose-500/20 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white text-[10px] font-black uppercase tracking-widest transition-all">
                     <Trash2 size={12} /> Delete Post
                   </button>

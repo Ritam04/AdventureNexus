@@ -10,7 +10,7 @@ export const createStory = async (req: Request, res: Response) => {
     try {
         const { title, content, location, images } = req.body;
         const userId = req.user?._id;
-        const clerkUserId = req.user?.clerkUserId;
+        const firebaseUid = (req as any).user?.firebaseUid;
 
         if (!title || !content || !location) {
             return res.status(StatusCodes.BAD_REQUEST).json({
@@ -21,20 +21,20 @@ export const createStory = async (req: Request, res: Response) => {
 
         const newStory = await TravelStory.create({
             userId,
-            clerkUserId,
+            firebaseUid,
             title,
             content,
             location,
             images: images || []
         });
 
-        logger.info(`New travel story created: ${newStory._id} by ${clerkUserId}`);
+        logger.info(`New travel story created: ${newStory._id} by ${firebaseUid}`);
 
         // Real-time broadcast
         import('../../../shared/socket/socket').then(({ broadcastRealtimeEvent }) => {
             broadcastRealtimeEvent('community:story', {
                 story: newStory,
-                clerkUserId
+                firebaseUid
             });
         });
 
@@ -72,7 +72,7 @@ export const getAllStories = async (req: Request, res: Response) => {
 
         const stories = await TravelStory.find(query)
             .sort({ createdAt: -1 })
-            .populate('userId', 'username profilepicture fullname clerkUserId');
+            .populate('userId', 'username profilepicture fullname firebaseUid');
 
         return res.status(StatusCodes.OK).json({
             success: true,
@@ -93,7 +93,7 @@ export const getAllStories = async (req: Request, res: Response) => {
 export const toggleLikeStory = async (req: Request, res: Response) => {
     try {
         const { storyId } = req.params;
-        const clerkUserId = req.user?.clerkUserId;
+        const firebaseUid = (req as any).user?.firebaseUid;
 
         const story = await TravelStory.findById(storyId);
 
@@ -104,12 +104,12 @@ export const toggleLikeStory = async (req: Request, res: Response) => {
             });
         }
 
-        const isLiked = story.likes.includes(clerkUserId as string);
+        const isLiked = story.likes.includes(firebaseUid as string);
 
         if (isLiked) {
-            story.likes = story.likes.filter(id => id !== clerkUserId);
+            story.likes = story.likes.filter(id => id !== firebaseUid);
         } else {
-            story.likes.push(clerkUserId as string);
+            story.likes.push(firebaseUid as string);
         }
 
         await story.save();

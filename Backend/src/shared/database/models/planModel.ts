@@ -13,8 +13,8 @@ const planSchema = new Schema<IPlan>({
         required: true,
         index: true,
     },
-    // Reference to Clerk User ID for quick lookups
-    clerkUserId: {
+    // Reference to Firebase User ID for quick lookups
+    firebaseUid: {
         type: String,
         required: true,
         index: true,

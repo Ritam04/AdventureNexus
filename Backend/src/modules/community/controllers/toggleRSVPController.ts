@@ -9,9 +9,9 @@ import logger from '../../../shared/utils/logger';
 export const toggleRSVP = async (req: Request, res: Response) => {
     try {
         const { eventId } = req.body;
-        const clerkUserId = req.user?.clerkUserId;
+        const firebaseUid = (req as any).user?.firebaseUid;
 
-        if (!clerkUserId) {
+        if (!firebaseUid) {
             return res.status(StatusCodes.UNAUTHORIZED).json({
                 success: false,
                 message: 'User not authenticated'
@@ -26,13 +26,13 @@ export const toggleRSVP = async (req: Request, res: Response) => {
             });
         }
 
-        const rsvpIndex = event.attendees.indexOf(clerkUserId);
+        const rsvpIndex = event.attendees.indexOf(firebaseUid);
         if (rsvpIndex > -1) {
             // Cancel RSVP
             event.attendees.splice(rsvpIndex, 1);
         } else {
             // RSVP
-            event.attendees.push(clerkUserId);
+            event.attendees.push(firebaseUid);
         }
 
         await event.save();

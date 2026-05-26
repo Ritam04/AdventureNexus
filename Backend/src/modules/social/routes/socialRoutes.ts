@@ -2,7 +2,7 @@ import { Router } from 'express';
 import * as socialController from '../controllers/socialController';
 import * as friendshipController from '../controllers/friendshipController';
 import * as notificationController from '../controllers/notificationController';
-import { protect } from '../../../shared/middleware/authClerkTokenMiddleware';
+import { protect } from '../../../shared/middleware/firebaseAuthMiddleware';
 
 const router = Router();
 

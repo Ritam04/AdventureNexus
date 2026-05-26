@@ -9,7 +9,7 @@ import { broadcastRealtimeEvent } from '../../../shared/socket/socket';
 export const createGroup = async (req: Request, res: Response) => {
     try {
         const { groupName, participants, groupImage = "" } = req.body;
-        const creatorClerkUserId = (req as any).user?.clerkUserId;
+        const creatorClerkUserId = (req as any).user?.firebaseUid;
 
         if (!groupName || !participants || !Array.isArray(participants)) {
             return res.status(400).json({ success: false, message: 'Invalid group data' });
@@ -50,14 +50,14 @@ export const createGroup = async (req: Request, res: Response) => {
 export const addMembers = async (req: Request, res: Response) => {
     try {
         const { conversationId, newParticipants } = req.body;
-        const userClerkUserId = (req as any).user?.clerkUserId;
+        const userFirebaseUid = (req as any).user?.firebaseUid;
 
         const group = await Conversation.findById(conversationId);
         if (!group || !group.isGroup) {
             return res.status(404).json({ success: false, message: 'Group not found' });
         }
 
-        if (!group.admins.includes(userClerkUserId)) {
+        if (!group.admins.includes(userFirebaseUid)) {
             return res.status(403).json({ success: false, message: 'Only admins can add members' });
         }
 

@@ -34,7 +34,7 @@ export const useExperiences = (initialParams = {}) => {
             // Optimistic UI update
             setPosts(prev => prev.map(p => {
                 if ((p._id || p.id) !== postId) return p;
-                const userId = ''; // Will be replaced by actual clerk ID check
+                const userId = ''; // Will be replaced by actual firebase ID check
                 const isLiked = p.likes?.includes(userId);
                 return {
                     ...p,

@@ -10,9 +10,9 @@ import logger from '../../../shared/utils/logger';
 export const toggleLike = async (req: Request, res: Response) => {
     try {
         const { targetType, targetId } = req.body;
-        const clerkUserId = req.user?.clerkUserId;
+        const firebaseUid = (req as any).user?.firebaseUid;
 
-        if (!clerkUserId) {
+        if (!firebaseUid) {
             return res.status(StatusCodes.UNAUTHORIZED).json({
                 success: false,
                 message: 'User not authenticated'
@@ -38,22 +38,22 @@ export const toggleLike = async (req: Request, res: Response) => {
             });
         }
 
-        const likeIndex = target.likes.indexOf(clerkUserId);
+        const likeIndex = target.likes.indexOf(firebaseUid);
         if (likeIndex > -1) {
             // Unlike
             target.likes.splice(likeIndex, 1);
         } else {
             // Like
-            target.likes.push(clerkUserId);
+            target.likes.push(firebaseUid);
 
             // Send notification
             const { createAndSendNotification } = await import('../../../shared/utils/notificationHelper');
             const { NotificationType } = await import('../../../shared/database/models/notificationModel');
             
-            if (target.clerkUserId) {
+            if (target.firebaseUid) {
                 createAndSendNotification({
-                    recipientClerkUserId: target.clerkUserId,
-                    senderClerkUserId: clerkUserId!,
+                    recipientFirebaseUid: target.firebaseUid,
+                    senderFirebaseUid: firebaseUid!,
                     type: NotificationType.LIKE_POST,
                     relatedId: targetType === 'post' ? targetId : undefined
                 });
@@ -62,7 +62,7 @@ export const toggleLike = async (req: Request, res: Response) => {
             // Track activity
             try {
                 const { trackActivity } = await import('../../../shared/utils/activityTracker');
-                await trackActivity(clerkUserId!, 'like_given', targetId);
+                await trackActivity(firebaseUid!, 'like_given', targetId);
             } catch (err) {
                 logger.error('Failed to track like_given activity:', err);
             }
@@ -76,7 +76,7 @@ export const toggleLike = async (req: Request, res: Response) => {
                 targetType,
                 targetId,
                 likes: target.likes,
-                clerkUserId
+                firebaseUid
             });
         });
 

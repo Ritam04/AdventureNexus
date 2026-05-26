@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import User, { IUser } from '../../../shared/database/models/userModel';
 import bcryptjs from 'bcryptjs';
 import { userSchemaValidationLogin } from '../../../shared/utils/validators/joiLoginValidation';
-import createHttpError from 'http-errors';
+import createError from 'http-errors';
 import { config } from '../../../shared/config/config';
 import logger from '../../../shared/utils/logger';
 
@@ -22,13 +22,13 @@ const loginuser = async (
 
         // 2. Validate Basic Presence
         if (!username || !email || !password) {
-            return next(createHttpError(400, 'All fields are required'));
+            return next(createError(400, 'All fields are required'));
         }
 
         // 3. Joi Validation for Login Schema
         const { error } = userSchemaValidationLogin.validate(req.body);
         if (error) {
-            return next(createHttpError(400, error.details[0].message));
+            return next(createError(400, error.details[0].message));
         }
 
         // 4. Find User by Username and Email
@@ -87,16 +87,16 @@ const loginuser = async (
                     refreshToken: refreshToken,
                 });
             } else {
-                return next(createHttpError(401, 'Incorrect Password'));
+                return next(createError(401, 'Incorrect Password'));
             }
         } else {
-            return next(createHttpError(404, 'User not found!'));
+            return next(createError(404, 'User not found!'));
         }
     } catch (error) {
         if (config.env === 'development') {
             logger.error('Error during login:', error); // Log for debugging
         }
-        return next(createHttpError(500, 'Internal Server Error!'));
+        return next(createError(500, 'Internal Server Error!'));
     }
 };
 

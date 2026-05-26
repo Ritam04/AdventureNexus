@@ -94,7 +94,7 @@ const AdventureNexusReviews = () => {
                 'Content-Type': 'application/json',
                 ...(token ? { Authorization: `Bearer ${token}` } : {})
             };
-            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com';
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com');
             const res = await fetch(`${backendUrl}/api/v1/plans/my-plans`, { headers });
             if (res.ok) {
                 const data = await res.json();
@@ -226,8 +226,8 @@ const AdventureNexusReviews = () => {
                 ...newReview,
                 userName: user.fullName || user.username || user.displayName || 'Traveler',
                 userAvatar: user.imageUrl || user.photoURL,
-                userId: user.clerkUserId || user.id || user._id, // Clerk ID stored as string in this model
-                clerkUserId: user.clerkUserId || user.id || user._id
+                userId: user.firebaseUid || user.id || user._id, // Firebase UID stored as string in this model
+                firebaseUid: user.firebaseUid || user.id || user._id
             };
 
             // Remove empty tripId to avoid Mongoose CastError to ObjectId
@@ -624,7 +624,7 @@ const AdventureNexusReviews = () => {
                                                 <div className="relative">
                                                     <div
                                                         className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 p-[2px] shadow-lg shadow-indigo-500/20 cursor-pointer overflow-hidden transform hover:scale-105 transition-transform"
-                                                        onClick={() => navigate(`/user/profile/${review.clerkUserId || review.userId}`)}
+                                                        onClick={() => navigate(`/user/profile/${review.firebaseUid || review.userId}`)}
                                                     >
                                                         <div className="w-full h-full rounded-full bg-black overflow-hidden relative">
                                                             {review.userAvatar ? (
@@ -645,7 +645,7 @@ const AdventureNexusReviews = () => {
                                                 <div className="text-center md:text-left">
                                                     <h3
                                                         className="font-semibold text-white text-lg tracking-tight cursor-pointer hover:text-primary transition-colors"
-                                                        onClick={() => navigate(`/user/profile/${review.clerkUserId || review.userId}`)}
+                                                        onClick={() => navigate(`/user/profile/${review.firebaseUid || review.userId}`)}
                                                     >
                                                         {review.userName}
                                                     </h3>

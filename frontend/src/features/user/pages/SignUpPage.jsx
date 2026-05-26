@@ -19,11 +19,11 @@ export default function SignUpPage() {
     const navigate = useNavigate();
 
     const registerUserOnBackend = async (firebaseUser, displayName) => {
-        const api_url = import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com';
+        const api_url = import.meta.env.VITE_BACKEND_URL || (import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com');
         try {
             const token = await firebaseUser.getIdToken();
             await axios.post(`${api_url}/api/v1/users/register`, {
-                clerkUserId: firebaseUser.uid,
+                firebaseUid: firebaseUser.uid,
                 email: firebaseUser.email,
                 username: displayName || firebaseUser.displayName || 'Traveler',
                 profileImage: firebaseUser.photoURL || ''

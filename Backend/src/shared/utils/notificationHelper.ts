@@ -4,8 +4,8 @@ import { sendRealtimeNotification } from '../socket/socket';
 import logger from './logger';
 
 interface CreateNotificationParams {
-    recipientClerkUserId: string;
-    senderClerkUserId: string;
+    recipientFirebaseUid: string;
+    senderFirebaseUid: string;
     type: NotificationType;
     relatedId?: string;
 }
@@ -16,21 +16,21 @@ interface CreateNotificationParams {
 export const createAndSendNotification = async (params: CreateNotificationParams) => {
     try {
         // Prevent sending notification to oneself
-        if (params.recipientClerkUserId === params.senderClerkUserId) {
+        if (params.recipientFirebaseUid === params.senderFirebaseUid) {
             return null;
         }
 
         // Save to DB
         const notification = await Notification.create({
-            recipientClerkUserId: params.recipientClerkUserId,
-            senderClerkUserId: params.senderClerkUserId,
+            recipientFirebaseUid: params.recipientFirebaseUid,
+            senderFirebaseUid: params.senderFirebaseUid,
             type: params.type,
             relatedId: params.relatedId,
             isRead: false
         });
 
         // Fetch sender details
-        const sender = await User.findOne({ clerkUserId: params.senderClerkUserId })
+        const sender = await User.findOne({ firebaseUid: params.senderFirebaseUid })
             .select('username profilepicture fullname');
 
         const enrichedNotification = {
@@ -43,7 +43,7 @@ export const createAndSendNotification = async (params: CreateNotificationParams
         };
 
         // Send via Socket.io
-        sendRealtimeNotification(params.recipientClerkUserId, enrichedNotification);
+        sendRealtimeNotification(params.recipientFirebaseUid, enrichedNotification);
 
         return enrichedNotification;
     } catch (error: any) {

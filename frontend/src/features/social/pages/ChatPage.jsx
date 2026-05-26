@@ -17,14 +17,14 @@ import toast from 'react-hot-toast';
 import NavBar from '@/components/NavBar';
 
 const ChatPage = () => {
-    const { userId: clerkUserId, getToken } = useAuth();
+    const { userId: firebaseUid, getToken } = useAuth();
     const { user } = useUser();
     const { socket } = useSocket();
     const location = useLocation();
     const navigate = useNavigate();
 
     // E2EE Hook — handles key generation, encryption, and decryption
-    const { isReady: e2eeReady, encrypt, decrypt, decryptBatch } = useE2EE(clerkUserId, getToken);
+    const { isReady: e2eeReady, encrypt, decrypt, decryptBatch } = useE2EE(firebaseUid, getToken);
 
     const [conversations, setConversations] = useState([]);
     const [activeConversation, setActiveConversation] = useState(null);
@@ -70,10 +70,10 @@ const ChatPage = () => {
             }
         };
 
-        if (clerkUserId) {
+        if (firebaseUid) {
             loadInitialConversations();
         }
-    }, [clerkUserId, location.state]);
+    }, [firebaseUid, location.state]);
 
     // 2. Fetch Messages when Active Conversation changes — decrypt E2EE messages
     useEffect(() => {
@@ -116,7 +116,7 @@ const ChatPage = () => {
             if (data && data.type === 'messages:seen') {
                 if (activeConversation && data.conversationId === activeConversation._id) {
                     setMessages(prev => prev.map(m => 
-                        m && m.senderClerkUserId === clerkUserId ? { ...m, status: 'seen' } : m
+                        m && m.senderFirebaseUid === firebaseUid ? { ...m, status: 'seen' } : m
                     ).filter(Boolean));
                 }
                 return;
@@ -231,7 +231,7 @@ const ChatPage = () => {
 
             // Encrypt if E2EE is ready and we have a 1-on-1 conversation
             if (e2eeReady && recipient && !activeConversation.isGroup) {
-                const encrypted = await encrypt(originalText, recipient.clerkUserId);
+                const encrypted = await encrypt(originalText, recipient.firebaseUid);
                 if (encrypted && encrypted.isEncrypted) {
                     encryptedPayload = encrypted;
                 }
@@ -277,7 +277,7 @@ const ChatPage = () => {
     // Helper: extract the recipient traveler profile
     const getRecipientProfile = (conv) => {
         if (!conv || conv.isGroup) return null;
-        return conv.participantDetails?.find(p => p.clerkUserId !== clerkUserId) || null;
+        return conv.participantDetails?.find(p => p.firebaseUid !== firebaseUid) || null;
     };
 
     const formatMessageTime = (dateString) => {
@@ -340,7 +340,7 @@ const ChatPage = () => {
                     ) : (
                         filteredConversations.map((conv) => {
                             const recipient = getRecipientProfile(conv);
-                            const isOnline = recipient && onlineUserIds.has(recipient.clerkUserId);
+                            const isOnline = recipient && onlineUserIds.has(recipient.firebaseUid);
                             const isActive = activeConversation?._id === conv._id;
                             const avatarUrl = recipient?.profilepicture;
 
@@ -393,7 +393,7 @@ const ChatPage = () => {
                         {/* Chat Bar Header */}
                         {(() => {
                             const recipient = getRecipientProfile(activeConversation);
-                            const isOnline = recipient && onlineUserIds.has(recipient.clerkUserId);
+                            const isOnline = recipient && onlineUserIds.has(recipient.firebaseUid);
 
                             return (
                                 <div className="h-20 border-b border-white/5 flex items-center justify-between px-6 bg-[#07090e]/80 backdrop-blur-xl z-10">
@@ -409,7 +409,7 @@ const ChatPage = () => {
  
                                         <div 
                                             className="cursor-pointer flex items-center gap-4"
-                                            onClick={() => navigate(`/user/profile/${recipient?.clerkUserId}`)}
+                                            onClick={() => navigate(`/user/profile/${recipient?.firebaseUid}`)}
                                         >
                                             <div className="relative">
                                                 <div className="w-11 h-11 rounded-xl bg-slate-900 border border-white/10 overflow-hidden flex items-center justify-center font-bold text-white shadow-md">
@@ -443,7 +443,7 @@ const ChatPage = () => {
                                             variant="ghost" 
                                             size="icon" 
                                             className="rounded-full hover:bg-white/5 text-white/40 hover:text-white"
-                                            onClick={() => navigate(`/user/profile/${recipient?.clerkUserId}`)}
+                                            onClick={() => navigate(`/user/profile/${recipient?.firebaseUid}`)}
                                         >
                                             <User size={18} />
                                         </Button>
@@ -464,7 +464,7 @@ const ChatPage = () => {
                             </div>
 
                             {messages.map((msg, i) => {
-                                const isMe = msg.senderClerkUserId === clerkUserId;
+                                const isMe = msg.senderFirebaseUid === firebaseUid;
                                 const displayContent = msg._displayContent || msg.content;
                                 const isEncryptedMsg = msg.isEncrypted;
                                 return (

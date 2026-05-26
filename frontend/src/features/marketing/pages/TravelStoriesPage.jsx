@@ -56,7 +56,7 @@ const TravelStoriesPage = () => {
     useEffect(() => {
         fetchStories();
 
-        const socket = io(import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com');
+        const socket = io(import.meta.env.VITE_BACKEND_URL || (import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com'));
 
         socket.on('community:story', (data) => {
             setStories(prev => [data.story, ...prev]);
@@ -255,7 +255,7 @@ const TravelStoriesPage = () => {
                                             <div className="flex items-center justify-between">
                                                 <div
                                                     className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
-                                                    onClick={() => navigate(`/user/profile/${story.clerkUserId}`)}
+                                                    onClick={() => navigate(`/user/profile/${story.firebaseUid}`)}
                                                 >
                                                     <div className="w-8 h-8 rounded-xl overflow-hidden border border-white/20">
                                                         <img src={story.userId?.profilepicture} alt={story.userId?.username} className="w-full h-full object-cover" />
@@ -285,7 +285,7 @@ const TravelStoriesPage = () => {
                                         <Button
                                             variant="ghost"
                                             className="w-full rounded-2xl border border-primary/10 hover:bg-primary/5 font-black uppercase tracking-widest text-[9px] group"
-                                            onClick={() => navigate(`/user/profile/${story.clerkUserId}`)}
+                                            onClick={() => navigate(`/user/profile/${story.firebaseUid}`)}
                                         >
                                             View Full Journey <ArrowRight size={14} className="ml-2 group-hover:translate-x-1 transition-transform" />
                                         </Button>

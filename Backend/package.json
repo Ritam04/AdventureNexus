@@ -17,7 +17,6 @@
     "license": "ISC",
     "description": "",
     "dependencies": {
-        "@clerk/express": "^1.7.26",
         "@google/genai": "^1.31.0",
         "@types/bcryptjs": "^2.4.6",
         "@types/joi": "^17.2.2",

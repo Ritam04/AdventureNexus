@@ -1,7 +1,7 @@
 import { Schema, model, Document } from 'mongoose';
 
 export interface ITrainBooking {
-    clerkUserId: string;
+    firebaseUid: string;
     // Passenger Details
     passengerName: string;
     passengerAge: number;
@@ -32,7 +32,7 @@ export interface ITrainBookingDocument extends ITrainBooking, Document {}
 
 const trainBookingSchema = new Schema<ITrainBookingDocument>(
     {
-        clerkUserId: { type: String, required: true, index: true },
+        firebaseUid: { type: String, required: true, index: true },
         passengerName: { type: String, required: true, trim: true, maxlength: 100 },
         passengerAge: { type: Number, required: true, min: 1, max: 120 },
         passengerGender: { type: String, enum: ['Male', 'Female', 'Other'], required: true },

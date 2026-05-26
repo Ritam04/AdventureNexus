@@ -9,7 +9,7 @@ import { savePlanToUser } from '../controllers/savePlanToUserController';
 import { unsavePlanFromUser } from '../controllers/unsavePlanFromUserController';
 import { createPlan } from '../controllers/newPlanController';
 import { getMyPlans } from '../controllers/getMyPlansController';
-import protect from '../../../shared/middleware/authClerkTokenMiddleware';
+import protect from '../../../shared/middleware/firebaseAuthMiddleware';
 import { cacheMiddleware } from '../../../shared/middleware/cacheMiddleware';
 import { CACHE_CONFIG } from '../../../shared/config/cache.config';
 
@@ -30,16 +30,16 @@ route.get("/my-plans", protect, getMyPlans);
 /**
  * @route POST /api/v1/plans/search/destination
  * @desc Generate travel plan recommendations based on user input.
- * @access Public (Currently not using 'protect' middleware in line 15, but logic inside controller might check auth)
+ * @access Private
  */
-route.post("/search/destination", searchNewDestination);
+route.post("/search/destination", protect, searchNewDestination);
 
 /**
  * @route GET /api/v1/plans/recommendations
  * @desc Get personalized travel recommendations based on user history
  */
-route.get("/recommendations", cacheMiddleware({ prefix: CACHE_CONFIG.PREFIX.RECOMMENDATIONS, useUserPrefix: true }), getPersonalizedRecommendations);
-route.post("/recommendations/matchmaker", matchmakerController);
+route.get("/recommendations", protect, cacheMiddleware({ prefix: CACHE_CONFIG.PREFIX.RECOMMENDATIONS, useUserPrefix: true }), getPersonalizedRecommendations);
+route.post("/recommendations/matchmaker", protect, matchmakerController);
 
 /**
  * @route POST /api/v1/plans/search/destination-images

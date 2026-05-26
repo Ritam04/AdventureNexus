@@ -149,7 +149,7 @@ export const GroupPage = () => {
           const filtered = (res.data || []).filter(u => {
             const isAlreadyMember = group?.members?.some(m => {
               const mId = typeof m === 'object' ? m?._id : m;
-              return mId?.toString() === u._id?.toString() || mId?.toString() === u.clerkUserId?.toString();
+              return mId?.toString() === u._id?.toString() || mId?.toString() === u.firebaseUid?.toString();
             });
             return !isAlreadyMember;
           });
@@ -974,7 +974,7 @@ export const GroupPage = () => {
                           <PostCard 
                             key={post._id}
                             discussion={post}
-                            clerkUserId={user?.id}
+                            firebaseUid={user?.id}
                             onLike={handleLike}
                             onSave={handleSave}
                             onShare={handleShare}

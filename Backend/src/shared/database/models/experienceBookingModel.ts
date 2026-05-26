@@ -2,7 +2,7 @@ import { Schema, model, Document } from 'mongoose';
 
 export interface IExperienceBooking {
     experienceId: Schema.Types.ObjectId;
-    clerkUserId: string;
+    firebaseUid: string;
     slot: {
         date: string;
         time: string;
@@ -24,7 +24,7 @@ export interface IExperienceBookingDocument extends IExperienceBooking, Document
 
 const experienceBookingSchema = new Schema<IExperienceBookingDocument>({
     experienceId: { type: Schema.Types.ObjectId, ref: 'Experience', required: true },
-    clerkUserId: { type: String, required: true },
+    firebaseUid: { type: String, required: true },
     slot: {
         date: { type: String, required: true },
         time: { type: String, required: true }

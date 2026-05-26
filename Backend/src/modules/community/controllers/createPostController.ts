@@ -13,7 +13,7 @@ export const createPost = async (req: Request, res: Response) => {
     try {
         const { title, content, category, tags, destinationTags, tripId, groupId, communityId, images } = req.body;
         const userId = req.user?._id;
-        const clerkUserId = req.user?.clerkUserId;
+        const firebaseUid = (req as any).user?.firebaseUid;
 
         if (!title || !content || !category) {
             return res.status(StatusCodes.BAD_REQUEST).json({
@@ -61,7 +61,7 @@ export const createPost = async (req: Request, res: Response) => {
 
         const newPost = await CommunityPost.create({
             userId,
-            clerkUserId,
+            firebaseUid,
             title,
             content,
             category,
@@ -73,12 +73,12 @@ export const createPost = async (req: Request, res: Response) => {
             images: imageUrls
         });
 
-        logger.info(`New community post created: ${newPost._id} by ${clerkUserId}`);
+        logger.info(`New community post created: ${newPost._id} by ${firebaseUid}`);
 
         // Track activity
         try {
             const { trackActivity } = await import('../../../shared/utils/activityTracker');
-            await trackActivity(clerkUserId!, 'post_created', newPost._id.toString());
+            await trackActivity(firebaseUid!, 'post_created', newPost._id.toString());
         } catch (err) {
             logger.error('Failed to track post_created activity:', err);
         }
@@ -87,7 +87,7 @@ export const createPost = async (req: Request, res: Response) => {
         import('../../../shared/socket/socket').then(({ broadcastRealtimeEvent }) => {
             broadcastRealtimeEvent('community:post', {
                 post: newPost,
-                clerkUserId
+                firebaseUid
             });
         });
 

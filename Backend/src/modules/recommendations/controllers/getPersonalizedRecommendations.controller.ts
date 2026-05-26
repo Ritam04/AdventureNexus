@@ -7,9 +7,9 @@ import Plan from "../../../shared/database/models/planModel";
 
 const getPersonalizedRecommendations = async (req: Request, res: Response) => {
     try {
-        const clerkUserId = req.auth()?.userId;
+        const firebaseUid = (req as any).user?.firebaseUid;
 
-        if (!clerkUserId) {
+        if (!firebaseUid) {
             return res.status(StatusCodes.UNAUTHORIZED).json({
                 status: "Failed",
                 message: "Unauthorized",
@@ -17,7 +17,7 @@ const getPersonalizedRecommendations = async (req: Request, res: Response) => {
         }
 
         // Get local User ID
-        const user = await User.findOne({ clerkUserId });
+        const user = await User.findOne({ firebaseUid });
         if (!user) {
             return res.status(StatusCodes.NOT_FOUND).json({
                 status: "Failed",

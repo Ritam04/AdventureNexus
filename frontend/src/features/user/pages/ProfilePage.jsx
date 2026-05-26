@@ -17,7 +17,7 @@ import { useProfile } from '../../../hooks/useProfile';
 import toast from 'react-hot-toast';
 
 const ProfilePage = () => {
-    const { user: clerkUser } = useUser();
+    const { user: firebaseUser } = useUser();
     const {
         profile,
         stats,

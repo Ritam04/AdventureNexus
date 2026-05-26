@@ -2,12 +2,12 @@ import mongoose from "mongoose";
 
 const reviewSchema = new mongoose.Schema({
     userId: {
-        type: String, // Keeping as String for backward compatibility (Clerk ID)
+        type: String, // Keeping as String for backward compatibility (Firebase UID)
         required: true,
         index: true
     },
-    // Explicit Clerk ID field for clarity/future migration
-    clerkUserId: {
+    // Explicit Firebase UID field for clarity/future migration
+    firebaseUid: {
         type: String,
         required: false, // Optional for old records, required for new
         index: true

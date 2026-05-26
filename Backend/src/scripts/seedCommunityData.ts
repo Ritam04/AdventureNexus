@@ -23,7 +23,7 @@ const seedCommunityData = async () => {
                 description: "Join world-renowned photographer Elena R. for a masterclass on capturing breathtaking landscapes in low light.",
                 date: new Date('2025-11-15T18:30:00Z'),
                 type: 'Webinar',
-                attendees: ['clerk_123', 'clerk_456'],
+                attendees: ['firebase_123', 'firebase_456'],
                 imageUrl: 'https://images.unsplash.com/photo-1452421822248-d4c2b47f0c03?w=800&auto=format&fit=crop&q=60'
             },
             {
@@ -32,7 +32,7 @@ const seedCommunityData = async () => {
                 date: new Date('2025-12-02T19:00:00Z'),
                 type: 'In-Person',
                 location: 'Bar del Pla, Barcelona, Spain',
-                attendees: ['clerk_789'],
+                attendees: ['firebase_789'],
                 imageUrl: 'https://images.unsplash.com/photo-1583422409516-2895a77efded?w=800&auto=format&fit=crop&q=60'
             },
             {

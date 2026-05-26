@@ -44,12 +44,12 @@ const searchNewDestination = async (req: Request, res: Response) => {
     }
 
     // ✅ 2. GET CLERK USER ID
-    const clerkUserId = req.auth()?.userId;
+    const firebaseUid = (req as any).user?.firebaseUid;
 
-    if (!clerkUserId) {
+    if (!firebaseUid) {
       return res.status(StatusCodes.UNAUTHORIZED).json({
         status: "Failed",
-        message: "Unauthorized: Clerk user not found",
+        message: "Unauthorized: Firebase user not found",
       });
     }
 
@@ -183,7 +183,7 @@ const searchNewDestination = async (req: Request, res: Response) => {
 
       // Construct Plan Data
       const planData: IPlan = {
-        clerkUserId,
+        firebaseUid,
         to,
         from,
         date,
@@ -218,7 +218,7 @@ const searchNewDestination = async (req: Request, res: Response) => {
 
 
     // 8. Find User in DB to link plan
-    const user = await User.findOne({ clerkUserId });
+    const user = await User.findOne({ firebaseUid });
 
     if (!user) {
       logger.info(`URL: ${fullUrl} - User not found`);
@@ -232,7 +232,7 @@ const searchNewDestination = async (req: Request, res: Response) => {
     const savedPlans = await Promise.all(processedPlans.map(async (planData) => {
       // Check for duplicates before saving (Plan level)
       const existingPlan = await Plan.findOne({
-        clerkUserId,
+        firebaseUid,
         name: planData.name, // check specific destination name
         date,
         budget

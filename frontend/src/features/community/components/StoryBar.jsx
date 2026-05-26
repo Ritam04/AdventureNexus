@@ -11,7 +11,7 @@ export const StoryBar = ({ stories, isStoriesLoading }) => {
     if (!stories) return [];
     
     const reduced = stories.reduce((acc, story) => {
-      const uId = story.userId?._id || story.clerkUserId;
+      const uId = story.userId?._id || story.firebaseUid;
       if (!uId) return acc;
       
       if (!acc[uId]) {
@@ -49,10 +49,10 @@ export const StoryBar = ({ stories, isStoriesLoading }) => {
           /* Grouped Stories Render */
           groupedStories.map((groupedStory) => (
             <motion.div 
-              key={groupedStory.userId?._id || groupedStory.clerkUserId}
+              key={groupedStory.userId?._id || groupedStory.firebaseUid}
               whileHover={{ scale: 1.05 }}
               className="flex flex-col items-center gap-2 cursor-pointer relative shrink-0"
-              onClick={() => navigate(`/stories?user=${groupedStory.userId?._id || groupedStory.clerkUserId}`)}
+              onClick={() => navigate(`/stories?user=${groupedStory.userId?._id || groupedStory.firebaseUid}`)}
             >
               <div className="w-16 h-16 rounded-full border-2 border-pink-500 p-0.5 shadow-lg shadow-pink-500/20 relative">
                 <img 

@@ -9,12 +9,12 @@ import logger from '../../../shared/utils/logger';
 export const getMessageHistory = async (req: Request, res: Response) => {
     try {
         const { otherClerkUserId } = req.params;
-        const currentClerkUserId = req.user?.clerkUserId;
+        const currentClerkUserId = (req as any).user?.firebaseUid;
 
         const messages = await Message.find({
             $or: [
-                { senderClerkUserId: currentClerkUserId, recipientClerkUserId: otherClerkUserId },
-                { senderClerkUserId: otherClerkUserId, recipientClerkUserId: currentClerkUserId }
+                { senderFirebaseUid: currentClerkUserId, recipientFirebaseUid: otherClerkUserId },
+                { senderFirebaseUid: otherClerkUserId, recipientFirebaseUid: currentClerkUserId }
             ]
         }).sort({ createdAt: 1 });
 
@@ -36,10 +36,10 @@ export const getMessageHistory = async (req: Request, res: Response) => {
  */
 export const sendMessage = async (req: Request, res: Response) => {
     try {
-        const { recipientClerkUserId, content } = req.body;
-        const senderClerkUserId = req.user?.clerkUserId;
+        const { recipientFirebaseUid, content } = req.body;
+        const senderFirebaseUid = (req as any).user?.firebaseUid;
 
-        if (!recipientClerkUserId || !content) {
+        if (!recipientFirebaseUid || !content) {
             return res.status(StatusCodes.BAD_REQUEST).json({
                 success: false,
                 message: 'Recipient and content are required'
@@ -47,8 +47,8 @@ export const sendMessage = async (req: Request, res: Response) => {
         }
 
         const newMessage = await Message.create({
-            senderClerkUserId,
-            recipientClerkUserId,
+            senderFirebaseUid,
+            recipientFirebaseUid,
             content
         });
 

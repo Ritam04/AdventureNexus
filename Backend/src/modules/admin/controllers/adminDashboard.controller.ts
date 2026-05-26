@@ -117,7 +117,7 @@ export const deleteUser = async (req: Request, res: Response) => {
         const user = await User.findByIdAndDelete(req.params.id);
         const { getIO } = await import('../../../shared/socket/socket'); // Dynamic import
         if (user) {
-            getIO().emit('user:deleted', user.clerkUserId);
+            getIO().emit('user:deleted', user.firebaseUid);
 
             // Log the action (Phase 4)
             await AuditLog.log({
@@ -611,7 +611,7 @@ export const resolveModerationAlert = async (req: Request, res: Response) => {
                 const deleted = await Review.findByIdAndDelete(id);
                 if (deleted) {
                     await trackAdminEvent({
-                        clerkUserId: 'admin123',
+                        firebaseUid: 'admin123',
                         activityType: 'comment_added', // Re-use generic audit log trigger safely
                         targetId: id,
                         details: `Moderator purged toxic testimonial review: "${(deleted as any).comment.substring(0, 30)}..."`,
@@ -622,7 +622,7 @@ export const resolveModerationAlert = async (req: Request, res: Response) => {
                 const deleted = await CommunityComment.findByIdAndDelete(id);
                 if (deleted) {
                     await trackAdminEvent({
-                        clerkUserId: 'admin123',
+                        firebaseUid: 'admin123',
                         activityType: 'comment_added',
                         targetId: id,
                         details: `Moderator purged toxic community comment: "${(deleted as any).content.substring(0, 30)}..."`,
@@ -633,7 +633,7 @@ export const resolveModerationAlert = async (req: Request, res: Response) => {
         } else {
             // Approve - mark as safe or log verification approval
             await trackAdminEvent({
-                clerkUserId: 'admin123',
+                firebaseUid: 'admin123',
                 activityType: 'comment_added',
                 targetId: id,
                 details: `Moderator cleared content flags for ${type} node id: ${id}`,

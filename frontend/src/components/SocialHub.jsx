@@ -21,7 +21,7 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
 const SocialHub = () => {
-    const { userId: clerkUserId, isSignedIn, getToken } = useAuth();
+    const { userId: firebaseUid, isSignedIn, getToken } = useAuth();
     const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('notifications'); // 'notifications' or 'messages'
@@ -58,10 +58,10 @@ const SocialHub = () => {
 
         let socket;
         import('socket.io-client').then(({ io }) => {
-            socket = io(import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com');
+            socket = io(import.meta.env.VITE_BACKEND_URL || (import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com'));
 
             socket.on('connect', () => {
-                socket.emit('identity', clerkUserId);
+                socket.emit('identity', firebaseUid);
             });
 
             socket.on('notification', (newNotif) => {
@@ -79,7 +79,7 @@ const SocialHub = () => {
         return () => {
             if (socket) socket.disconnect();
         };
-    }, [isSignedIn, clerkUserId]);
+    }, [isSignedIn, firebaseUid]);
 
     const markRead = async (id) => {
         try {
@@ -156,7 +156,7 @@ const SocialHub = () => {
                                                 key={notif._id}
                                                 onClick={() => {
                                                     markRead(notif._id);
-                                                    if (notif.type === 'follow') navigate(`/user/profile/${notif.senderClerkUserId}`);
+                                                    if (notif.type === 'follow') navigate(`/user/profile/${notif.senderFirebaseUid}`);
                                                     else if (notif.type.includes('story')) navigate('/stories');
                                                     else navigate('/community');
                                                 }}

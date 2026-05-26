@@ -4,7 +4,7 @@ import api from '../services/adminApi';
 
 export interface ActivityEvent {
     _id: string;
-    clerkUserId: string;
+    firebaseUid: string;
     username: string;
     activityType: string;
     targetId: string;

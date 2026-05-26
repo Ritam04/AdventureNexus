@@ -71,7 +71,7 @@ function AppProvider({ children }) {
         if (isLoaded && isSignedIn && user) {
             // Initialize Socket
             if (!socketRef.current) {
-                const newSocket = io(import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com');
+                const newSocket = io(import.meta.env.VITE_BACKEND_URL || (import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com'));
                 socketRef.current = newSocket;
                 setSocket(newSocket);
 

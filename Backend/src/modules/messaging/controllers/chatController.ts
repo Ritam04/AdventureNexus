@@ -10,43 +10,43 @@ import { broadcastRealtimeEvent, sendChatRealtimeMessage, isUserOnline } from '.
  */
 export const getOrCreateConversation = async (req: Request, res: Response) => {
     try {
-        const { recipientClerkUserId } = req.body;
-        const senderClerkUserId = (req as any).user?.clerkUserId;
+        const { recipientFirebaseUid } = req.body;
+        const senderFirebaseUid = (req as any).user?.firebaseUid;
 
-        if (!recipientClerkUserId) {
+        if (!recipientFirebaseUid) {
             return res.status(400).json({ success: false, message: 'Recipient ID is required' });
         }
 
         // Find existing 1-on-1 conversation
         let conversation = await Conversation.findOne({
             isGroup: false,
-            participants: { $all: [senderClerkUserId, recipientClerkUserId] }
+            participants: { $all: [senderFirebaseUid, recipientFirebaseUid] }
         });
 
         if (!conversation) {
             conversation = new Conversation({
-                participants: [senderClerkUserId, recipientClerkUserId],
+                participants: [senderFirebaseUid, recipientFirebaseUid],
                 isGroup: false
             });
             await conversation.save();
         }
 
-        const users = await User.find({ clerkUserId: { $in: conversation.participants } })
-            .select('clerkUserId username fullname profilepicture onlineStatus lastActive');
+        const users = await User.find({ firebaseUid: { $in: conversation.participants } })
+            .select('firebaseUid username fullname profilepicture onlineStatus lastActive');
 
-        const userMap = new Map(users.map(u => [u.clerkUserId, u]));
+        const userMap = new Map(users.map(u => [u.firebaseUid, u]));
 
         const enrichedParticipants = conversation.participants.map(pId => {
             const u = userMap.get(pId);
             return u ? {
-                clerkUserId: u.clerkUserId,
+                firebaseUid: u.firebaseUid,
                 username: u.username,
                 fullname: u.fullname || u.username,
                 profilepicture: u.profilepicture,
                 onlineStatus: u.onlineStatus,
                 lastActive: u.lastActive
             } : {
-                clerkUserId: pId,
+                firebaseUid: pId,
                 username: 'Traveler',
                 fullname: 'Traveler',
                 profilepicture: '',
@@ -75,21 +75,21 @@ export const getOrCreateConversation = async (req: Request, res: Response) => {
 export const sendMessage = async (req: Request, res: Response) => {
     try {
         const { conversationId, content, type = 'text', nonce = '', isEncrypted = false } = req.body;
-        const senderClerkUserId = (req as any).user?.clerkUserId;
+        const senderFirebaseUid = (req as any).user?.firebaseUid;
 
         const conversation = await Conversation.findById(conversationId);
-        if (!conversation || !conversation.participants.includes(senderClerkUserId)) {
+        if (!conversation || !conversation.participants.includes(senderFirebaseUid)) {
             return res.status(404).json({ success: false, message: 'Conversation not found or access denied' });
         }
 
         // Check if recipient is online to set status as 'delivered'
-        const recipientsOnline = conversation.participants.some(pId => pId !== senderClerkUserId && isUserOnline(pId));
+        const recipientsOnline = conversation.participants.some(pId => pId !== senderFirebaseUid && isUserOnline(pId));
 
         // Server stores content as-is (ciphertext when E2EE is active)
         // Server NEVER decrypts — it acts as a blind relay
         const message = new Message({
             conversationId,
-            senderClerkUserId,
+            senderFirebaseUid,
             content,
             nonce,
             isEncrypted,
@@ -105,7 +105,7 @@ export const sendMessage = async (req: Request, res: Response) => {
 
         // Broadcast to all participants except sender
         conversation.participants.forEach(participantId => {
-            if (participantId !== senderClerkUserId) {
+            if (participantId !== senderFirebaseUid) {
                 sendChatRealtimeMessage(participantId, {
                     conversationId,
                     message
@@ -131,26 +131,26 @@ export const getMessages = async (req: Request, res: Response) => {
     try {
         const { conversationId } = req.params;
         const { page = 1, limit = 20 } = req.query;
-        const userClerkUserId = (req as any).user?.clerkUserId;
+        const userFirebaseUid = (req as any).user?.firebaseUid;
 
         const conversation = await Conversation.findById(conversationId);
-        if (!conversation || !conversation.participants.includes(userClerkUserId)) {
+        if (!conversation || !conversation.participants.includes(userFirebaseUid)) {
             return res.status(404).json({ success: false, message: 'Conversation not found or access denied' });
         }
 
         // Mark messages as seen
         await Message.updateMany(
-            { conversationId, senderClerkUserId: { $ne: userClerkUserId }, status: { $ne: 'seen' } },
+            { conversationId, senderFirebaseUid: { $ne: userFirebaseUid }, status: { $ne: 'seen' } },
             { $set: { status: 'seen' } }
         );
 
         // Notify other participants via socket that messages are seen!
         conversation.participants.forEach(participantId => {
-            if (participantId !== userClerkUserId) {
+            if (participantId !== userFirebaseUid) {
                 sendChatRealtimeMessage(participantId, {
                     type: 'messages:seen',
                     conversationId,
-                    seenBy: userClerkUserId
+                    seenBy: userFirebaseUid
                 });
             }
         });
@@ -178,10 +178,10 @@ export const getMessages = async (req: Request, res: Response) => {
  */
 export const getConversations = async (req: Request, res: Response) => {
     try {
-        const userClerkUserId = (req as any).user?.clerkUserId;
+        const userFirebaseUid = (req as any).user?.firebaseUid;
 
         const conversations = await Conversation.find({
-            participants: userClerkUserId
+            participants: userFirebaseUid
         })
         .populate('lastMessage')
         .sort({ updatedAt: -1 });
@@ -191,23 +191,23 @@ export const getConversations = async (req: Request, res: Response) => {
             new Set(conversations.flatMap(c => c.participants))
         );
 
-        const users = await User.find({ clerkUserId: { $in: allParticipantIds } })
-            .select('clerkUserId username fullname profilepicture onlineStatus lastActive');
+        const users = await User.find({ firebaseUid: { $in: allParticipantIds } })
+            .select('firebaseUid username fullname profilepicture onlineStatus lastActive');
 
-        const userMap = new Map(users.map(u => [u.clerkUserId, u]));
+        const userMap = new Map(users.map(u => [u.firebaseUid, u]));
 
         const enrichedConversations = conversations.map(c => {
             const enrichedParticipants = c.participants.map(pId => {
                 const u = userMap.get(pId);
                 return u ? {
-                    clerkUserId: u.clerkUserId,
+                    firebaseUid: u.firebaseUid,
                     username: u.username,
                     fullname: u.fullname || u.username,
                     profilepicture: u.profilepicture,
                     onlineStatus: u.onlineStatus,
                     lastActive: u.lastActive
                 } : {
-                    clerkUserId: pId,
+                    firebaseUid: pId,
                     username: 'Traveler',
                     fullname: 'Traveler',
                     profilepicture: '',
@@ -239,24 +239,24 @@ export const getConversations = async (req: Request, res: Response) => {
 export const markAsRead = async (req: Request, res: Response) => {
     try {
         const { conversationId } = req.params;
-        const userClerkUserId = (req as any).user?.clerkUserId;
+        const userFirebaseUid = (req as any).user?.firebaseUid;
 
         const conversation = await Conversation.findById(conversationId);
-        if (!conversation || !conversation.participants.includes(userClerkUserId)) {
+        if (!conversation || !conversation.participants.includes(userFirebaseUid)) {
             return res.status(404).json({ success: false, message: 'Conversation not found or access denied' });
         }
 
         await Message.updateMany(
-            { conversationId, senderClerkUserId: { $ne: userClerkUserId }, status: { $ne: 'seen' } },
+            { conversationId, senderFirebaseUid: { $ne: userFirebaseUid }, status: { $ne: 'seen' } },
             { $set: { status: 'seen' } }
         );
 
         conversation.participants.forEach(participantId => {
-            if (participantId !== userClerkUserId) {
+            if (participantId !== userFirebaseUid) {
                 sendChatRealtimeMessage(participantId, {
                     type: 'messages:seen',
                     conversationId,
-                    seenBy: userClerkUserId
+                    seenBy: userFirebaseUid
                 });
             }
         });

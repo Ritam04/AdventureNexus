@@ -2,7 +2,7 @@ import mongoose, { Document, Schema, model } from 'mongoose'; // Mongoose for Mo
 
 // User Interface Definition
 export interface IUser extends Document {
-    clerkUserId: string; // ID from Clerk Authentication
+    firebaseUid: string; // ID from Firebase Authentication
     email: string;      // User's email address
     firstName?: string; // Optional first name
     lastName?: string;  // Optional last name
@@ -16,8 +16,8 @@ export interface IUser extends Document {
     preferences?: string[]; // Travel preferences (e.g., 'adventure', 'luxury')
     plans?: string[];       // Array of Plan IDs created by the user
     likedPlans?: string[];  // Array of Plan IDs liked by the user (IDs)
-    followers?: string[];   // Array of clerkUserIds following this user
-    following?: string[];   // Array of clerkUserIds this user is following
+    followers?: string[];   // Array of firebaseUids following this user
+    following?: string[];   // Array of firebaseUids this user is following
     bio?: string;           // User bio
     coverImage?: string;    // URL to cover/background image
     isPrivate?: boolean;    // Whether the profile is public or private
@@ -27,7 +27,6 @@ export interface IUser extends Document {
         instagram?: string;
         website?: string;
     };
-    isPrivate: boolean;     // Account privacy
     onlineStatus: 'online' | 'offline';
     lastActive?: Date;      // Last active timestamp
     isBanned?: boolean;     // Ban status
@@ -47,10 +46,10 @@ enum Gender {
 // User Schema Definition
 const userSchema = new Schema<IUser>(
     {
-        clerkUserId: {
+        firebaseUid: {
             type: String,
             required: true,
-            unique: true, // Ensures one account per Clerk ID
+            unique: true, // Ensures one account per Firebase UID
             index: true
         },
         email: {
@@ -97,8 +96,8 @@ const userSchema = new Schema<IUser>(
             },
         ],
         likedPlans: [{ type: String }],
-        followers: [{ type: String, ref: 'User' }], // Clerk User IDs
-        following: [{ type: String, ref: 'User' }], // Clerk User IDs
+        followers: [{ type: String, ref: 'User' }], // Firebase UIDs
+        following: [{ type: String, ref: 'User' }], // Firebase UIDs
         bio: { type: String, default: "" },
         coverImage: { type: String, default: "" },
         isPrivate: { type: Boolean, default: false },
@@ -108,7 +107,6 @@ const userSchema = new Schema<IUser>(
             instagram: { type: String, default: "" },
             website: { type: String, default: "" },
         },
-        isPrivate: { type: Boolean, default: false },
         onlineStatus: { type: String, enum: ['online', 'offline'], default: 'offline' },
         isBanned: { type: Boolean, default: false },
         banReason: { type: String, default: "" },
@@ -123,8 +121,8 @@ const userSchema = new Schema<IUser>(
 // Middleware: Handle Duplicate Key Errors (e.g., Email or Username already exists)
 userSchema.post('save', function (error: any, doc: any, next: any) {
     if (error.name === 'MongoServerError' && error.code === 11000) {
-        if (error.keyPattern.clerkUserId) {
-            next(new Error('User with this Clerk ID already exists'));
+        if (error.keyPattern.firebaseUid) {
+            next(new Error('User with this Firebase UID already exists'));
         } else if (error.keyPattern.username) {
             next(new Error('Username already taken'));
             next(new Error('Phone number already registered'));

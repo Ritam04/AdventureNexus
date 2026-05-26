@@ -1,6 +1,6 @@
 // Core dependencies
 import express, { NextFunction, Request, Response } from 'express'; // Express framework
-import createHttpError from 'http-errors'; // HTTP error creation utility
+import createError from 'http-errors'; // HTTP error creation utility
 import morgan from 'morgan'; // HTTP request logger
 import cors from 'cors'; // Cross-Origin Resource Sharing
 import dotenv from 'dotenv'; // Environment variables
@@ -25,12 +25,10 @@ import User from './shared/database/models/userModel';
 // Middlewares
 import errorHandler from './shared/middleware/globalErrorHandler'; // Global error handler
 import sanitizeInput from './shared/middleware/sanitization';
-import { clerkMiddleware } from '@clerk/express';
 import { checkMaintenance } from './shared/middleware/maintenanceMiddleware';
 import { telemetryMiddleware } from './shared/middleware/telemetryMiddleware';
 
 // Controllers
-import cleckWebhook from './modules/auth/controllers/ClerkWebhook';
 import subscribeDailyMailController from './modules/newsletter/controllers/subscribeDailyMail.controller';
 
 // Routes
@@ -123,7 +121,7 @@ app.use(morganMiddleware);
 app.use(telemetryMiddleware);
 
 // Authentication
-app.use(clerkMiddleware());
+// (Firebase middleware removed in favor of Firebase auth)
 
 // Initialize Swagger Docs
 const swaggerDocs = swaggerJSDoc(swaggerOptions);
@@ -135,10 +133,9 @@ app.use(sanitizeInput);
 // Activity Tracking Middleware (Updates lastActive)
 app.use(async (req: any, res: Response, next: NextFunction) => {
     try {
-        const auth = req.auth();
-        if (auth?.userId) {
+        if (req.user && (req as any).user.firebaseUid) {
             // Fire and forget update (don't await to avoid latency)
-            User.updateOne({ clerkUserId: auth.userId }, { lastActive: new Date() })
+            User.updateOne({ firebaseUid: (req as any).user.firebaseUid }, { lastActive: new Date() })
                 .exec()
                 .catch(err => logger.warn('Failed to update user activity: DB timeout or error'));
         }
@@ -150,9 +147,6 @@ app.use(async (req: any, res: Response, next: NextFunction) => {
 });
 
 // --- Routes Definition ---
-
-// Clerk Webhook Route
-app.use('/api/clerk', cleckWebhook);
 
 // Maintenance Check (Phase 4 - Blocks public access if enabled)
 app.use(checkMaintenance);
@@ -202,7 +196,7 @@ app.use('/api/v1/experiences', experiencesRoute);
 
 // 404 Not Found Handler
 app.use((req: Request, res: Response, next: NextFunction) => {
-    next(createHttpError(404));
+    next(createError(404));
 });
 
 // Global Error Handler

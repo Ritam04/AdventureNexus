@@ -5,7 +5,7 @@ export interface IBookingDocument extends IBooking, Document { }
 
 const bookingSchema = new Schema<IBookingDocument>({
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    clerkUserId: { type: String, required: true },
+    firebaseUid: { type: String, required: true },
     type: { type: String, enum: ['Flight', 'Hotel'], required: true },
     referenceId: { type: Schema.Types.ObjectId, required: true, refPath: 'type' },
     roomId: { type: Schema.Types.ObjectId, ref: 'Room' },

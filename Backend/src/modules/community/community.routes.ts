@@ -5,7 +5,7 @@ import { createPost } from './controllers/createPostController';
 import { getPostById } from './controllers/getPostByIdController';
 import { toggleLike } from './controllers/toggleLikeController';
 import { addComment, deleteComment } from './controllers/addCommentController';
-import { protect, optionalProtect } from '../../shared/middleware/authClerkTokenMiddleware';
+import { protect, optionalProtect } from '../../shared/middleware/firebaseAuthMiddleware';
 import { checkBanned } from '../../shared/middleware/checkBannedMiddleware';
 import { upload } from '../../shared/middleware/multer';
 import { toggleSavePost } from './controllers/toggleSavePostController';
@@ -108,11 +108,11 @@ route.get('/spotlight', getSpotlight);
 route.get('/stats', getStats);
 
 /**
- * @route GET /api/v1/community/profile/:clerkUserId
+ * @route GET /api/v1/community/profile/:firebaseUid
  * @desc Get user profile and activity
  * @access Public/Private
  */
-route.get('/profile/:clerkUserId', optionalProtect, getUserProfile);
+route.get('/profile/:firebaseUid', optionalProtect, getUserProfile);
 
 /**
  * @route POST /api/v1/community/follow

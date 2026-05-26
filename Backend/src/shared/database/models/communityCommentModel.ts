@@ -18,7 +18,7 @@ const communityCommentSchema = new Schema<ICommunityComment>({
         required: true,
         index: true,
     },
-    clerkUserId: {
+    firebaseUid: {
         type: String,
         required: true,
         index: true,
@@ -32,7 +32,7 @@ const communityCommentSchema = new Schema<ICommunityComment>({
         ref: 'CommunityComment',
     },
     likes: [{
-        type: String, // Array of Clerk User IDs
+        type: String, // Array of Firebase UIDs
     }],
 }, { timestamps: true });
 

@@ -1,6 +1,6 @@
 import express from 'express';
 import { createBooking, getMyBookings } from '../controllers/booking.controller';
-import protect from '../../../shared/middleware/authClerkTokenMiddleware';
+import protect from '../../../shared/middleware/firebaseAuthMiddleware';
 
 const router = express.Router();
 

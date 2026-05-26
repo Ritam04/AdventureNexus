@@ -10,13 +10,13 @@ import logger from '../../../shared/utils/logger';
 export const toggleSavePost = async (req: Request, res: Response) => {
     try {
         const postId = req.params.id;
-        const clerkUserId = req.auth?.userId;
+        const firebaseUid = (req as any).user?.firebaseUid;
 
-        if (!clerkUserId) {
+        if (!firebaseUid) {
             return res.status(StatusCodes.UNAUTHORIZED).json({ success: false, message: 'Unauthorized' });
         }
 
-        const user = await User.findOne({ clerkUserId });
+        const user = await User.findOne({ firebaseUid });
         if (!user) {
             return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'User not found' });
         }

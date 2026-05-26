@@ -4,49 +4,49 @@ import User from '../../../shared/database/models/userModel';
 import CommunityPost from '../../../shared/database/models/communityPostModel';
 import TravelStory from '../../../shared/database/models/travelStoryModel';
 import logger from '../../../shared/utils/logger';
-import { clerkClient } from '@clerk/express';
+import { adminAuth } from '../../../shared/config/firebase';
 
 /**
  * Controller to fetch a user's public profile and activity.
  */
 export const getUserProfile = async (req: Request, res: Response) => {
     try {
-        const { clerkUserId } = req.params;
-        const requestingUserClerkId = req.user?.clerkUserId;
+        const { firebaseUid } = req.params;
+        const requestingUserFirebaseUid = (req as any).user?.firebaseUid;
 
-        if (!clerkUserId) {
+        if (!firebaseUid) {
             return res.status(StatusCodes.BAD_REQUEST).json({
                 success: false,
                 message: 'User ID is required'
             });
         }
 
-        let user = await User.findOne({ clerkUserId });
+        let user = await User.findOne({ firebaseUid });
 
         // --- REAL-TIME SYNC FALLBACK ---
-        // If user not in DB, fetch from Clerk and sync
+        // If user not in DB, fetch from Firebase and sync
         if (!user) {
-            logger.info(`🔍 User ${clerkUserId} not found in DB, attempting sync from Clerk...`);
+            logger.info(`🔍 User ${firebaseUid} not found in DB, attempting sync from Firebase...`);
             try {
-                const clerkUser = await clerkClient.users.getUser(clerkUserId);
-                if (clerkUser) {
+                const firebaseUser = await adminAuth.getUser(firebaseUid);
+                if (firebaseUser) {
                     user = await User.findOneAndUpdate(
-                        { clerkUserId },
+                        { firebaseUid },
                         {
-                            clerkUserId: clerkUser.id,
-                            email: clerkUser.emailAddresses[0]?.emailAddress,
-                            username: clerkUser.username || clerkUser.externalAccounts[0]?.username || `traveler_${clerkUser.id.substring(0, 5)}`,
-                            firstName: clerkUser.firstName,
-                            lastName: clerkUser.lastName,
-                            fullname: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || clerkUser.username || 'Traveler',
-                            profilepicture: clerkUser.imageUrl,
+                            firebaseUid: firebaseUser.uid,
+                            email: firebaseUser.email,
+                            username: firebaseUser.displayName || `traveler_${firebaseUser.uid.substring(0, 5)}`,
+                            firstName: firebaseUser.displayName?.split(' ')[0] || '',
+                            lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
+                            fullname: firebaseUser.displayName || 'Traveler',
+                            profilepicture: firebaseUser.photoURL,
                         },
                         { upsert: true, new: true }
                     );
-                    logger.info(`✅ Synced missing user ${clerkUserId} to database.`);
+                    logger.info(`✅ Synced missing user ${firebaseUid} to database.`);
                 }
-            } catch (clerkError: any) {
-                logger.error(`❌ Clerk sync failed: ${clerkError.message}`);
+            } catch (firebaseError: any) {
+                logger.error(`❌ Firebase sync failed: ${firebaseError.message}`);
             }
         }
 
@@ -58,23 +58,23 @@ export const getUserProfile = async (req: Request, res: Response) => {
         }
 
         // Fetch user's community posts
-        const posts = await CommunityPost.find({ clerkUserId })
+        const posts = await CommunityPost.find({ firebaseUid })
             .sort({ createdAt: -1 })
             .limit(10);
 
         // Fetch user's travel stories (blogs)
-        const stories = await TravelStory.find({ clerkUserId })
+        const stories = await TravelStory.find({ firebaseUid })
             .sort({ createdAt: -1 })
             .limit(10);
 
         // Fetch user's saved plans
-        const savedPlans = await User.findOne({ clerkUserId })
+        const savedPlans = await User.findOne({ firebaseUid })
             .populate('plans')
             .then(u => u?.plans || []);
 
         // Check if the requesting user is following this user
-        const isFollowing = requestingUserClerkId
-            ? user.followers?.includes(requestingUserClerkId)
+        const isFollowing = requestingUserFirebaseUid
+            ? user.followers?.includes(requestingUserFirebaseUid)
             : false;
 
         // Better name derivation for profile
@@ -84,7 +84,7 @@ export const getUserProfile = async (req: Request, res: Response) => {
             success: true,
             data: {
                 profile: {
-                    clerkUserId: user.clerkUserId,
+                    firebaseUid: user.firebaseUid,
                     username: user.username,
                     fullname,
                     profilepicture: user.profilepicture,

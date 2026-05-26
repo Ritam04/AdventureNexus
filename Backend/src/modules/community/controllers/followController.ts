@@ -2,47 +2,48 @@ import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import User from '../../../shared/database/models/userModel';
 import logger from '../../../shared/utils/logger';
+import { adminAuth } from '../../../shared/config/firebase';
 
 /**
  * Controller to toggle follow/unfollow a user.
  */
 export const toggleFollow = async (req: Request, res: Response) => {
     try {
-        const { targetClerkUserId } = req.body;
-        const followerClerkUserId = req.user?.clerkUserId;
+        const { targetFirebaseUid } = req.body;
+        const followerFirebaseUid = (req as any).user?.firebaseUid;
 
-        if (!targetClerkUserId) {
+        if (!targetFirebaseUid) {
             return res.status(StatusCodes.BAD_REQUEST).json({
                 success: false,
                 message: 'Target user ID is required'
             });
         }
 
-        if (targetClerkUserId === followerClerkUserId) {
+        if (targetFirebaseUid === followerFirebaseUid) {
             return res.status(StatusCodes.BAD_REQUEST).json({
                 success: false,
                 message: 'You cannot follow yourself'
             });
         }
 
-        let targetUser = await User.findOne({ clerkUserId: targetClerkUserId });
-        let followerUser = await User.findOne({ clerkUserId: followerClerkUserId });
+        let targetUser = await User.findOne({ firebaseUid: targetFirebaseUid });
+        let followerUser = await User.findOne({ firebaseUid: followerFirebaseUid });
 
         // --- REAL-TIME SYNC FALLBACK ---
         if (!targetUser) {
             try {
-                const clerkUser = await clerkClient.users.getUser(targetClerkUserId);
-                if (clerkUser) {
+                const firebaseUser = await adminAuth.getUser(targetFirebaseUid);
+                if (firebaseUser) {
                     targetUser = await User.findOneAndUpdate(
-                        { clerkUserId: targetClerkUserId },
+                        { firebaseUid: targetFirebaseUid },
                         {
-                            clerkUserId: clerkUser.id,
-                            email: clerkUser.emailAddresses[0]?.emailAddress,
-                            username: clerkUser.username || clerkUser.externalAccounts[0]?.username || `traveler_${clerkUser.id.substring(0, 5)}`,
-                            firstName: clerkUser.firstName,
-                            lastName: clerkUser.lastName,
-                            fullname: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || clerkUser.username || 'Traveler',
-                            profilepicture: clerkUser.imageUrl,
+                            firebaseUid: firebaseUser.uid,
+                            email: firebaseUser.email,
+                            username: firebaseUser.displayName || `traveler_${firebaseUser.uid.substring(0, 5)}`,
+                            firstName: firebaseUser.displayName?.split(' ')[0] || '',
+                            lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
+                            fullname: firebaseUser.displayName || 'Traveler',
+                            profilepicture: firebaseUser.photoURL,
                         },
                         { upsert: true, new: true }
                     );
@@ -50,20 +51,20 @@ export const toggleFollow = async (req: Request, res: Response) => {
             } catch (e) { }
         }
 
-        if (!followerUser && followerClerkUserId) {
+        if (!followerUser && followerFirebaseUid) {
             try {
-                const clerkUser = await clerkClient.users.getUser(followerClerkUserId);
-                if (clerkUser) {
+                const firebaseUser = await adminAuth.getUser(followerFirebaseUid);
+                if (firebaseUser) {
                     followerUser = await User.findOneAndUpdate(
-                        { clerkUserId: followerClerkUserId },
+                        { firebaseUid: followerFirebaseUid },
                         {
-                            clerkUserId: clerkUser.id,
-                            email: clerkUser.emailAddresses[0]?.emailAddress,
-                            username: clerkUser.username || clerkUser.externalAccounts[0]?.username || `traveler_${clerkUser.id.substring(0, 5)}`,
-                            firstName: clerkUser.firstName,
-                            lastName: clerkUser.lastName,
-                            fullname: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || clerkUser.username || 'Traveler',
-                            profilepicture: clerkUser.imageUrl,
+                            firebaseUid: firebaseUser.uid,
+                            email: firebaseUser.email,
+                            username: firebaseUser.displayName || `traveler_${firebaseUser.uid.substring(0, 5)}`,
+                            firstName: firebaseUser.displayName?.split(' ')[0] || '',
+                            lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
+                            fullname: firebaseUser.displayName || 'Traveler',
+                            profilepicture: firebaseUser.photoURL,
                         },
                         { upsert: true, new: true }
                     );
@@ -72,27 +73,27 @@ export const toggleFollow = async (req: Request, res: Response) => {
         }
 
         if (!targetUser || !followerUser) {
-            logger.warn(`❌ Follow failed: Target(${targetClerkUserId}:${!!targetUser}) or Follower(${followerClerkUserId}:${!!followerUser}) not in DB`);
+            logger.warn(`❌ Follow failed: Target(${targetFirebaseUid}:${!!targetUser}) or Follower(${followerFirebaseUid}:${!!followerUser}) not in DB`);
             return res.status(StatusCodes.NOT_FOUND).json({
                 success: false,
                 message: 'User not found in database'
             });
         }
 
-        const isFollowing = followerUser.following?.includes(targetClerkUserId);
+        const isFollowing = followerUser.following?.includes(targetFirebaseUid);
 
         if (isFollowing) {
             // Unfollow
             await User.findOneAndUpdate(
-                { clerkUserId: followerClerkUserId },
-                { $pull: { following: targetClerkUserId } }
+                { firebaseUid: followerFirebaseUid },
+                { $pull: { following: targetFirebaseUid } }
             );
             await User.findOneAndUpdate(
-                { clerkUserId: targetClerkUserId },
-                { $pull: { followers: followerClerkUserId } }
+                { firebaseUid: targetFirebaseUid },
+                { $pull: { followers: followerFirebaseUid } }
             );
 
-            logger.info(`User ${followerClerkUserId} unfollowed ${targetClerkUserId}`);
+            logger.info(`User ${followerFirebaseUid} unfollowed ${targetFirebaseUid}`);
             return res.status(StatusCodes.OK).json({
                 success: true,
                 message: 'Unfollowed successfully',
@@ -101,15 +102,15 @@ export const toggleFollow = async (req: Request, res: Response) => {
         } else {
             // Follow
             await User.findOneAndUpdate(
-                { clerkUserId: followerClerkUserId },
-                { $addToSet: { following: targetClerkUserId } }
+                { firebaseUid: followerFirebaseUid },
+                { $addToSet: { following: targetFirebaseUid } }
             );
             await User.findOneAndUpdate(
-                { clerkUserId: targetClerkUserId },
-                { $addToSet: { followers: followerClerkUserId } }
+                { firebaseUid: targetFirebaseUid },
+                { $addToSet: { followers: followerFirebaseUid } }
             );
 
-            logger.info(`User ${followerClerkUserId} followed ${targetClerkUserId}`);
+            logger.info(`User ${followerFirebaseUid} followed ${targetFirebaseUid}`);
             return res.status(StatusCodes.OK).json({
                 success: true,
                 message: 'Followed successfully',

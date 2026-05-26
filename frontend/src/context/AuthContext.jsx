@@ -15,10 +15,10 @@ export function AuthProvider({ children }) {
       setCurrentUser(firebaseUser);
       
       if (firebaseUser) {
-        // Fetch detailed user profile from backend to populate 'user' object (like Clerk's useUser)
+        // Fetch detailed user profile from backend to populate 'user' object (like Firebase's useUser)
         try {
           const token = await firebaseUser.getIdToken();
-          const api_url = import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com';
+          const api_url = import.meta.env.VITE_BACKEND_URL || (import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com');
           
           // Fallback or attempt to fetch user
           try {
@@ -31,7 +31,7 @@ export function AuthProvider({ children }) {
             // If user doesn't exist, we might need to create them or wait for signup flow
             setUser({
               id: firebaseUser.uid,
-              clerkUserId: firebaseUser.uid, // Keep naming for compatibility
+              firebaseUid: firebaseUser.uid, // Keep naming for compatibility
               emailAddresses: [{ emailAddress: firebaseUser.email }],
               fullName: firebaseUser.displayName,
               imageUrl: firebaseUser.photoURL,

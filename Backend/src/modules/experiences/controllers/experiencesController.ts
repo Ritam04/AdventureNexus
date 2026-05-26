@@ -85,7 +85,7 @@ export const createExperiencePost = async (req: Request, res: Response, next: Ne
 
         const post = await ExperiencePost.create({
             userId: user._id,
-            clerkUserId: user.clerkUserId,
+            firebaseUid: user.firebaseUid,
             title,
             description,
             location,
@@ -100,7 +100,7 @@ export const createExperiencePost = async (req: Request, res: Response, next: Ne
 
         // Populate user info for response
         const populated = await ExperiencePost.findById(post._id)
-            .populate('userId', 'clerkUserId firstName lastName username profilepicture');
+            .populate('userId', 'firebaseUid firstName lastName username profilepicture');
 
         return res.status(201).json({ success: true, data: populated });
     } catch (error) {
@@ -157,13 +157,13 @@ export const getExperienceFeed = async (req: Request, res: Response, next: NextF
             ];
             posts = await ExperiencePost.aggregate(pipeline);
             // Populate user info manually
-            await ExperiencePost.populate(posts, { path: 'userId', select: 'clerkUserId firstName lastName username profilepicture' });
+            await ExperiencePost.populate(posts, { path: 'userId', select: 'firebaseUid firstName lastName username profilepicture' });
         } else {
             posts = await ExperiencePost.find(filter)
                 .sort(sortOrder)
                 .skip(skip)
                 .limit(limit)
-                .populate('userId', 'clerkUserId firstName lastName username profilepicture')
+                .populate('userId', 'firebaseUid firstName lastName username profilepicture')
                 .lean();
         }
 
@@ -193,7 +193,7 @@ export const getExperienceById = async (req: Request, res: Response, next: NextF
             id,
             { $inc: { viewCount: 1 } },
             { new: true }
-        ).populate('userId', 'clerkUserId firstName lastName username profilepicture bio');
+        ).populate('userId', 'firebaseUid firstName lastName username profilepicture bio');
 
         if (!post) {
             return res.status(404).json({ success: false, message: 'Experience not found.' });
@@ -201,7 +201,7 @@ export const getExperienceById = async (req: Request, res: Response, next: NextF
 
         // Get comments for this post
         const comments = await ExperienceComment.find({ postId: id })
-            .populate('userId', 'clerkUserId firstName lastName username profilepicture')
+            .populate('userId', 'firebaseUid firstName lastName username profilepicture')
             .sort({ createdAt: -1 })
             .lean();
 
@@ -222,13 +222,13 @@ export const toggleExperienceLike = async (req: Request, res: Response, next: Ne
         const post = await ExperiencePost.findById(id);
         if (!post) return res.status(404).json({ success: false, message: 'Experience not found.' });
 
-        const clerkId = user.clerkUserId;
-        const alreadyLiked = post.likes.includes(clerkId);
+        const firebaseUid = user.firebaseUid;
+        const alreadyLiked = post.likes.includes(firebaseUid);
 
         if (alreadyLiked) {
-            post.likes = post.likes.filter((lid: string) => lid !== clerkId);
+            post.likes = post.likes.filter((lid: string) => lid !== firebaseUid);
         } else {
-            post.likes.push(clerkId);
+            post.likes.push(firebaseUid);
         }
         await post.save();
 
@@ -253,13 +253,13 @@ export const toggleExperienceSave = async (req: Request, res: Response, next: Ne
         const post = await ExperiencePost.findById(id);
         if (!post) return res.status(404).json({ success: false, message: 'Experience not found.' });
 
-        const clerkId = user.clerkUserId;
-        const alreadySaved = post.saves.includes(clerkId);
+        const firebaseUid = user.firebaseUid;
+        const alreadySaved = post.saves.includes(firebaseUid);
 
         if (alreadySaved) {
-            post.saves = post.saves.filter((sid: string) => sid !== clerkId);
+            post.saves = post.saves.filter((sid: string) => sid !== firebaseUid);
         } else {
-            post.saves.push(clerkId);
+            post.saves.push(firebaseUid);
         }
         await post.save();
 
@@ -292,7 +292,7 @@ export const addExperienceComment = async (req: Request, res: Response, next: Ne
         const comment = await ExperienceComment.create({
             postId,
             userId: user._id,
-            clerkUserId: user.clerkUserId,
+            firebaseUid: user.firebaseUid,
             content,
             parentId: parentId || null,
         });
@@ -302,7 +302,7 @@ export const addExperienceComment = async (req: Request, res: Response, next: Ne
         await post.save();
 
         const populated = await ExperienceComment.findById(comment._id)
-            .populate('userId', 'clerkUserId firstName lastName username profilepicture');
+            .populate('userId', 'firebaseUid firstName lastName username profilepicture');
 
         return res.status(201).json({ success: true, data: populated });
     } catch (error) {
@@ -316,7 +316,7 @@ export const getExperienceComments = async (req: Request, res: Response, next: N
     try {
         const { postId } = req.params;
         const comments = await ExperienceComment.find({ postId })
-            .populate('userId', 'clerkUserId firstName lastName username profilepicture')
+            .populate('userId', 'firebaseUid firstName lastName username profilepicture')
             .sort({ createdAt: -1 })
             .lean();
 
@@ -368,7 +368,7 @@ export const deleteExperiencePost = async (req: Request, res: Response, next: Ne
         }
 
         // Check if current user is the creator of the experience
-        if (post.clerkUserId !== user.clerkUserId) {
+        if (post.firebaseUid !== user.firebaseUid) {
             return res.status(403).json({ success: false, message: 'You are not authorized to delete this experience.' });
         }
 

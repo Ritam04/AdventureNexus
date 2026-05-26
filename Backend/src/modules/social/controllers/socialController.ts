@@ -24,7 +24,7 @@ export const searchUsers = async (req: Request, res: Response) => {
                 { fullname: { $regex: searchQuery, $options: 'i' } }
             ]
         })
-        .select('clerkUserId username fullname profilepicture bio followersCount followingCount')
+        .select('firebaseUid username fullname profilepicture bio followersCount followingCount')
         .limit(20);
 
         return res.status(200).json({
@@ -53,7 +53,7 @@ export const getUserProfile = async (req: Request, res: Response) => {
         }
 
         // Calculate dynamic stats
-        const tripsCount = await Plan.countDocuments({ clerkUserId: user.clerkUserId });
+        const tripsCount = await Plan.countDocuments({ firebaseUid: user.firebaseUid });
 
         // Add to the response
         const userProfileData = user.toObject();
@@ -75,7 +75,7 @@ export const getUserProfile = async (req: Request, res: Response) => {
  */
 export const toggleFollow = async (req: Request, res: Response) => {
     try {
-        const currentUserId = req.auth()?.userId;
+        const currentUserId = (req as any).user?.firebaseUid;
         const targetUserId = req.params.targetId;
 
         if (!currentUserId) {
@@ -86,8 +86,8 @@ export const toggleFollow = async (req: Request, res: Response) => {
             return res.status(400).json({ success: false, message: 'You cannot follow yourself' });
         }
 
-        const currentUser = await User.findOne({ clerkUserId: currentUserId });
-        const targetUser = await User.findOne({ clerkUserId: targetUserId });
+        const currentUser = await User.findOne({ firebaseUid: currentUserId });
+        const targetUser = await User.findOne({ firebaseUid: targetUserId });
 
         if (!currentUser || !targetUser) {
             return res.status(404).json({ success: false, message: 'User not found' });

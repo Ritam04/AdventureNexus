@@ -8,8 +8,8 @@ import ExperienceComment from '../../../shared/database/models/experienceComment
 import GroupMembership from '../../../shared/database/models/groupMembershipModel';
 import logger from '../../../shared/utils/logger';
 
-const getUserByClerkIdWithSync = async (clerkUserId: string) => {
-    let user = await User.findOne({ clerkUserId });
+const getUserByClerkIdWithSync = async (firebaseUid: string) => {
+    let user = await User.findOne({ firebaseUid });
     // JIT Provisioning handles Firebase sync in the protect middleware before reaching controllers.
     return user;
 };
@@ -19,24 +19,24 @@ const getUserByClerkIdWithSync = async (clerkUserId: string) => {
  */
 export const getUserDashboardProfile = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
-        const { clerkUserId } = req.params;
-        if (!clerkUserId) {
-            return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: 'Clerk User ID is required' });
+        const { firebaseUid } = req.params;
+        if (!firebaseUid) {
+            return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: 'Firebase User ID is required' });
         }
 
-        const user = await getUserByClerkIdWithSync(clerkUserId);
+        const user = await getUserByClerkIdWithSync(firebaseUid);
         if (!user) {
             return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'User not found' });
         }
 
         // Parallel counts for high performance
         const [postsCount, experiencesCount, communityCommentsCount, experienceCommentsCount, likedCommunityPosts, likedExperiencePosts, groupsCount] = await Promise.all([
-            CommunityPost.countDocuments({ clerkUserId }),
-            ExperiencePost.countDocuments({ clerkUserId }),
-            CommunityComment.countDocuments({ clerkUserId }),
-            ExperienceComment.countDocuments({ clerkUserId }),
-            CommunityPost.countDocuments({ likes: clerkUserId }),
-            ExperiencePost.countDocuments({ likes: clerkUserId }),
+            CommunityPost.countDocuments({ firebaseUid }),
+            ExperiencePost.countDocuments({ firebaseUid }),
+            CommunityComment.countDocuments({ firebaseUid }),
+            ExperienceComment.countDocuments({ firebaseUid }),
+            CommunityPost.countDocuments({ likes: firebaseUid }),
+            ExperiencePost.countDocuments({ likes: firebaseUid }),
             GroupMembership.countDocuments({ userId: user._id })
         ]);
 
@@ -48,7 +48,7 @@ export const getUserDashboardProfile = async (req: Request, res: Response, next:
             data: {
                 profile: {
                     _id: user._id,
-                    clerkUserId: user.clerkUserId,
+                    firebaseUid: user.firebaseUid,
                     email: user.email,
                     username: user.username,
                     firstName: user.firstName,
@@ -87,8 +87,8 @@ export const getUserDashboardProfile = async (req: Request, res: Response, next:
  */
 export const getUserDashboardPosts = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
-        const { clerkUserId } = req.params;
-        const posts = await CommunityPost.find({ clerkUserId })
+        const { firebaseUid } = req.params;
+        const posts = await CommunityPost.find({ firebaseUid })
             .populate('userId', 'username fullname profilepicture')
             .sort({ createdAt: -1 })
             .lean();
@@ -105,8 +105,8 @@ export const getUserDashboardPosts = async (req: Request, res: Response, next: N
  */
 export const getUserDashboardExperiences = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
-        const { clerkUserId } = req.params;
-        const experiences = await ExperiencePost.find({ clerkUserId })
+        const { firebaseUid } = req.params;
+        const experiences = await ExperiencePost.find({ firebaseUid })
             .populate('userId', 'username fullname profilepicture')
             .sort({ createdAt: -1 })
             .lean();
@@ -123,10 +123,10 @@ export const getUserDashboardExperiences = async (req: Request, res: Response, n
  */
 export const getUserDashboardComments = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
-        const { clerkUserId } = req.params;
+        const { firebaseUid } = req.params;
         
         // Find community comments
-        const commComments = await CommunityComment.find({ clerkUserId })
+        const commComments = await CommunityComment.find({ firebaseUid })
             .populate('postId', 'title content')
             .sort({ createdAt: -1 })
             .lean();
@@ -150,10 +150,10 @@ export const getUserDashboardComments = async (req: Request, res: Response, next
  */
 export const getUserDashboardLikes = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
-        const { clerkUserId } = req.params;
+        const { firebaseUid } = req.params;
         
         // Find community posts liked by this user
-        const likedComm = await CommunityPost.find({ likes: clerkUserId })
+        const likedComm = await CommunityPost.find({ likes: firebaseUid })
             .populate('userId', 'username fullname profilepicture')
             .sort({ createdAt: -1 })
             .lean();
@@ -170,8 +170,8 @@ export const getUserDashboardLikes = async (req: Request, res: Response, next: N
  */
 export const getUserDashboardGroups = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
-        const { clerkUserId } = req.params;
-        const user = await getUserByClerkIdWithSync(clerkUserId);
+        const { firebaseUid } = req.params;
+        const user = await getUserByClerkIdWithSync(firebaseUid);
         if (!user) {
             return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'User not found' });
         }

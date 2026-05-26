@@ -11,7 +11,7 @@ export const addComment = async (req: Request, res: Response) => {
     try {
         const { postId, content, parentId } = req.body;
         const userId = req.user?._id;
-        const clerkUserId = req.user?.clerkUserId;
+        const firebaseUid = (req as any).user?.firebaseUid;
 
         if (!postId || !content) {
             return res.status(StatusCodes.BAD_REQUEST).json({
@@ -31,7 +31,7 @@ export const addComment = async (req: Request, res: Response) => {
         const newComment = await CommunityComment.create({
             postId,
             userId,
-            clerkUserId,
+            firebaseUid,
             content,
             parentId: parentId || undefined
         });
@@ -47,38 +47,38 @@ export const addComment = async (req: Request, res: Response) => {
         if (parentId) {
             // Reply to a comment
             const parentComment = await CommunityComment.findById(parentId);
-            if (parentComment && parentComment.clerkUserId) {
+            if (parentComment && parentComment.firebaseUid) {
                 createAndSendNotification({
-                    recipientClerkUserId: parentComment.clerkUserId,
-                    senderClerkUserId: clerkUserId!,
+                    recipientFirebaseUid: parentComment.firebaseUid,
+                    senderFirebaseUid: firebaseUid!,
                     type: NotificationType.COMMENT_POST,
                     relatedId: postId
                 });
             }
         } else {
             // Direct comment on post
-            if (post.clerkUserId) {
+            if (post.firebaseUid) {
                 createAndSendNotification({
-                    recipientClerkUserId: post.clerkUserId,
-                    senderClerkUserId: clerkUserId!,
+                    recipientFirebaseUid: post.firebaseUid,
+                    senderFirebaseUid: firebaseUid!,
                     type: NotificationType.COMMENT_POST,
                     relatedId: postId
                 });
             }
         }
 
-        logger.info(`New comment added to post ${postId} by ${clerkUserId}`);
+        logger.info(`New comment added to post ${postId} by ${firebaseUid}`);
 
         // Fetch populated comment for real-time broadcast
         const populatedComment = await CommunityComment.findById(newComment._id)
-            .populate('userId', 'username profilepicture fullname clerkUserId');
+            .populate('userId', 'username profilepicture fullname firebaseUid');
 
         // Real-time broadcast
         import('../../../shared/socket/socket').then(({ broadcastRealtimeEvent }) => {
             broadcastRealtimeEvent('community:comment', {
                 postId,
                 comment: populatedComment || newComment,
-                clerkUserId
+                firebaseUid
             });
         });
 
@@ -101,7 +101,7 @@ export const addComment = async (req: Request, res: Response) => {
 export const deleteComment = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const clerkUserId = req.user?.clerkUserId;
+        const firebaseUid = (req as any).user?.firebaseUid;
 
         if (!id) {
             return res.status(StatusCodes.BAD_REQUEST).json({
@@ -119,7 +119,7 @@ export const deleteComment = async (req: Request, res: Response) => {
         }
 
         // Verify ownership
-        if (comment.clerkUserId !== clerkUserId) {
+        if (comment.firebaseUid !== firebaseUid) {
             return res.status(StatusCodes.FORBIDDEN).json({
                 success: false,
                 message: 'You are not authorized to delete this comment'
@@ -139,7 +139,7 @@ export const deleteComment = async (req: Request, res: Response) => {
         // Delete the comment itself
         await CommunityComment.findByIdAndDelete(id);
 
-        logger.info(`Comment ${id} and replies deleted by ${clerkUserId}`);
+        logger.info(`Comment ${id} and replies deleted by ${firebaseUid}`);
 
         return res.status(StatusCodes.OK).json({
             success: true,

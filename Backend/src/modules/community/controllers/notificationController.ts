@@ -8,9 +8,9 @@ import logger from '../../../shared/utils/logger';
  */
 export const getNotifications = async (req: Request, res: Response) => {
     try {
-        const clerkUserId = req.user?.clerkUserId;
+        const firebaseUid = (req as any).user?.firebaseUid;
 
-        const notifications = await Notification.find({ recipientClerkUserId: clerkUserId })
+        const notifications = await Notification.find({ recipientFirebaseUid: firebaseUid })
             .sort({ createdAt: -1 })
             .limit(50);
 
@@ -33,10 +33,10 @@ export const getNotifications = async (req: Request, res: Response) => {
 export const markAsRead = async (req: Request, res: Response) => {
     try {
         const { notificationId } = req.params;
-        const clerkUserId = req.user?.clerkUserId;
+        const firebaseUid = (req as any).user?.firebaseUid;
 
         await Notification.findOneAndUpdate(
-            { _id: notificationId, recipientClerkUserId: clerkUserId },
+            { _id: notificationId, recipientFirebaseUid: firebaseUid },
             { isRead: true }
         );
 

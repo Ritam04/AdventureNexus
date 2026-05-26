@@ -7,13 +7,13 @@
 
 /**
  * @swagger
- * /api/clerk:
+ * /api/firebase:
  *   post:
- *     summary: Clerk Webhook
+ *     summary: Firebase Webhook
  *     tags: [Webhooks]
  *     security:
- *       - clerkAuth: []
- *     description: Receives events from Clerk (user.created, user.updated, etc.) to sync with local database.
+ *       - firebaseAuth: []
+ *     description: Receives events from Firebase (user.created, user.updated, etc.) to sync with local database.
  *     responses:
  *       200:
  *         description: Webhook processed successfully

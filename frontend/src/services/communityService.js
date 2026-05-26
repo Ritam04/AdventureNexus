@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-const api_url = import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com';
+const api_url = import.meta.env.VITE_BACKEND_URL || (import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com');
 
 const getAuthHeaders = () => {
-    const token = localStorage.getItem('clerk-db-jwt'); // Or however you retrieve the token
+    const token = localStorage.getItem('firebase-db-jwt'); // Or however you retrieve the token
     return {
         headers: {
             Authorization: `Bearer ${token}`
@@ -12,9 +12,9 @@ const getAuthHeaders = () => {
 };
 
 export const communityService = {
-    getPosts: async (category = '', search = '', clerkUserId = '', groupId = '', communityId = '') => {
+    getPosts: async (category = '', search = '', firebaseUid = '', groupId = '', communityId = '') => {
         const response = await axios.get(`${api_url}/api/v1/community/posts`, {
-            params: { category, search, clerkUserId, groupId, communityId }
+            params: { category, search, firebaseUid, groupId, communityId }
         });
         return response.data;
     },
@@ -107,14 +107,14 @@ export const communityService = {
     },
 
     // Social & Stories
-    getProfile: async (clerkUserId, token = null) => {
+    getProfile: async (firebaseUid, token = null) => {
         const config = {};
         if (token) {
             config.headers = {
                 Authorization: `Bearer ${token}`
             };
         }
-        const response = await axios.get(`${api_url}/api/v1/community/profile/${clerkUserId}`, config);
+        const response = await axios.get(`${api_url}/api/v1/community/profile/${firebaseUid}`, config);
         return response.data;
     },
 
@@ -127,8 +127,8 @@ export const communityService = {
         return response.data;
     },
 
-    toggleFollow: async (targetClerkUserId, token) => {
-        const response = await axios.post(`${api_url}/api/v1/community/follow`, { targetClerkUserId }, {
+    toggleFollow: async (targetFirebaseUid, token) => {
+        const response = await axios.post(`${api_url}/api/v1/community/follow`, { targetFirebaseUid }, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -198,8 +198,8 @@ export const communityService = {
     },
 
     // --- Private Real-Time Chat APIs ---
-    getOrCreateChatConversation: async (recipientClerkUserId, token) => {
-        const response = await axios.post(`${api_url}/api/v1/messaging/conversation`, { recipientClerkUserId }, {
+    getOrCreateChatConversation: async (recipientFirebaseUid, token) => {
+        const response = await axios.post(`${api_url}/api/v1/messaging/conversation`, { recipientFirebaseUid }, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -233,8 +233,8 @@ export const communityService = {
         return response.data;
     },
 
-    getPublicKey: async (clerkUserId, token) => {
-        const response = await axios.get(`${api_url}/api/v1/users/e2ee/public-key/${clerkUserId}`, {
+    getPublicKey: async (firebaseUid, token) => {
+        const response = await axios.get(`${api_url}/api/v1/users/e2ee/public-key/${firebaseUid}`, {
             headers: { Authorization: `Bearer ${token}` }
         });
         return response.data;

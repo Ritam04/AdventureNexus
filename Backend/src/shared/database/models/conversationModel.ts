@@ -1,11 +1,11 @@
 import mongoose, { Schema, Document, model } from 'mongoose';
 
 export interface IConversation extends Document {
-    participants: string[]; // clerkUserIds
+    participants: string[]; // firebaseUids
     isGroup: boolean;
     groupName?: string;
     groupImage?: string;
-    admins: string[]; // clerkUserIds
+    admins: string[]; // firebaseUids
     lastMessage?: mongoose.Types.ObjectId; // Reference to Message model
     createdAt: Date;
     updatedAt: Date;

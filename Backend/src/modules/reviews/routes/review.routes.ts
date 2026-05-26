@@ -2,7 +2,7 @@ import express from 'express';
 import { getAllReviews, createReview, likeReview } from '../controllers/reviewController';
 import { cacheMiddleware } from '../../../shared/middleware/cacheMiddleware';
 import { CACHE_CONFIG } from '../../../shared/config/cache.config';
-import { protect } from '../../../shared/middleware/authClerkTokenMiddleware';
+import { protect } from '../../../shared/middleware/firebaseAuthMiddleware';
 import { checkBanned } from '../../../shared/middleware/checkBannedMiddleware';
 
 const router = express.Router();

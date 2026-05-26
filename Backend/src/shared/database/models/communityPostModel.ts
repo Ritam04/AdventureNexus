@@ -12,7 +12,7 @@ const communityPostSchema = new Schema<ICommunityPost>({
         required: true,
         index: true,
     },
-    clerkUserId: {
+    firebaseUid: {
         type: String,
         required: true,
         index: true,
@@ -55,7 +55,7 @@ const communityPostSchema = new Schema<ICommunityPost>({
         ref: 'Plan',
     },
     likes: [{
-        type: String, // Clerk User IDs
+        type: String, // Firebase UIDs
     }],
     interactionScore: {
         type: Number,

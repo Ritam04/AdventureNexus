@@ -7,7 +7,7 @@ export const useCommunitySocket = ({ setPosts, setSelectedPost, setStories }) =>
 
   useEffect(() => {
     // 1. Connect Once
-    socketRef.current = io(import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com');
+    socketRef.current = io(import.meta.env.VITE_BACKEND_URL || (import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com'));
 
     // 2. Listener: Like Update (Sync across clients)
     socketRef.current.on('community:like', (data) => {
@@ -48,7 +48,7 @@ export const useCommunitySocket = ({ setPosts, setSelectedPost, setStories }) =>
         if (alreadyExists) return prev;
         return [data.story, ...prev];
       });
-      toast.success(`New travel story from ${data.clerkUserId}!`, { icon: '📖' });
+      toast.success(`New travel story from ${data.firebaseUid}!`, { icon: '📖' });
     });
 
     // 5. Listener: New Post

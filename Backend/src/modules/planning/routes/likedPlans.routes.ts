@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { likePlan, unlikePlan, getLikedPlans } from '../controllers/likedPlansController';
-import { protect } from '../../../shared/middleware/authClerkTokenMiddleware';
+import { protect } from '../../../shared/middleware/firebaseAuthMiddleware';
 
 const router = Router();
 

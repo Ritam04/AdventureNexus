@@ -4,7 +4,7 @@ import { broadcastRealtimeEvent } from '../socket/socket';
 import logger from './logger';
 
 export const trackAdminEvent = async (params: {
-    clerkUserId: string;
+    firebaseUid: string;
     activityType: string;
     targetId: string;
     details?: string;
@@ -13,12 +13,12 @@ export const trackAdminEvent = async (params: {
     try {
         let username = params.username;
         if (!username) {
-            const user = await User.findOne({ clerkUserId: params.clerkUserId });
+            const user = await User.findOne({ firebaseUid: params.firebaseUid });
             username = user?.username || 'traveler';
         }
 
         const log = await ActivityLog.create({
-            clerkUserId: params.clerkUserId,
+            firebaseUid: params.firebaseUid,
             activityType: params.activityType,
             targetId: params.targetId,
             details: params.details || '',
@@ -28,7 +28,7 @@ export const trackAdminEvent = async (params: {
         // Broadcast to admin dashboard instantly
         broadcastRealtimeEvent('activity:new', {
             _id: log._id,
-            clerkUserId: log.clerkUserId,
+            firebaseUid: log.firebaseUid,
             username,
             activityType: log.activityType,
             targetId: log.targetId,

@@ -83,7 +83,7 @@ const ProfilePage = () => {
         try {
             const token = await getToken();
             const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
-            const res = await axios.post(`${backendUrl}/api/v1/social/follow/${profileUser.clerkUserId}`, {}, {
+            const res = await axios.post(`${backendUrl}/api/v1/social/follow/${profileUser.firebaseUid}`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -126,7 +126,7 @@ const ProfilePage = () => {
     const handleMessage = async () => {
         try {
             const res = await axios.post('/api/v1/messaging/conversation', {
-                recipientClerkUserId: profileUser.clerkUserId
+                recipientFirebaseUid: profileUser.firebaseUid
             });
             if (res.data.success) {
                 navigate(`/chat`);
@@ -149,7 +149,7 @@ const ProfilePage = () => {
         </div>
     );
 
-    const isOwnProfile = currentUser?.id === profileUser.clerkUserId;
+    const isOwnProfile = currentUser?.id === profileUser.firebaseUid;
 
     return (
         <div className="min-h-screen bg-black font-inter pb-20">

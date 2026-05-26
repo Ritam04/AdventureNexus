@@ -19,11 +19,11 @@ import { communityService } from '@/services/communityService';
 /**
  * Hook to manage E2EE for a chat conversation.
  * 
- * @param {string} clerkUserId - Current user's Clerk ID
- * @param {Function} getToken - Clerk's getToken function
+ * @param {string} firebaseUid - Current user's Firebase UID
+ * @param {Function} getToken - Firebase's getToken function
  * @returns {Object} E2EE utilities
  */
-export const useE2EE = (clerkUserId, getToken) => {
+export const useE2EE = (firebaseUid, getToken) => {
     const [isReady, setIsReady] = useState(false);
     const [error, setError] = useState(null);
     const keysRef = useRef(null);
@@ -33,12 +33,12 @@ export const useE2EE = (clerkUserId, getToken) => {
     // ──────────────────────────────────────
 
     useEffect(() => {
-        if (!clerkUserId) return;
+        if (!firebaseUid) return;
 
         const initializeKeys = async () => {
             try {
                 // Check if keys already exist in IndexedDB
-                const existingKeys = await getKeyPair(clerkUserId);
+                const existingKeys = await getKeyPair(firebaseUid);
 
                 if (existingKeys) {
                     keysRef.current = existingKeys;
@@ -50,7 +50,7 @@ export const useE2EE = (clerkUserId, getToken) => {
                 const newKeys = generateKeyPair();
 
                 // Store secret key securely in IndexedDB
-                await storeKeyPair(clerkUserId, newKeys.publicKey, newKeys.secretKey);
+                await storeKeyPair(firebaseUid, newKeys.publicKey, newKeys.secretKey);
                 keysRef.current = newKeys;
 
                 // Upload public key to server
@@ -70,23 +70,23 @@ export const useE2EE = (clerkUserId, getToken) => {
         };
 
         initializeKeys();
-    }, [clerkUserId]);
+    }, [firebaseUid]);
 
     // ──────────────────────────────────────
     // FETCH RECIPIENT PUBLIC KEY
     // ──────────────────────────────────────
 
-    const getRecipientPublicKey = useCallback(async (recipientClerkUserId) => {
+    const getRecipientPublicKey = useCallback(async (recipientFirebaseUid) => {
         // Check in-memory cache first
-        const cached = getCachedPublicKey(recipientClerkUserId);
+        const cached = getCachedPublicKey(recipientFirebaseUid);
         if (cached) return cached;
 
         // Fetch from server
         try {
             const token = await getToken();
-            const res = await communityService.getPublicKey(recipientClerkUserId, token);
+            const res = await communityService.getPublicKey(recipientFirebaseUid, token);
             if (res.success && res.data?.e2eePublicKey) {
-                cachePublicKey(recipientClerkUserId, res.data.e2eePublicKey);
+                cachePublicKey(recipientFirebaseUid, res.data.e2eePublicKey);
                 return res.data.e2eePublicKey;
             }
         } catch (err) {
@@ -99,13 +99,13 @@ export const useE2EE = (clerkUserId, getToken) => {
     // ENCRYPT A MESSAGE
     // ──────────────────────────────────────
 
-    const encrypt = useCallback(async (plaintext, recipientClerkUserId) => {
+    const encrypt = useCallback(async (plaintext, recipientFirebaseUid) => {
         if (!keysRef.current) {
             console.error('[E2EE] Keys not initialized');
             return null;
         }
 
-        const recipientPublicKey = await getRecipientPublicKey(recipientClerkUserId);
+        const recipientPublicKey = await getRecipientPublicKey(recipientFirebaseUid);
         if (!recipientPublicKey) {
             console.warn('[E2EE] Recipient has no public key — sending unencrypted');
             return { content: plaintext, isEncrypted: false };
@@ -144,8 +144,8 @@ export const useE2EE = (clerkUserId, getToken) => {
         }
 
         // Determine who the "other party" is for decryption
-        const senderClerkUserId = message.senderClerkUserId;
-        const isMine = senderClerkUserId === clerkUserId;
+        const senderFirebaseUid = message.senderFirebaseUid;
+        const isMine = senderFirebaseUid === firebaseUid;
 
         // For messages I sent: I need the recipient's public key (to recreate the shared secret)
         // For messages I received: I need the sender's public key
@@ -166,7 +166,7 @@ export const useE2EE = (clerkUserId, getToken) => {
             // If we don't have the cached plaintext, try decrypting with recipient's key
             otherPartyPublicKey = await getRecipientPublicKey(message._recipientClerkUserId || '');
         } else {
-            otherPartyPublicKey = await getRecipientPublicKey(senderClerkUserId);
+            otherPartyPublicKey = await getRecipientPublicKey(senderFirebaseUid);
         }
 
         if (!otherPartyPublicKey) {
@@ -190,7 +190,7 @@ export const useE2EE = (clerkUserId, getToken) => {
             console.error('[E2EE] Decryption error:', err);
             return '🔒 Decryption failed';
         }
-    }, [clerkUserId, getRecipientPublicKey]);
+    }, [firebaseUid, getRecipientPublicKey]);
 
     // ──────────────────────────────────────
     // DECRYPT BATCH (for message history)

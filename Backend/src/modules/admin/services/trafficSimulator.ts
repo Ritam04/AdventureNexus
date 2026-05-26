@@ -52,11 +52,11 @@ export const startSimulator = (intervalMs: number = 4000) => {
                 const randomIndex = Math.floor(Math.random() * MOCK_NAMES.length);
                 const fullname = MOCK_NAMES[randomIndex];
                 const username = `${MOCK_USERNAMES[randomIndex]}_${Math.floor(Math.random() * 100)}`;
-                const clerkUserId = `user_mock_${Math.random().toString(36).substr(2, 9)}`;
+                const firebaseUid = `user_mock_${Math.random().toString(36).substr(2, 9)}`;
                 const email = `${username}@nexus-mock.com`;
 
                 const newUser = await User.create({
-                    clerkUserId,
+                    firebaseUid,
                     username,
                     email,
                     fullname,
@@ -66,7 +66,7 @@ export const startSimulator = (intervalMs: number = 4000) => {
 
                 // Track and Broadcast
                 const log = await ActivityLog.create({
-                    clerkUserId,
+                    firebaseUid,
                     activityType: 'user_created',
                     targetId: newUser._id.toString(),
                     details: `New operator registered: @${username}`,
@@ -74,7 +74,7 @@ export const startSimulator = (intervalMs: number = 4000) => {
                 });
 
                 broadcastRealtimeEvent('activity:new', log);
-                broadcastRealtimeEvent('user:online', clerkUserId);
+                broadcastRealtimeEvent('user:online', firebaseUid);
                 broadcastRealtimeEvent('simulator:user:new', newUser);
 
                 logger.info(`[SIMULATOR] Ingested mock registration: @${username}`);
@@ -91,7 +91,7 @@ export const startSimulator = (intervalMs: number = 4000) => {
                     const fromCity = 'London, UK';
                     const newPlan = await Plan.create({
                         userId: randomUser._id,
-                        clerkUserId: randomUser.clerkUserId,
+                        firebaseUid: randomUser.firebaseUid,
                         to: destination,
                         from: fromCity,
                         days,
@@ -102,7 +102,7 @@ export const startSimulator = (intervalMs: number = 4000) => {
                     });
 
                     const log = await ActivityLog.create({
-                        clerkUserId: newPlan.clerkUserId,
+                        firebaseUid: newPlan.firebaseUid,
                         activityType: 'create_experience_post',
                         targetId: newPlan._id.toString(),
                         details: `Ingested new AI travel dossier to ${destination}`,
@@ -125,7 +125,7 @@ export const startSimulator = (intervalMs: number = 4000) => {
                     const newComment = await CommunityComment.create({
                         postId: randomPost._id,
                         userId: randomUser._id,
-                        clerkUserId: randomUser.clerkUserId,
+                        firebaseUid: randomUser.firebaseUid,
                         content: commentText
                     });
 
@@ -133,7 +133,7 @@ export const startSimulator = (intervalMs: number = 4000) => {
                     await CommunityPost.findByIdAndUpdate(randomPost._id, { $inc: { repliesCount: 1 } });
 
                     const log = await ActivityLog.create({
-                        clerkUserId: randomUser.clerkUserId,
+                        firebaseUid: randomUser.firebaseUid,
                         activityType: 'comment_added',
                         targetId: newComment._id.toString(),
                         details: `Commented on post "${randomPost.title.substring(0, 18)}...": "${commentText.substring(0, 20)}..."`,
@@ -151,13 +151,13 @@ export const startSimulator = (intervalMs: number = 4000) => {
                 const randomPost = await CommunityPost.findOne();
 
                 if (randomUser && randomPost) {
-                    if (!randomPost.likes.includes(randomUser.clerkUserId)) {
-                        randomPost.likes.push(randomUser.clerkUserId);
+                    if (!randomPost.likes.includes(randomUser.firebaseUid)) {
+                        randomPost.likes.push(randomUser.firebaseUid);
                         randomPost.interactionScore += 1;
                         await randomPost.save();
 
                         const log = await ActivityLog.create({
-                            clerkUserId: randomUser.clerkUserId,
+                            firebaseUid: randomUser.firebaseUid,
                             activityType: 'like_given',
                             targetId: randomPost._id.toString(),
                             details: `Liked community post: "${randomPost.title.substring(0, 20)}..."`,
@@ -179,7 +179,7 @@ export const startSimulator = (intervalMs: number = 4000) => {
 
                 const newReview = await Review.create({
                     userId: `user_mock_${Math.random().toString(36).substr(2, 9)}`,
-                    clerkUserId: `user_mock_${Math.random().toString(36).substr(2, 9)}`,
+                    firebaseUid: `user_mock_${Math.random().toString(36).substr(2, 9)}`,
                     userName,
                     location: MOCK_LOCATIONS[Math.floor(Math.random() * MOCK_LOCATIONS.length)],
                     tripType: TRIP_TYPES[Math.floor(Math.random() * TRIP_TYPES.length)],
@@ -191,7 +191,7 @@ export const startSimulator = (intervalMs: number = 4000) => {
                 });
 
                 const log = await ActivityLog.create({
-                    clerkUserId: newReview.userId,
+                    firebaseUid: newReview.userId,
                     activityType: 'comment_added',
                     targetId: newReview._id.toString(),
                     details: `Left verified traveler review: "${comment.substring(0, 30)}..."`,

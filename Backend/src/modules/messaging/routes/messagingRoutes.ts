@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as chatController from '../controllers/chatController';
 import * as groupController from '../controllers/groupController';
-import { protect } from '../../../shared/middleware/authClerkTokenMiddleware';
+import { protect } from '../../../shared/middleware/firebaseAuthMiddleware';
 
 const router = Router();
 

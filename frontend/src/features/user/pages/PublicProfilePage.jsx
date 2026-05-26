@@ -29,7 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import toast from 'react-hot-toast';
 
 const PublicProfilePage = () => {
-    const { clerkUserId } = useParams();
+    const { firebaseUid } = useParams();
     const navigate = useNavigate();
     const { userId: currentUserId, getToken } = useAuth();
     const [profileData, setProfileData] = useState(null);
@@ -61,7 +61,7 @@ const PublicProfilePage = () => {
             try {
                 setIsLoading(true);
                 const token = currentUserId ? await getToken() : null;
-                const res = await communityService.getProfile(clerkUserId, token);
+                const res = await communityService.getProfile(firebaseUid, token);
                 if (res.success) {
                     setProfileData(res.data);
                     setIsFollowing(res.data.profile.isFollowing);
@@ -84,7 +84,7 @@ const PublicProfilePage = () => {
         };
 
         fetchProfile();
-    }, [clerkUserId, navigate, currentUserId]);
+    }, [firebaseUid, navigate, currentUserId]);
 
     const handleToggleFollow = async () => {
         if (!currentUserId) {
@@ -95,7 +95,7 @@ const PublicProfilePage = () => {
         try {
             setIsFollowLoading(true);
             const token = await getToken();
-            const res = await communityService.toggleFollow(clerkUserId, token);
+            const res = await communityService.toggleFollow(firebaseUid, token);
             if (res.success) {
                 setIsFollowing(res.data.isFollowing);
                 // Optimistically update counts if needed, but let's refresh for reliability or just toggle
@@ -125,7 +125,7 @@ const PublicProfilePage = () => {
             setIsSendingMessage(true);
             const token = await getToken();
             const res = await communityService.sendMessage({
-                recipientClerkUserId: clerkUserId,
+                recipientFirebaseUid: firebaseUid,
                 content: messageContent
             }, token);
 
@@ -145,7 +145,7 @@ const PublicProfilePage = () => {
         try {
             setIsInitiatingChat(true);
             const token = await getToken();
-            const res = await communityService.getOrCreateChatConversation(clerkUserId, token);
+            const res = await communityService.getOrCreateChatConversation(firebaseUid, token);
             if (res.success) {
                 navigate('/chat', { 
                     state: { 
@@ -252,7 +252,7 @@ const PublicProfilePage = () => {
                             </div>
                             
                             <div className="flex items-center gap-4">
-                                {currentUserId !== profile.clerkUserId ? (
+                                {currentUserId !== profile.firebaseUid ? (
                                     <>
                                         <Button 
                                             onClick={handleToggleFollow}

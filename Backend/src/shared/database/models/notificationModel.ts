@@ -14,8 +14,8 @@ export enum NotificationType {
 }
 
 export interface INotification extends Document {
-    recipientClerkUserId: string;
-    senderClerkUserId: string;
+    recipientFirebaseUid: string;
+    senderFirebaseUid: string;
     type: NotificationType;
     relatedId?: string; // ID of post, story, or message
     isRead: boolean;
@@ -24,8 +24,8 @@ export interface INotification extends Document {
 
 const notificationSchema = new Schema<INotification>(
     {
-        recipientClerkUserId: { type: String, required: true, index: true },
-        senderClerkUserId: { type: String, required: true },
+        recipientFirebaseUid: { type: String, required: true, index: true },
+        senderFirebaseUid: { type: String, required: true },
         type: { type: String, enum: Object.values(NotificationType), required: true },
         relatedId: { type: String },
         isRead: { type: Boolean, default: false },

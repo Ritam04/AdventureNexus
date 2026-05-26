@@ -66,7 +66,7 @@
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       401:
- *         description: Unauthorized - Clerk user not found
+ *         description: Unauthorized - Firebase user not found
  *         content:
  *           application/json:
  *             schema:

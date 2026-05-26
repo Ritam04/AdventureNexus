@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'; // React hooks
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext'; // Clerk auth hooks and components
+import { useAuth } from '@/context/AuthContext'; // Firebase auth hooks and components
 import { useAppContext } from '../context/appContext'; // Global app context
 
 // Define props for the ProtectedRoute component
@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 
 // Component to protect routes that require authentication
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-    const { isSignedIn, isLoaded } = useAuth(); // Check authentication status from Clerk
+    const { isSignedIn, isLoaded } = useAuth(); // Check authentication status from Firebase
     const { fetchUser, userData } = useAppContext(); // Access user data functions from context
 
     // Effect to fetch user data from the backend when the user is authenticated

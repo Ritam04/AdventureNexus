@@ -2,12 +2,12 @@ import mongoose, { Schema, Document, model } from 'mongoose';
 
 export interface ITravelStory extends Document {
     userId: mongoose.Types.ObjectId;
-    clerkUserId: string;
+    firebaseUid: string;
     title: string;
     content: string;
     location: string;
     images: string[];
-    likes: string[]; // Clerk User IDs
+    likes: string[]; // Firebase UIDs
     commentsCount: number;
     createdAt: Date;
     updatedAt: Date;
@@ -16,7 +16,7 @@ export interface ITravelStory extends Document {
 const travelStorySchema = new Schema<ITravelStory>(
     {
         userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-        clerkUserId: { type: String, required: true, index: true },
+        firebaseUid: { type: String, required: true, index: true },
         title: { type: String, required: true, trim: true },
         content: { type: String, required: true },
         location: { type: String, required: true },

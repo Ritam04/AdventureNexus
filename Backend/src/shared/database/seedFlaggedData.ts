@@ -27,7 +27,7 @@ const runSeed = async () => {
         let user = await User.findOne();
         if (!user) {
             user = await User.create({
-                clerkUserId: 'user_seed_test_123',
+                firebaseUid: 'user_seed_test_123',
                 email: 'tester_moderation@nexus.com',
                 fullname: 'John Tester',
                 username: 'moderation_tester',
@@ -64,7 +64,7 @@ const runSeed = async () => {
         for (const postData of flaggedPostsData) {
             const post = await CommunityPost.create({
                 userId: user._id,
-                clerkUserId: user.clerkUserId,
+                firebaseUid: user.firebaseUid,
                 title: postData.title,
                 content: postData.content,
                 category: postData.category,
@@ -99,7 +99,7 @@ const runSeed = async () => {
         if (!post) {
             post = await CommunityPost.create({
                 userId: user._id,
-                clerkUserId: user.clerkUserId,
+                firebaseUid: user.firebaseUid,
                 title: 'Active Community Travel Discussion',
                 content: 'Welcome to AdventureNexus discussion boards!',
                 category: 'General'
@@ -110,7 +110,7 @@ const runSeed = async () => {
             const comment = await CommunityComment.create({
                 postId: post._id,
                 userId: user._id,
-                clerkUserId: user.clerkUserId,
+                firebaseUid: user.firebaseUid,
                 content: commentText
             });
 
@@ -136,7 +136,7 @@ const runSeed = async () => {
         for (const reviewText of flaggedReviewsData) {
             const review = await Review.create({
                 userId: user._id.toString(),
-                clerkUserId: user.clerkUserId,
+                firebaseUid: user.firebaseUid,
                 userName: 'Angry Nomad',
                 location: 'Cairo, Egypt',
                 tripType: 'solo',
@@ -175,7 +175,7 @@ const runSeed = async () => {
 
         for (const uData of flaggedUserData) {
             const u = await User.create({
-                clerkUserId: `user_mock_flagged_${Math.random().toString(36).substr(2, 9)}`,
+                firebaseUid: `user_mock_flagged_${Math.random().toString(36).substr(2, 9)}`,
                 email: `${uData.username}@scamnexus.com`,
                 fullname: uData.fullname,
                 username: uData.username,

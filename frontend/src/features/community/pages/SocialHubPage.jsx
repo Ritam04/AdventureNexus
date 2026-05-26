@@ -118,14 +118,14 @@ export const SocialHubPage = () => {
       setIsPostsLoading(true);
       setIsStoriesLoading(true);
 
-      const clerkUserId = user?.id || '';
+      const firebaseUid = user?.id || '';
       
       const categoryFilter = (activeTab === 'global' || activeTab === 'groups') ? '' : (activeTab === 'communities' ? 'General' : activeTab);
       const groupFilter = activeTab === 'groups' ? 'all_groups' : 'none';
       const communityFilter = selectedCommunity?._id || '';
 
       const [postRes, storyRes] = await Promise.all([
-        communityService.getPosts(categoryFilter, searchQuery, clerkUserId, groupFilter, communityFilter),
+        communityService.getPosts(categoryFilter, searchQuery, firebaseUid, groupFilter, communityFilter),
         communityService.getStories()
       ]);
 
@@ -677,7 +677,7 @@ export const SocialHubPage = () => {
                     <PostCard 
                       key={post._id}
                       discussion={post}
-                      clerkUserId={user?.id}
+                      firebaseUid={user?.id}
                       onLike={handleLike}
                       onSave={handleSave}
                       onShare={handleShare}

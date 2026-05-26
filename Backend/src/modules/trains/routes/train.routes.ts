@@ -8,6 +8,7 @@ import {
     getMyBookings,
     cancelBooking
 } from '../controllers/train.controller';
+import protect from '../../../shared/middleware/firebaseAuthMiddleware';
 
 const router = Router();
 
@@ -17,9 +18,9 @@ router.get('/search', searchTrains);
 router.get('/schedule/:trainNumber', getTrainSchedule);
 router.get('/live/:trainNumber', getTrainLiveStatus);
 
-// ── Protected Routes (Clerk auth via middleware in app.ts) ────────────────────
-router.post('/book', bookTicket);
-router.get('/bookings/mine', getMyBookings);
-router.delete('/bookings/:id/cancel', cancelBooking);
+// ── Protected Routes ──────────────────────────────────────────────────────────
+router.post('/book', protect, bookTicket);
+router.get('/bookings/mine', protect, getMyBookings);
+router.delete('/bookings/:id/cancel', protect, cancelBooking);
 
 export default router;

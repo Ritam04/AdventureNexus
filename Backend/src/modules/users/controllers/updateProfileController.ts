@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import User from '../../../shared/database/models/userModel';
-import createHttpError from 'http-errors';
+import createError from 'http-errors';
 import logger from '../../../shared/utils/logger';
 import cloudinary from '../../../shared/services/cloudinaryService';
 import fs from 'fs';
@@ -15,9 +15,9 @@ export const updateProfile = async (
     next: NextFunction
 ) => {
     try {
-        const clerkUserId = req.user?.clerkUserId;
-        if (!clerkUserId) {
-            return next(createHttpError(401, 'Unauthorized'));
+        const firebaseUid = (req as any).user?.firebaseUid;
+        if (!firebaseUid) {
+            return next(createError(401, 'Unauthorized'));
         }
 
         const {
@@ -78,15 +78,19 @@ export const updateProfile = async (
                 if (fs.existsSync(req.file.path)) {
                     fs.unlinkSync(req.file.path);
                 }
-                return next(createHttpError(500, 'Image upload failed'));
+                return next(createError(500, 'Image upload failed'));
             }
         }
 
         const updatedUser = await User.findOneAndUpdate(
-            { clerkUserId },
+            { firebaseUid },
             { $set: updateData },
-            { new: true, upsert: true }
+            { new: true, runValidators: true }
         );
+
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, message: 'User not found in database. Please re-login.' });
+        }
 
         res.status(200).json({
             success: true,
@@ -97,8 +101,8 @@ export const updateProfile = async (
     } catch (error: any) {
         logger.error('Error updating profile:', error);
         if (error.code === 11000 && error.keyPattern?.username) {
-            return next(createHttpError(400, 'Username already exists. Please choose another one.'));
+            return next(createError(400, 'Username already exists. Please choose another one.'));
         }
-        return next(createHttpError(500, 'Failed to update profile'));
+        return next(createError(500, 'Failed to update profile'));
     }
 };

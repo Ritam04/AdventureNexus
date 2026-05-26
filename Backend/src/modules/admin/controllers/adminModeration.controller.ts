@@ -239,8 +239,8 @@ export const resolveModerationReport = async (req: Request, res: Response) => {
                     // Send persistent notification to the banned user
                     try {
                         await Notification.create({
-                            recipientClerkUserId: userToBan.clerkUserId,
-                            senderClerkUserId: 'admin_security',
+                            recipientFirebaseUid: userToBan.firebaseUid,
+                            senderFirebaseUid: 'admin_security',
                             type: 'account_ban',
                             relatedId: reportId,
                             isRead: false
@@ -249,7 +249,7 @@ export const resolveModerationReport = async (req: Request, res: Response) => {
                         // Emit real-time notification socket event
                         const io = getIO();
                         if (io) {
-                            io.to(userToBan.clerkUserId).emit('notification', {
+                            io.to(userToBan.firebaseUid).emit('notification', {
                                 type: 'account_ban',
                                 reason: userToBan.banReason,
                                 message: `Your account has been restricted: ${userToBan.banReason}`,
@@ -269,7 +269,7 @@ export const resolveModerationReport = async (req: Request, res: Response) => {
             await report.save();
 
             await trackAdminEvent({
-                clerkUserId: 'admin123',
+                firebaseUid: 'admin123',
                 activityType: 'comment_added',
                 targetId: report.entityId,
                 details: `Moderator purged flagged ${report.type} node: "${report.flaggedContent.substring(0, 30)}..."`,
@@ -280,7 +280,7 @@ export const resolveModerationReport = async (req: Request, res: Response) => {
             await report.save();
 
             await trackAdminEvent({
-                clerkUserId: 'admin123',
+                firebaseUid: 'admin123',
                 activityType: 'comment_added',
                 targetId: report.entityId,
                 details: `Moderator whitelisted flagged ${report.type} node: "${report.flaggedContent.substring(0, 30)}..."`,

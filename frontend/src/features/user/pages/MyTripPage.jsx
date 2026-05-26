@@ -143,7 +143,7 @@ const MyTripsPage = () => {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {})
         };
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com';
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com');
 
         // Fetch My Plans (History)
         const myPlansRes = await fetch(`${backendUrl}/api/v1/plans/my-plans`, { headers });
@@ -435,7 +435,7 @@ const MyTripsPage = () => {
       const token = await getToken();
       if (!token) return;
 
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com';
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com');
       const headers = {
         'Authorization': `Bearer ${token}`
       };
@@ -474,7 +474,7 @@ const MyTripsPage = () => {
            return;
         }
 
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com';
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com');
         const formData = new FormData();
         formData.append('title', `My Trip: ${trip.title}`);
         formData.append('content', message || `I planned a trip to ${trip.destination}! Check it out.`);

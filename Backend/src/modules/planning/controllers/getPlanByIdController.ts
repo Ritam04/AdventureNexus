@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import Plan from '../../../shared/database/models/planModel';
-import createHttpError from 'http-errors';
+import createError from 'http-errors';
 import logger from '../../../shared/utils/logger';
 
 /**
@@ -23,9 +23,7 @@ export const getPlanById = async (
             .populate('flights');
 
         if (!plan) {
-            return next(
-                createHttpError(404, 'Plan Not Found or The ID is Invalid.')
-            );
+            return next(createError(404, 'Plan Not Found or The ID is Invalid.'));
         }
 
         return res.status(200).json({
@@ -35,6 +33,6 @@ export const getPlanById = async (
 
     } catch (err: any) {
         logger.error(`Error in getPlanByIdController: ${err.message || err}`);
-        return next(createHttpError(500, 'Internal Server Error!'));
+        return next(createError(500, 'Internal Server Error!'));
     }
 };

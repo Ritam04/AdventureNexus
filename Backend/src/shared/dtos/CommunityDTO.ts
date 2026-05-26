@@ -6,7 +6,7 @@ import { Schema, Document } from "mongoose";
  */
 export interface ICommunityPost extends Document {
     userId: Schema.Types.ObjectId;
-    clerkUserId: string;
+    firebaseUid: string;
     communityId?: Schema.Types.ObjectId; // NEW: Topic-based community
     groupId?: Schema.Types.ObjectId;     // NEW: Private/Public Group
     title: string;
@@ -27,7 +27,7 @@ export interface ICommunityPost extends Document {
 export interface ICommunityComment extends Document {
     postId: Schema.Types.ObjectId;
     userId: Schema.Types.ObjectId;
-    clerkUserId: string;
+    firebaseUid: string;
     content: string;
     parentId?: Schema.Types.ObjectId;
     likes: string[];

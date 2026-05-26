@@ -41,7 +41,7 @@ export const cacheMiddleware = (options: CacheOptions) => {
 
         // If user-specific caching is required
         if (useUserPrefix) {
-            const userId = (req as any).auth?.userId;
+            const userId = (req as any).user?.firebaseUid;
             if (userId) {
                 identifier = `${userId}:${identifier}`;
             }

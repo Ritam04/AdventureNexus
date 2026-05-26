@@ -116,14 +116,14 @@ export const decryptMessage = (encryptedContentBase64, nonceBase64, senderPublic
  * Each member gets their own encrypted copy (per-member encryption).
  * 
  * @param {string} plaintext - The message to encrypt
- * @param {Array<{clerkUserId: string, publicKey: string}>} members - Group members with public keys
+ * @param {Array<{firebaseUid: string, publicKey: string}>} members - Group members with public keys
  * @param {string} senderSecretKeyBase64 - Sender's secret key
- * @param {string} senderClerkUserId - Sender's clerk user ID (to skip self-encryption)
+ * @param {string} senderFirebaseUid - Sender's firebase user ID (to skip self-encryption)
  * @returns {Array<{recipientId: string, encryptedContent: string, nonce: string}>}
  */
-export const encryptForGroup = (plaintext, members, senderSecretKeyBase64, senderClerkUserId) => {
+export const encryptForGroup = (plaintext, members, senderSecretKeyBase64, senderFirebaseUid) => {
     return members
-        .filter(m => m.clerkUserId !== senderClerkUserId && m.publicKey)
+        .filter(m => m.firebaseUid !== senderFirebaseUid && m.publicKey)
         .map(member => {
             const { encryptedContent, nonce } = encryptMessage(
                 plaintext,
@@ -131,7 +131,7 @@ export const encryptForGroup = (plaintext, members, senderSecretKeyBase64, sende
                 senderSecretKeyBase64
             );
             return {
-                recipientId: member.clerkUserId,
+                recipientId: member.firebaseUid,
                 encryptedContent,
                 nonce,
             };
@@ -142,7 +142,7 @@ export const encryptForGroup = (plaintext, members, senderSecretKeyBase64, sende
  * Find and decrypt the copy of a group message intended for this user.
  * 
  * @param {Array<{recipientId: string, encryptedContent: string, nonce: string}>} encryptedCopies
- * @param {string} myClerkUserId - Current user's clerk ID
+ * @param {string} myClerkUserId - Current user's firebase ID
  * @param {string} senderPublicKeyBase64 - The sender's public key
  * @param {string} mySecretKeyBase64 - Current user's secret key
  * @returns {string|null} Decrypted plaintext

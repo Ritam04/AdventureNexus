@@ -8,21 +8,21 @@ import User from '../../../shared/database/models/userModel';
  */
 export const getNotifications = async (req: Request, res: Response) => {
     try {
-        const userClerkUserId = (req as any).user?.clerkUserId;
+        const userFirebaseUid = (req as any).user?.firebaseUid;
 
-        const notifications = await Notification.find({ recipientClerkUserId: userClerkUserId })
+        const notifications = await Notification.find({ recipientFirebaseUid: userFirebaseUid })
             .sort({ createdAt: -1 })
             .limit(50);
 
         // Fetch sender user profiles in batch
-        const senderClerkUserIds = Array.from(new Set(notifications.map(n => n.senderClerkUserId)));
-        const senders = await User.find({ clerkUserId: { $in: senderClerkUserIds } })
-            .select('username profilepicture fullname clerkUserId');
+        const senderClerkUserIds = Array.from(new Set(notifications.map(n => n.senderFirebaseUid)));
+        const senders = await User.find({ firebaseUid: { $in: senderClerkUserIds } })
+            .select('username profilepicture fullname firebaseUid');
 
-        const senderMap = new Map(senders.map(s => [s.clerkUserId, s]));
+        const senderMap = new Map(senders.map(s => [s.firebaseUid, s]));
 
         const enrichedNotifications = notifications.map(n => {
-            const sender = senderMap.get(n.senderClerkUserId);
+            const sender = senderMap.get(n.senderFirebaseUid);
             return {
                 ...n.toObject(),
                 sender: sender ? {
@@ -51,10 +51,10 @@ export const getNotifications = async (req: Request, res: Response) => {
 export const markAsRead = async (req: Request, res: Response) => {
     try {
         const id = req.params.id || req.params.notificationId;
-        const userClerkUserId = (req as any).user?.clerkUserId;
+        const userFirebaseUid = (req as any).user?.firebaseUid;
 
         const notification = await Notification.findOneAndUpdate(
-            { _id: id, recipientClerkUserId: userClerkUserId },
+            { _id: id, recipientFirebaseUid: userFirebaseUid },
             { isRead: true },
             { new: true }
         );
@@ -79,10 +79,10 @@ export const markAsRead = async (req: Request, res: Response) => {
  */
 export const markAllAsRead = async (req: Request, res: Response) => {
     try {
-        const userClerkUserId = (req as any).user?.clerkUserId;
+        const userFirebaseUid = (req as any).user?.firebaseUid;
 
         await Notification.updateMany(
-            { recipientClerkUserId: userClerkUserId, isRead: false },
+            { recipientFirebaseUid: userFirebaseUid, isRead: false },
             { isRead: true }
         );
 

@@ -36,10 +36,10 @@ const _config = {
     UNSPLASH_SECRET_KEY: process.env.UNSPLASH_SECRET_KEY,
     UNSPLASH_APPLICATION_ID: process.env.UNSPLASH_APPLICATION_ID,
 
-    // Clerk Authentication Keys
-    CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY,
-    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
-    CLERK_WEBHOOK_KEY: process.env.CLERK_WEBHOOK_KEY
+    // Firebase Authentication Keys
+    FIREBASE_PUBLISHABLE_KEY: process.env.FIREBASE_PUBLISHABLE_KEY,
+    FIREBASE_SECRET_KEY: process.env.FIREBASE_SECRET_KEY,
+    FIREBASE_WEBHOOK_KEY: process.env.FIREBASE_WEBHOOK_KEY
 };
 
 // Freeze configuration to prevent runtime modifications

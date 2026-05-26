@@ -15,7 +15,7 @@ import logger from '../../../shared/utils/logger';
  */
 export const uploadPublicKey = async (req: Request, res: Response) => {
     try {
-        const clerkUserId = (req as any).user?.clerkUserId;
+        const firebaseUid = (req as any).user?.firebaseUid;
         const { publicKey } = req.body;
 
         if (!publicKey || typeof publicKey !== 'string') {
@@ -34,12 +34,12 @@ export const uploadPublicKey = async (req: Request, res: Response) => {
         }
 
         await User.findOneAndUpdate(
-            { clerkUserId },
+            { firebaseUid },
             { e2eePublicKey: publicKey },
             { new: true }
         );
 
-        logger.info(`[E2EE] Public key uploaded for user ${clerkUserId}`);
+        logger.info(`[E2EE] Public key uploaded for user ${firebaseUid}`);
 
         return res.status(StatusCodes.OK).json({
             success: true,
@@ -56,15 +56,15 @@ export const uploadPublicKey = async (req: Request, res: Response) => {
 
 /**
  * Fetch a user's E2EE public key.
- * GET /api/v1/users/e2ee/public-key/:clerkUserId
+ * GET /api/v1/users/e2ee/public-key/:firebaseUid
  * 
  * Used by senders to encrypt messages for this recipient.
  */
 export const getPublicKey = async (req: Request, res: Response) => {
     try {
-        const { clerkUserId } = req.params;
+        const { firebaseUid } = req.params;
 
-        const user = await User.findOne({ clerkUserId }).select('e2eePublicKey clerkUserId username');
+        const user = await User.findOne({ firebaseUid }).select('e2eePublicKey firebaseUid username');
 
         if (!user) {
             return res.status(StatusCodes.NOT_FOUND).json({
@@ -76,7 +76,7 @@ export const getPublicKey = async (req: Request, res: Response) => {
         return res.status(StatusCodes.OK).json({
             success: true,
             data: {
-                clerkUserId: user.clerkUserId,
+                firebaseUid: user.firebaseUid,
                 username: user.username,
                 e2eePublicKey: user.e2eePublicKey || null
             }

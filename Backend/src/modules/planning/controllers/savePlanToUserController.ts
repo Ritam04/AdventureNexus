@@ -12,9 +12,9 @@ import mongoose from 'mongoose';
 export const savePlanToUser = async (req: Request, res: Response) => {
     try {
         const { planId } = req.params;
-        const clerkUserId = req.auth()?.userId;
+        const firebaseUid = (req as any).user?.firebaseUid;
 
-        if (!clerkUserId) {
+        if (!firebaseUid) {
             return res.status(StatusCodes.UNAUTHORIZED).json({
                 success: false,
                 message: 'Unauthorized: No user found'
@@ -38,7 +38,7 @@ export const savePlanToUser = async (req: Request, res: Response) => {
         }
 
         // 2. Find the user
-        const user = await User.findOne({ clerkUserId });
+        const user = await User.findOne({ firebaseUid });
         if (!user) {
             return res.status(StatusCodes.NOT_FOUND).json({
                 success: false,
@@ -62,7 +62,7 @@ export const savePlanToUser = async (req: Request, res: Response) => {
         user.plans.push(planObjectId as any);
         await user.save();
 
-        logger.info(`✅ Plan ${planId} saved to user ${clerkUserId}`);
+        logger.info(`✅ Plan ${planId} saved to user ${firebaseUid}`);
 
         return res.status(StatusCodes.OK).json({
             success: true,

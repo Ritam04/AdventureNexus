@@ -8,7 +8,7 @@ export enum FriendshipStatus {
 
 export interface IFriendship extends Document {
     requesterClerkUserId: string;
-    recipientClerkUserId: string;
+    recipientFirebaseUid: string;
     status: FriendshipStatus;
     createdAt: Date;
     updatedAt: Date;
@@ -17,7 +17,7 @@ export interface IFriendship extends Document {
 const friendshipSchema = new Schema<IFriendship>(
     {
         requesterClerkUserId: { type: String, required: true, index: true },
-        recipientClerkUserId: { type: String, required: true, index: true },
+        recipientFirebaseUid: { type: String, required: true, index: true },
         status: {
             type: String,
             enum: Object.values(FriendshipStatus),
@@ -28,7 +28,7 @@ const friendshipSchema = new Schema<IFriendship>(
 );
 
 // Ensure unique friendship between two users regardless of who is requester
-friendshipSchema.index({ requesterClerkUserId: 1, recipientClerkUserId: 1 }, { unique: true });
+friendshipSchema.index({ requesterClerkUserId: 1, recipientFirebaseUid: 1 }, { unique: true });
 
 const Friendship = model<IFriendship>('Friendship', friendshipSchema);
 export default Friendship;

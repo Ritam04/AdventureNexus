@@ -38,7 +38,7 @@ import { StoryBar } from '../../community/components/StoryBar';
 
 const CommunityPage = () => {
   const navigate = useNavigate();
-  const { getToken, userId: clerkUserId, isLoaded: isAuthLoaded } = useAuth();
+  const { getToken, userId: firebaseUid, isLoaded: isAuthLoaded } = useAuth();
   const { user } = useUser();
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -82,7 +82,7 @@ const CommunityPage = () => {
   const fetchPosts = async () => {
     try {
       setIsLoading(true);
-      const data = await communityService.getPosts(activeCategory, searchQuery, clerkUserId);
+      const data = await communityService.getPosts(activeCategory, searchQuery, firebaseUid);
       if (data.success) {
         setPosts(data.data);
       }
@@ -166,7 +166,7 @@ const CommunityPage = () => {
 
   const handleCreatePost = async (e) => {
     e.preventDefault();
-    if (!clerkUserId) {
+    if (!firebaseUid) {
       toast.error('Please sign in to post');
       return;
     }
@@ -207,7 +207,7 @@ const CommunityPage = () => {
   };
 
   const handleSavePost = async (postId) => {
-    if (!clerkUserId) {
+    if (!firebaseUid) {
       toast.error('Please sign in to save posts');
       return;
     }
@@ -243,7 +243,7 @@ const CommunityPage = () => {
 
   const handleAddComment = useCallback(async (e) => {
     e.preventDefault();
-    if (!clerkUserId) {
+    if (!firebaseUid) {
       toast.error('Please sign in to comment');
       return;
     }
@@ -287,10 +287,10 @@ const CommunityPage = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [clerkUserId, newComment, replyingTo, selectedPost, getToken]);
+  }, [firebaseUid, newComment, replyingTo, selectedPost, getToken]);
 
   const handleLike = useCallback(async (postId, targetType = 'post') => {
-    if (!clerkUserId) {
+    if (!firebaseUid) {
       toast.error('Please sign in to like');
       return;
     }
@@ -299,11 +299,11 @@ const CommunityPage = () => {
     let wasLiked = false;
     setPosts(prev => prev.map(post => {
       if (post._id === postId) {
-        const hasLiked = post.likes?.includes(clerkUserId);
+        const hasLiked = post.likes?.includes(firebaseUid);
         wasLiked = hasLiked;
         const newLikes = hasLiked
-          ? (post.likes || []).filter(id => id !== clerkUserId)
-          : [...(post.likes || []), clerkUserId];
+          ? (post.likes || []).filter(id => id !== firebaseUid)
+          : [...(post.likes || []), firebaseUid];
         return { ...post, likes: newLikes };
       }
       return post;
@@ -311,10 +311,10 @@ const CommunityPage = () => {
 
     setSelectedPost(prev => {
       if (prev && prev._id === postId && targetType === 'post') {
-        const hasLiked = prev.likes?.includes(clerkUserId);
+        const hasLiked = prev.likes?.includes(firebaseUid);
         const newLikes = hasLiked
-          ? (prev.likes || []).filter(id => id !== clerkUserId)
-          : [...(prev.likes || []), clerkUserId];
+          ? (prev.likes || []).filter(id => id !== firebaseUid)
+          : [...(prev.likes || []), firebaseUid];
         return { ...prev, likes: newLikes };
       }
       return prev;
@@ -331,8 +331,8 @@ const CommunityPage = () => {
       setPosts(prev => prev.map(post => {
         if (post._id === postId) {
           const newLikes = wasLiked
-            ? [...(post.likes || []), clerkUserId]
-            : (post.likes || []).filter(id => id !== clerkUserId);
+            ? [...(post.likes || []), firebaseUid]
+            : (post.likes || []).filter(id => id !== firebaseUid);
           return { ...post, likes: newLikes };
         }
         return post;
@@ -341,18 +341,18 @@ const CommunityPage = () => {
       setSelectedPost(prev => {
         if (prev && prev._id === postId && targetType === 'post') {
           const newLikes = wasLiked
-            ? [...(prev.likes || []), clerkUserId]
-            : (prev.likes || []).filter(id => id !== clerkUserId);
+            ? [...(prev.likes || []), firebaseUid]
+            : (prev.likes || []).filter(id => id !== firebaseUid);
           return { ...prev, likes: newLikes };
         }
         return prev;
       });
       toast.error('Failed to update like');
     }
-  }, [clerkUserId, getToken]);
+  }, [firebaseUid, getToken]);
 
   const handleRSVP = async (eventId) => {
-    if (!clerkUserId) {
+    if (!firebaseUid) {
       toast.error('Please sign in to RSVP');
       return;
     }
@@ -571,7 +571,7 @@ const CommunityPage = () => {
                   >
                     <PostCard
                       discussion={discussion}
-                      clerkUserId={clerkUserId}
+                      firebaseUid={firebaseUid}
                       onLike={handleLike}
                       onSave={handleSavePost}
                       onShare={handleExternalShare}
@@ -684,10 +684,10 @@ const CommunityPage = () => {
                           <Button
                             size="sm"
                             variant="link"
-                            className={`h-auto p-0 mt-3 font-black text-xs uppercase tracking-tighter ${(clerkUserId && event.attendees?.includes(clerkUserId)) ? 'text-emerald-400' : 'text-primary'}`}
+                            className={`h-auto p-0 mt-3 font-black text-xs uppercase tracking-tighter ${(firebaseUid && event.attendees?.includes(firebaseUid)) ? 'text-emerald-400' : 'text-primary'}`}
                             onClick={() => handleRSVP(event._id)}
                           >
-                            {(clerkUserId && event.attendees?.includes(clerkUserId)) ? '✓ Attending' : 'RSVP Now'}
+                            {(firebaseUid && event.attendees?.includes(firebaseUid)) ? '✓ Attending' : 'RSVP Now'}
                           </Button>
                         </div>
                       </motion.div>
@@ -845,7 +845,7 @@ const CommunityPage = () => {
                       className="flex items-center gap-4 mt-8 relative z-10 cursor-pointer group/user"
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/user/profile/${selectedPost.userId?.clerkUserId}`);
+                        navigate(`/user/profile/${selectedPost.userId?.firebaseUid}`);
                       }}
                     >
                       <div className="w-12 h-12 rounded-full bg-primary/10 overflow-hidden border-2 border-primary/20 shadow-xl group-hover/user:border-primary transition-colors">
@@ -873,10 +873,10 @@ const CommunityPage = () => {
                       <motion.span
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
-                        className={`flex items-center gap-2 cursor-pointer text-lg font-black transition-colors ${(clerkUserId && selectedPost.likes?.includes(clerkUserId)) ? 'text-pink-500' : 'text-muted-foreground hover:text-pink-500'}`}
+                        className={`flex items-center gap-2 cursor-pointer text-lg font-black transition-colors ${(firebaseUid && selectedPost.likes?.includes(firebaseUid)) ? 'text-pink-500' : 'text-muted-foreground hover:text-pink-500'}`}
                         onClick={() => handleLike(selectedPost._id)}
                       >
-                        <Heart size={24} fill={(clerkUserId && selectedPost.likes?.includes(clerkUserId)) ? 'currentColor' : 'none'} /> {selectedPost.likes?.length || 0}
+                        <Heart size={24} fill={(firebaseUid && selectedPost.likes?.includes(firebaseUid)) ? 'currentColor' : 'none'} /> {selectedPost.likes?.length || 0}
                       </motion.span>
                       <span className="flex items-center gap-2 text-lg font-black text-muted-foreground">
                         <MessageSquare size={24} /> {selectedPost.comments?.length || 0}

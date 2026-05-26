@@ -7,16 +7,16 @@ import Plan from "../../../shared/database/models/planModel";
  */
 export const getMyPlans = async (req: Request, res: Response) => {
     try {
-        const clerkUserId = req.user?.clerkUserId;
+        const firebaseUid = (req as any).user?.firebaseUid;
 
-        if (!clerkUserId) {
+        if (!firebaseUid) {
             return res.status(StatusCodes.UNAUTHORIZED).json({
                 status: 'Failed',
                 message: 'User not authenticated'
             });
         }
 
-        const plans = await Plan.find({ clerkUserId }).sort({ createdAt: -1 });
+        const plans = await Plan.find({ firebaseUid }).sort({ createdAt: -1 });
 
         return res.status(StatusCodes.OK).json({
             status: 'Success',

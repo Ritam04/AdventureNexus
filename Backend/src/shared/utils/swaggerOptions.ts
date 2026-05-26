@@ -28,18 +28,18 @@ export const swaggerOptions = {
             },
         ],
         components: {
-            // Security Definitions (JWT Bearer & Clerk)
+            // Security Definitions (JWT Bearer & Firebase)
             securitySchemes: {
                 bearerAuth: {
                     type: 'http',
                     scheme: 'bearer',
                     bearerFormat: 'JWT',
                 },
-                clerkAuth: {
+                firebaseAuth: {
                     type: 'apiKey',
                     in: 'header',
                     name: 'Authorization',
-                    description: 'Clerk Short-lived Session Token'
+                    description: 'Firebase Short-lived Session Token'
                 }
             },
             // Reusable Data Models (Schemas)
@@ -48,12 +48,12 @@ export const swaggerOptions = {
                     type: 'object',
                     properties: {
                         _id: { type: 'string', example: '60d0fe4f5311236168a109ca' },
-                        clerkUserId: { type: 'string', example: 'user_2P...' },
+                        firebaseUid: { type: 'string', example: 'user_2P...' },
                         email: { type: 'string', example: 'user@example.com' },
                         firstName: { type: 'string', example: 'John' },
                         lastName: { type: 'string', example: 'Doe' },
                         username: { type: 'string', example: 'johndoe' },
-                        profilepicture: { type: 'string', example: 'https://img.clerk.com/...' },
+                        profilepicture: { type: 'string', example: 'https://img.firebase.com/...' },
                         preferences: {
                             type: 'array',
                             items: { type: 'string' },

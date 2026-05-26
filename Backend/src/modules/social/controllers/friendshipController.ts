@@ -10,18 +10,18 @@ import { broadcastRealtimeEvent } from '../../../shared/socket/socket';
  */
 export const sendFriendRequest = async (req: Request, res: Response) => {
     try {
-        const { recipientClerkUserId } = req.body;
-        const requesterClerkUserId = (req as any).user?.clerkUserId;
+        const { recipientFirebaseUid } = req.body;
+        const requesterClerkUserId = (req as any).user?.firebaseUid;
 
-        if (!recipientClerkUserId || requesterClerkUserId === recipientClerkUserId) {
+        if (!recipientFirebaseUid || requesterClerkUserId === recipientFirebaseUid) {
             return res.status(400).json({ success: false, message: 'Invalid recipient' });
         }
 
         // Check if already friends or request pending
         const existingFriendship = await Friendship.findOne({
             $or: [
-                { requesterClerkUserId, recipientClerkUserId },
-                { requesterClerkUserId: recipientClerkUserId, recipientClerkUserId: requesterClerkUserId }
+                { requesterClerkUserId, recipientFirebaseUid },
+                { requesterClerkUserId: recipientFirebaseUid, recipientFirebaseUid: requesterClerkUserId }
             ]
         });
 
@@ -31,7 +31,7 @@ export const sendFriendRequest = async (req: Request, res: Response) => {
 
         const friendship = new Friendship({
             requesterClerkUserId,
-            recipientClerkUserId,
+            recipientFirebaseUid,
             status: FriendshipStatus.PENDING
         });
 
@@ -39,15 +39,15 @@ export const sendFriendRequest = async (req: Request, res: Response) => {
 
         // Create notification
         const notification = new Notification({
-            recipientClerkUserId: recipientClerkUserId,
-            senderClerkUserId: requesterClerkUserId,
+            recipientFirebaseUid: recipientFirebaseUid,
+            senderFirebaseUid: requesterClerkUserId,
             type: NotificationType.FRIEND_REQUEST,
             relatedId: friendship._id
         });
         await notification.save();
 
         // Broadcast real-time notification
-        broadcastRealtimeEvent(recipientClerkUserId, 'notification:new', notification);
+        broadcastRealtimeEvent(recipientFirebaseUid, 'notification:new', notification);
 
         return res.status(201).json({
             success: true,
@@ -67,11 +67,11 @@ export const sendFriendRequest = async (req: Request, res: Response) => {
 export const acceptFriendRequest = async (req: Request, res: Response) => {
     try {
         const { friendshipId } = req.body;
-        const userClerkUserId = (req as any).user?.clerkUserId;
+        const userFirebaseUid = (req as any).user?.firebaseUid;
 
         const friendship = await Friendship.findById(friendshipId);
 
-        if (!friendship || friendship.recipientClerkUserId !== userClerkUserId) {
+        if (!friendship || friendship.recipientFirebaseUid !== userFirebaseUid) {
             return res.status(404).json({ success: false, message: 'Friend request not found' });
         }
 
@@ -84,8 +84,8 @@ export const acceptFriendRequest = async (req: Request, res: Response) => {
 
         // Create notification for the requester
         const notification = new Notification({
-            recipientClerkUserId: friendship.requesterClerkUserId,
-            senderClerkUserId: userClerkUserId,
+            recipientFirebaseUid: friendship.requesterClerkUserId,
+            senderFirebaseUid: userFirebaseUid,
             type: NotificationType.FRIEND_ACCEPTED,
             relatedId: friendship._id
         });
@@ -110,19 +110,19 @@ export const acceptFriendRequest = async (req: Request, res: Response) => {
  */
 export const getFriends = async (req: Request, res: Response) => {
     try {
-        const userClerkUserId = (req as any).user?.clerkUserId;
+        const userFirebaseUid = (req as any).user?.firebaseUid;
 
         const friendships = await Friendship.find({
-            $or: [{ requesterClerkUserId: userClerkUserId }, { recipientClerkUserId: userClerkUserId }],
+            $or: [{ requesterClerkUserId: userFirebaseUid }, { recipientFirebaseUid: userFirebaseUid }],
             status: FriendshipStatus.ACCEPTED
         });
 
         const friendIds = friendships.map(f => 
-            f.requesterClerkUserId === userClerkUserId ? f.recipientClerkUserId : f.requesterClerkUserId
+            f.requesterClerkUserId === userFirebaseUid ? f.recipientFirebaseUid : f.requesterClerkUserId
         );
 
-        const friends = await User.find({ clerkUserId: { $in: friendIds } })
-            .select('clerkUserId username fullname profilepicture onlineStatus lastActive');
+        const friends = await User.find({ firebaseUid: { $in: friendIds } })
+            .select('firebaseUid username fullname profilepicture onlineStatus lastActive');
 
         return res.status(200).json({
             success: true,

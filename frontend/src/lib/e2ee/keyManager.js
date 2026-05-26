@@ -49,18 +49,18 @@ const openDB = () => {
 
 /**
  * Store the user's E2EE key pair securely in IndexedDB.
- * @param {string} clerkUserId - The user's Clerk ID (used as key)
+ * @param {string} firebaseUid - The user's Firebase UID (used as key)
  * @param {string} publicKey - Base64-encoded public key
  * @param {string} secretKey - Base64-encoded secret key
  */
-export const storeKeyPair = async (clerkUserId, publicKey, secretKey) => {
+export const storeKeyPair = async (firebaseUid, publicKey, secretKey) => {
     try {
         const db = await openDB();
         const tx = db.transaction(STORE_NAME, 'readwrite');
         const store = tx.objectStore(STORE_NAME);
 
         store.put({
-            id: clerkUserId,
+            id: firebaseUid,
             publicKey,
             secretKey,
             createdAt: new Date().toISOString(),
@@ -78,15 +78,15 @@ export const storeKeyPair = async (clerkUserId, publicKey, secretKey) => {
 
 /**
  * Retrieve the user's stored key pair from IndexedDB.
- * @param {string} clerkUserId - The user's Clerk ID
+ * @param {string} firebaseUid - The user's Firebase UID
  * @returns {Promise<{publicKey: string, secretKey: string}|null>}
  */
-export const getKeyPair = async (clerkUserId) => {
+export const getKeyPair = async (firebaseUid) => {
     try {
         const db = await openDB();
         const tx = db.transaction(STORE_NAME, 'readonly');
         const store = tx.objectStore(STORE_NAME);
-        const request = store.get(clerkUserId);
+        const request = store.get(firebaseUid);
 
         return new Promise((resolve, reject) => {
             request.onsuccess = () => {
@@ -110,34 +110,34 @@ export const getKeyPair = async (clerkUserId) => {
 
 /**
  * Get ONLY the secret key for the current user.
- * @param {string} clerkUserId
+ * @param {string} firebaseUid
  * @returns {Promise<string|null>}
  */
-export const getSecretKey = async (clerkUserId) => {
-    const keyPair = await getKeyPair(clerkUserId);
+export const getSecretKey = async (firebaseUid) => {
+    const keyPair = await getKeyPair(firebaseUid);
     return keyPair?.secretKey || null;
 };
 
 /**
  * Check if the user already has a stored key pair.
- * @param {string} clerkUserId
+ * @param {string} firebaseUid
  * @returns {Promise<boolean>}
  */
-export const hasKeyPair = async (clerkUserId) => {
-    const keyPair = await getKeyPair(clerkUserId);
+export const hasKeyPair = async (firebaseUid) => {
+    const keyPair = await getKeyPair(firebaseUid);
     return !!keyPair;
 };
 
 /**
  * Delete the user's key pair (for key rotation or account deletion).
- * @param {string} clerkUserId
+ * @param {string} firebaseUid
  */
-export const deleteKeyPair = async (clerkUserId) => {
+export const deleteKeyPair = async (firebaseUid) => {
     try {
         const db = await openDB();
         const tx = db.transaction(STORE_NAME, 'readwrite');
         const store = tx.objectStore(STORE_NAME);
-        store.delete(clerkUserId);
+        store.delete(firebaseUid);
 
         return new Promise((resolve, reject) => {
             tx.oncomplete = () => resolve(true);
@@ -158,20 +158,20 @@ const publicKeyCache = new Map();
 
 /**
  * Cache a user's public key (fetched from server).
- * @param {string} clerkUserId
+ * @param {string} firebaseUid
  * @param {string} publicKey - Base64-encoded public key
  */
-export const cachePublicKey = (clerkUserId, publicKey) => {
-    publicKeyCache.set(clerkUserId, publicKey);
+export const cachePublicKey = (firebaseUid, publicKey) => {
+    publicKeyCache.set(firebaseUid, publicKey);
 };
 
 /**
  * Get a cached public key.
- * @param {string} clerkUserId
+ * @param {string} firebaseUid
  * @returns {string|null}
  */
-export const getCachedPublicKey = (clerkUserId) => {
-    return publicKeyCache.get(clerkUserId) || null;
+export const getCachedPublicKey = (firebaseUid) => {
+    return publicKeyCache.get(firebaseUid) || null;
 };
 
 /**

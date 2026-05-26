@@ -23,10 +23,10 @@ export const createPlan = async (req: Request, res: Response) => {
             destination_overview
         } = req.body;
 
-        const userId = req.user?._id;
-        const clerkUserId = req.user?.clerkUserId;
+        const userId = (req as any).user?._id;
+        const firebaseUid = (req as any).user?.firebaseUid;
 
-        if (!userId || !clerkUserId) {
+        if (!userId || !firebaseUid) {
             return res.status(StatusCodes.UNAUTHORIZED).json({
                 status: 'Failed',
                 message: 'User not authenticated'
@@ -44,7 +44,7 @@ export const createPlan = async (req: Request, res: Response) => {
         // 2. Create New Plan
         const newPlan = new Plan({
             userId,
-            clerkUserId,
+            firebaseUid,
             to,
             from,
             date,

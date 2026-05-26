@@ -3,7 +3,7 @@ import { Schema, model, Document } from 'mongoose';
 export interface IExperienceComment extends Document {
     postId: Schema.Types.ObjectId;
     userId: Schema.Types.ObjectId;
-    clerkUserId: string;
+    firebaseUid: string;
     content: string;
     parentId: Schema.Types.ObjectId | null;
     likes: string[];
@@ -23,7 +23,7 @@ const experienceCommentSchema = new Schema<IExperienceComment>({
         ref: 'User',
         required: true,
     },
-    clerkUserId: {
+    firebaseUid: {
         type: String,
         required: true,
     },

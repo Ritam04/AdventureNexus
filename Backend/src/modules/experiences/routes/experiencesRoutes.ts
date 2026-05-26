@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { protect, optionalProtect } from '../../../shared/middleware/authClerkTokenMiddleware';
+import { protect, optionalProtect } from '../../../shared/middleware/firebaseAuthMiddleware';
 import { upload } from '../../../shared/middleware/multer';
 import {
     createExperiencePost,

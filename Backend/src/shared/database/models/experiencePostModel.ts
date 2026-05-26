@@ -2,15 +2,15 @@ import { Schema, model, Document } from 'mongoose';
 
 export interface IExperiencePost extends Document {
     userId: Schema.Types.ObjectId;
-    clerkUserId: string;
+    firebaseUid: string;
     title: string;
     description: string;
     location: string;
     images: string[];
     tags: string[];
     rating: number;
-    likes: string[];       // Array of clerkUserIds
-    saves: string[];       // Array of clerkUserIds
+    likes: string[];       // Array of firebaseUids
+    saves: string[];       // Array of firebaseUids
     commentsCount: number;
     viewCount: number;
     // User-provided trip insights
@@ -29,7 +29,7 @@ const experiencePostSchema = new Schema<IExperiencePost>({
         required: true,
         index: true,
     },
-    clerkUserId: {
+    firebaseUid: {
         type: String,
         required: true,
         index: true,
@@ -62,10 +62,10 @@ const experiencePostSchema = new Schema<IExperiencePost>({
         default: 5,
     },
     likes: [{
-        type: String, // Clerk User IDs
+        type: String, // Firebase UIDs
     }],
     saves: [{
-        type: String, // Clerk User IDs
+        type: String, // Firebase UIDs
     }],
     commentsCount: {
         type: Number,

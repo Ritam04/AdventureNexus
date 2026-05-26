@@ -4,16 +4,16 @@ import logger from './logger';
 /**
  * Utility to log granular user actions.
  */
-export const trackActivity = async (clerkUserId: string, activityType: ActivityType, targetId: string) => {
+export const trackActivity = async (firebaseUid: string, activityType: ActivityType, targetId: string) => {
     try {
-        if (!clerkUserId || !targetId) return;
+        if (!firebaseUid || !targetId) return;
 
         await ActivityLog.create({
-            clerkUserId,
+            firebaseUid,
             activityType,
             targetId
         });
-        logger.info(`Activity tracked: User ${clerkUserId} completed ${activityType} on target ${targetId}`);
+        logger.info(`Activity tracked: User ${firebaseUid} completed ${activityType} on target ${targetId}`);
     } catch (error: any) {
         logger.error(`Error tracking activity: ${error.message}`);
     }

@@ -13,7 +13,7 @@ import logger from '../../../shared/utils/logger';
  */
 export const getPosts = async (req: Request, res: Response) => {
     try {
-        const { category, search, clerkUserId, groupId, communityId } = { ...req.query, ...req.params } as any;
+        const { category, search, firebaseUid, groupId, communityId } = { ...req.query, ...req.params } as any;
         let query: any = {};
 
         if (category) query.category = category;
@@ -46,8 +46,8 @@ export const getPosts = async (req: Request, res: Response) => {
         let userGroupIds: mongoose.Types.ObjectId[] = [];
         let interactedPostIds: string[] = [];
 
-        if (clerkUserId) {
-            const user = await User.findOne({ clerkUserId: clerkUserId as string });
+        if (firebaseUid) {
+            const user = await User.findOne({ firebaseUid: firebaseUid as string });
             if (user) {
                 followingIds = user.following || [];
                 const memberships = await GroupMembership.find({ userId: user._id });
@@ -55,7 +55,7 @@ export const getPosts = async (req: Request, res: Response) => {
             }
 
             // Fetch last 50 activity logs to identify recent interactions
-            const recentLogs = await ActivityLog.find({ clerkUserId })
+            const recentLogs = await ActivityLog.find({ firebaseUid })
                 .sort({ createdAt: -1 })
                 .limit(50);
             interactedPostIds = recentLogs.map(log => log.targetId);
@@ -71,7 +71,7 @@ export const getPosts = async (req: Request, res: Response) => {
             {
                 $addFields: {
                     isFollowed: {
-                        $cond: { if: { $in: ["$clerkUserId", followingIds] }, then: 1, else: 0 }
+                        $cond: { if: { $in: ["$firebaseUid", followingIds] }, then: 1, else: 0 }
                     },
                     inJoinedGroup: {
                         $cond: { if: { $in: ["$groupId", userGroupIds] }, then: 1, else: 0 }
@@ -105,7 +105,7 @@ export const getPosts = async (req: Request, res: Response) => {
         // Populate userId manually since aggregate doesn't support populate directly as easily
         let populatedPosts = await CommunityPost.populate(posts, {
             path: 'userId',
-            select: 'username profilepicture fullname clerkUserId'
+            select: 'username profilepicture fullname firebaseUid'
         });
         
         populatedPosts = await CommunityPost.populate(populatedPosts, {

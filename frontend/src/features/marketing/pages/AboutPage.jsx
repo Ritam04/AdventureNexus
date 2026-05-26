@@ -72,7 +72,7 @@ const AboutPage = () => {
         { name: "Google Gemini", icon: "googlegemini", color: "8E75B2", category: "AI Model", desc: "Multimodal AI" },
 
         // Utilities
-        { name: "Clerk", icon: "clerk", color: "6C47FF", category: "Auth", desc: "Secure identity" },
+        { name: "Firebase", icon: "firebase", color: "6C47FF", category: "Auth", desc: "Secure identity" },
         { name: "Radix UI", icon: "radixui", color: "ffffff", category: "Primitives", desc: "Accessible components" }, // White for visibility
     ];
 

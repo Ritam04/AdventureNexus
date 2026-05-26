@@ -1,5 +1,5 @@
 import { NextFunction, Response, Request } from 'express';
-import createHttpError from 'http-errors';
+import createError from 'http-errors';
 import { config } from '../../../shared/config/config';
 import Plan, { IPlan } from '../../../shared/database/models/planModel';
 import logger from '../../../shared/utils/logger';
@@ -73,7 +73,7 @@ const splitCost = async (
         if (config.env == 'development') {
             logger.error('Error in split cost:', err);
         }
-        return next(createHttpError(500, 'Internal Server Error!'));
+        return next(createError(500, 'Internal Server Error!'));
     }
 };
 

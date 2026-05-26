@@ -239,8 +239,8 @@ export const getTrainLiveStatus = async (req: Request, res: Response) => {
 export const bookTicket = async (req: Request, res: Response) => {
     const fullUrl = getFullURL(req);
     try {
-        const clerkUserId = req.auth()?.userId;
-        if (!clerkUserId) {
+        const firebaseUid = (req as any).user?.firebaseUid;
+        if (!firebaseUid) {
             return res.status(StatusCodes.UNAUTHORIZED).json({
                 status: 'Failed',
                 message: 'Authentication required to book tickets'
@@ -260,7 +260,7 @@ export const bookTicket = async (req: Request, res: Response) => {
         const pnrNumber = generatePNR();
 
         const newBooking = new TrainBooking({
-            clerkUserId,
+            firebaseUid,
             ...bookingData,
             journeyDate: new Date(bookingData.journeyDate),
             pnrNumber,
@@ -270,7 +270,7 @@ export const bookTicket = async (req: Request, res: Response) => {
 
         await newBooking.save();
 
-        logger.info(`URL: ${fullUrl} - Train booking created: PNR=${pnrNumber} by ${clerkUserId}`);
+        logger.info(`URL: ${fullUrl} - Train booking created: PNR=${pnrNumber} by ${firebaseUid}`);
 
         return res.status(StatusCodes.CREATED).json({
             status: 'Ok',
@@ -317,15 +317,15 @@ export const bookTicket = async (req: Request, res: Response) => {
 export const getMyBookings = async (req: Request, res: Response) => {
     const fullUrl = getFullURL(req);
     try {
-        const clerkUserId = req.auth()?.userId;
-        if (!clerkUserId) {
+        const firebaseUid = (req as any).user?.firebaseUid;
+        if (!firebaseUid) {
             return res.status(StatusCodes.UNAUTHORIZED).json({
                 status: 'Failed',
                 message: 'Authentication required'
             });
         }
 
-        const bookings = await TrainBooking.find({ clerkUserId })
+        const bookings = await TrainBooking.find({ firebaseUid })
             .sort({ createdAt: -1 })
             .lean();
 
@@ -366,8 +366,8 @@ export const getMyBookings = async (req: Request, res: Response) => {
 export const cancelBooking = async (req: Request, res: Response) => {
     const fullUrl = getFullURL(req);
     try {
-        const clerkUserId = req.auth()?.userId;
-        if (!clerkUserId) {
+        const firebaseUid = (req as any).user?.firebaseUid;
+        if (!firebaseUid) {
             return res.status(StatusCodes.UNAUTHORIZED).json({
                 status: 'Failed',
                 message: 'Authentication required'
@@ -375,7 +375,7 @@ export const cancelBooking = async (req: Request, res: Response) => {
         }
 
         const { id } = req.params;
-        const booking = await TrainBooking.findOne({ _id: id, clerkUserId });
+        const booking = await TrainBooking.findOne({ _id: id, firebaseUid });
 
         if (!booking) {
             return res.status(StatusCodes.NOT_FOUND).json({
@@ -394,7 +394,7 @@ export const cancelBooking = async (req: Request, res: Response) => {
         booking.status = 'Cancelled';
         await booking.save();
 
-        logger.info(`URL: ${fullUrl} - Train booking cancelled: ${id} by ${clerkUserId}`);
+        logger.info(`URL: ${fullUrl} - Train booking cancelled: ${id} by ${firebaseUid}`);
 
         return res.status(StatusCodes.OK).json({
             status: 'Ok',

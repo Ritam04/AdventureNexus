@@ -36,7 +36,7 @@ export const protect = async (req: Request, res: Response, next: NextFunction): 
         const token = authHeader.split(" ")[1];
 
         // 4. Verify Firebase Token
-        let clerkUserId: string;
+        let firebaseUid: string;
         let decodedToken: admin.auth.DecodedIdToken;
 
         try {
@@ -48,7 +48,7 @@ export const protect = async (req: Request, res: Response, next: NextFunction): 
                     message: "Invalid token payload.",
                 });
             }
-            clerkUserId = decodedToken.uid;
+            firebaseUid = decodedToken.uid;
         } catch (decodeError) {
             logger.error("❌ Token decode error:", decodeError);
             return res.status(StatusCodes.UNAUTHORIZED).json({
@@ -57,33 +57,43 @@ export const protect = async (req: Request, res: Response, next: NextFunction): 
             });
         }
 
-        // 5. Sync with Local Database & JIT Provisioning
-        let user: IUser | null = await User.findOne({ clerkUserId });
+        let user: IUser | null = await User.findOne({ firebaseUid });
 
         if (!user) {
-            logger.info("🆕 User not found in database. Auto-creating from Firebase token...");
-            
-            // Generate a safe, unique username
-            const uniqueSuffix = Math.random().toString(36).substring(2, 8);
-            let baseName = decodedToken.name || (decodedToken.email ? decodedToken.email.split('@')[0] : 'traveler');
-            let safeUsername = baseName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + '_' + uniqueSuffix;
+            // Check if user exists by email (migration from Clerk)
+            if (decodedToken.email) {
+                user = await User.findOne({ email: decodedToken.email });
+            }
 
-            user = new User({
-                clerkUserId,
-                email: decodedToken.email || `${clerkUserId}@placeholder.com`,
-                username: safeUsername,
-                fullname: decodedToken.name || '',
-                profilepicture: decodedToken.picture || '',
-                role: 'user'
-            });
-            await user.save();
-            logger.info("✅ User auto-created successfully!");
+            if (user) {
+                logger.info(`🔄 Linking existing account (${user.email}) to new Firebase UID`);
+                user.firebaseUid = firebaseUid;
+                await user.save();
+            } else {
+                logger.info("🆕 User not found in database. Auto-creating from Firebase token...");
+                
+                // Generate a safe, unique username
+                const uniqueSuffix = Math.random().toString(36).substring(2, 8);
+                let baseName = decodedToken.name || (decodedToken.email ? decodedToken.email.split('@')[0] : 'traveler');
+                let safeUsername = baseName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + '_' + uniqueSuffix;
+
+                user = new User({
+                    firebaseUid,
+                    email: decodedToken.email || `${firebaseUid}@placeholder.com`,
+                    username: safeUsername,
+                    fullname: decodedToken.name || '',
+                    profilepicture: decodedToken.picture || '',
+                    role: 'user'
+                });
+                await user.save();
+                logger.info("✅ User auto-created successfully!");
+            }
         }
 
         // 6. Attach User to Request Object for downstream use
         req.user = {
             _id: user._id.toString(),
-            clerkUserId: user.clerkUserId,
+            firebaseUid: user.firebaseUid,
             role: user.role || "user",
             email: user.email,
             username: user.username,
@@ -131,7 +141,7 @@ export const verifyFirebaseToken = async (req: Request, res: Response, next: Nex
             // Attach minimal info to request for the controller
             req.user = {
                 _id: "",
-                clerkUserId: decodedToken.uid,
+                firebaseUid: decodedToken.uid,
                 role: "user",
                 email: decodedToken.email || "",
                 username: "",
@@ -168,11 +178,11 @@ export const optionalProtect = async (req: Request, res: Response, next: NextFun
         const decodedToken = await admin.auth().verifyIdToken(token);
 
         if (decodedToken && decodedToken.uid) {
-            const user: IUser | null = await User.findOne({ clerkUserId: decodedToken.uid });
+            const user: IUser | null = await User.findOne({ firebaseUid: decodedToken.uid });
             if (user) {
                 req.user = {
                     _id: user._id.toString(),
-                    clerkUserId: user.clerkUserId,
+                    firebaseUid: user.firebaseUid,
                     role: user.role || "user",
                     email: user.email,
                     username: user.username,

@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import Plan from '../../../shared/database/models/planModel';
 import User from '../../../shared/database/models/userModel';
-import createHttpError from 'http-errors';
+import createError from 'http-errors';
 import logger from '../../../shared/utils/logger';
 
 interface UpdatePlanRequestBody {
@@ -43,13 +43,13 @@ export const updatePlan = async (
         // 1. Find the plan by ID
         const plan = await Plan.findById(id);
         if (!plan) {
-            return next(createHttpError(404, 'Plan Not Found!'));
+            return next(createError(404, 'Plan Not Found!'));
         }
 
         // 2. Authorization: Check if the plan belongs to the user
-        if (plan.user.toString() !== req.user._id) {
+        if (plan.user.toString() !== (req as any).user._id) {
             return next(
-                createHttpError(
+                createError(
                     403,
                     'You do not permission to update this plan'
                 )
@@ -70,6 +70,6 @@ export const updatePlan = async (
         });
     } catch (error) {
         logger.error('Error updating plan:', error);
-        return next(createHttpError(500, 'Internal Server Error!'));
+        return next(createError(500, 'Internal Server Error!'));
     }
 };

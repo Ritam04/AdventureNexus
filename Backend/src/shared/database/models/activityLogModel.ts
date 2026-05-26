@@ -3,7 +3,7 @@ import mongoose, { Schema, Document, model } from 'mongoose';
 export type ActivityType = string;
 
 export interface IActivityLog extends Document {
-    clerkUserId: string;
+    firebaseUid: string;
     activityType: ActivityType;
     targetId: string; // postId, groupId, etc.
     createdAt: Date;
@@ -11,7 +11,7 @@ export interface IActivityLog extends Document {
 
 const activityLogSchema = new Schema<IActivityLog>(
     {
-        clerkUserId: { type: String, required: true, index: true },
+        firebaseUid: { type: String, required: true, index: true },
         activityType: { 
             type: String, 
             required: true 
@@ -24,7 +24,7 @@ const activityLogSchema = new Schema<IActivityLog>(
 );
 
 // Add index for fast querying by user and activity
-activityLogSchema.index({ clerkUserId: 1, activityType: 1 });
+activityLogSchema.index({ firebaseUid: 1, activityType: 1 });
 
 const ActivityLog = model<IActivityLog>('ActivityLog', activityLogSchema);
 export default ActivityLog;

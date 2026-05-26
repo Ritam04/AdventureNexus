@@ -9,7 +9,7 @@ import { IHotel } from "./HotelsDTO";
  */
 export interface IPlan extends Document {
     userId: Schema.Types.ObjectId; // Reference to local User ID
-    clerkUserId: string;           // Reference to Clerk User ID
+    firebaseUid: string;           // Reference to Firebase User ID
     to: string;                    // Destination
     from: string;                  // Origin
     date: Date;                    // Travel Date

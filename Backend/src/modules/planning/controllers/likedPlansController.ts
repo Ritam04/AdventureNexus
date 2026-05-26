@@ -11,7 +11,7 @@ import logger from '../../../shared/utils/logger';
 export const likePlan = async (req: Request, res: Response) => {
     try {
         const { planId } = req.params;
-        const userId = req.user?.clerkUserId; // From Clerk auth middleware
+        const userId = (req as any).user?.firebaseUid; // From Firebase auth middleware
 
         if (!userId) {
             return res.status(401).json({
@@ -37,8 +37,8 @@ export const likePlan = async (req: Request, res: Response) => {
             });
         }
 
-        // Find user by Clerk ID
-        const user = await User.findOne({ clerkUserId: userId });
+        // Find user by Firebase UID
+        const user = await User.findOne({ firebaseUid: userId });
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -84,7 +84,7 @@ export const likePlan = async (req: Request, res: Response) => {
 export const unlikePlan = async (req: Request, res: Response) => {
     try {
         const { planId } = req.params;
-        const userId = req.user?.clerkUserId;
+        const userId = (req as any).user?.firebaseUid;
 
         if (!userId) {
             return res.status(401).json({
@@ -101,8 +101,8 @@ export const unlikePlan = async (req: Request, res: Response) => {
             });
         }
 
-        // Find user by Clerk ID
-        const user = await User.findOne({ clerkUserId: userId });
+        // Find user by Firebase UID
+        const user = await User.findOne({ firebaseUid: userId });
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -155,7 +155,7 @@ export const unlikePlan = async (req: Request, res: Response) => {
  */
 export const getLikedPlans = async (req: Request, res: Response) => {
     try {
-        const userId = req.user?.clerkUserId;
+        const userId = (req as any).user?.firebaseUid;
 
         if (!userId) {
             return res.status(401).json({
@@ -165,7 +165,7 @@ export const getLikedPlans = async (req: Request, res: Response) => {
         }
 
         // Find user and populate liked plans
-        const user = await User.findOne({ clerkUserId: userId })
+        const user = await User.findOne({ firebaseUid: userId })
             .populate('likedPlans');
 
         if (!user) {

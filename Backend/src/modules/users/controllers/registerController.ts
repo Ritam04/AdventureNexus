@@ -5,19 +5,19 @@ import logger from '../../../shared/utils/logger';
 
 export const registerUser = async (req: Request, res: Response) => {
     try {
-        // Even though it is called 'clerkUserId' in the DB, it is actually the Firebase UID now.
+        // Even though it is called 'firebaseUid' in the DB, it is actually the Firebase UID now.
         // We do this to ensure backward compatibility with the existing database.
-        const { clerkUserId, email, username, profileImage } = req.body;
+        const { firebaseUid, email, username, profileImage } = req.body;
 
-        if (!clerkUserId || !email) {
+        if (!firebaseUid || !email) {
             return res.status(StatusCodes.BAD_REQUEST).json({
                 success: false,
-                message: 'clerkUserId (uid) and email are required'
+                message: 'firebaseUid (uid) and email are required'
             });
         }
 
         // Check if user already exists
-        let user = await User.findOne({ clerkUserId });
+        let user = await User.findOne({ firebaseUid });
         
         if (user) {
             // Update existing user with latest Firebase data
@@ -28,7 +28,7 @@ export const registerUser = async (req: Request, res: Response) => {
         } else {
             // Create new user
             user = new User({
-                clerkUserId,
+                firebaseUid,
                 email,
                 username: username || email.split('@')[0],
                 profileImage: profileImage || '',

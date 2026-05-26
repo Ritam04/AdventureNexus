@@ -127,7 +127,7 @@ const AppContent = () => {
           </ProtectedRoute>
         } />
         <Route path='/profile/:username' element={<ProfilePage />} />
-        <Route path='/user/profile/:clerkUserId' element={<PublicProfilePage />} />
+        <Route path='/user/profile/:firebaseUid' element={<PublicProfilePage />} />
         <Route path='/terms' element={<TermsPage />} />
         <Route path='/privacy' element={<PrivacyPage />} />
         <Route path='/cookies' element={<CookiesPage />} />

@@ -118,9 +118,9 @@ export const broadcastRealtimeEvent = (event: string, data: any) => {
 /**
  * Helper to emit a notification to a specific user if they are online.
  */
-export const sendRealtimeNotification = (recipientClerkUserId: string, notification: any) => {
-    if (io && onlineUsers.has(recipientClerkUserId)) {
-        onlineUsers.get(recipientClerkUserId)?.forEach(socketId => {
+export const sendRealtimeNotification = (recipientFirebaseUid: string, notification: any) => {
+    if (io && onlineUsers.has(recipientFirebaseUid)) {
+        onlineUsers.get(recipientFirebaseUid)?.forEach(socketId => {
             io.to(socketId).emit('notification', notification);
             io.to(socketId).emit('notification:new', notification);
         });
@@ -130,9 +130,9 @@ export const sendRealtimeNotification = (recipientClerkUserId: string, notificat
 /**
  * Helper to emit a message to a specific user if they are online.
  */
-export const sendRealtimeMessage = (recipientClerkUserId: string, message: any) => {
-    if (io && onlineUsers.has(recipientClerkUserId)) {
-        onlineUsers.get(recipientClerkUserId)?.forEach(socketId => {
+export const sendRealtimeMessage = (recipientFirebaseUid: string, message: any) => {
+    if (io && onlineUsers.has(recipientFirebaseUid)) {
+        onlineUsers.get(recipientFirebaseUid)?.forEach(socketId => {
             io.to(socketId).emit('message:direct', message);
         });
     }
@@ -141,9 +141,9 @@ export const sendRealtimeMessage = (recipientClerkUserId: string, message: any) 
 /**
  * Helper to emit a message to a specific user if they are online.
  */
-export const sendChatRealtimeMessage = (recipientClerkUserId: string, data: any) => {
-    if (io && onlineUsers.has(recipientClerkUserId)) {
-        onlineUsers.get(recipientClerkUserId)?.forEach(socketId => {
+export const sendChatRealtimeMessage = (recipientFirebaseUid: string, data: any) => {
+    if (io && onlineUsers.has(recipientFirebaseUid)) {
+        onlineUsers.get(recipientFirebaseUid)?.forEach(socketId => {
             io.to(socketId).emit('chat:message', data);
         });
     }

@@ -38,8 +38,8 @@ const UsersPage: React.FC = () => {
                 return newSet;
             }));
             socket.on('user:created', () => fetchUsers());
-            socket.on('user:deleted', (clerkId: string) => {
-                setUsers(prev => prev.filter(u => u.clerkUserId !== clerkId));
+            socket.on('user:deleted', (firebaseUid: string) => {
+                setUsers(prev => prev.filter(u => u.firebaseUid !== firebaseUid));
             });
 
             return () => {
@@ -148,7 +148,7 @@ const UsersPage: React.FC = () => {
                         </thead>
                         <tbody className="divide-y divide-white/5 text-[11px]">
                             {filteredUsers.map((user) => {
-                                const isOnline = onlineUserIds.has(user.clerkUserId);
+                                const isOnline = onlineUserIds.has(user.firebaseUid);
                                 return (
                                     <tr
                                         key={user._id}
@@ -249,7 +249,7 @@ const UsersPage: React.FC = () => {
                                     alt={selectedUser.username}
                                     className="w-16 h-16 rounded-xl object-cover border border-white/10"
                                 />
-                                {onlineUserIds.has(selectedUser.clerkUserId) && (
+                                {onlineUserIds.has(selectedUser.firebaseUid) && (
                                     <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-4 border-[#0c0c0c] rounded-full animate-pulse"></span>
                                 )}
                             </div>
@@ -273,7 +273,7 @@ const UsersPage: React.FC = () => {
                                 <Activity className="w-4 h-4 text-emerald-400" />
                                 <span className="text-gray-500 text-[8px] font-black uppercase tracking-widest block mt-1">CONNECTION LINE</span>
                                 <span className="text-white font-black text-[10px] uppercase">
-                                    {onlineUserIds.has(selectedUser.clerkUserId) ? 'ACTIVE TELEMETRY' : 'PERSISTENT DISCONNECTED'}
+                                    {onlineUserIds.has(selectedUser.firebaseUid) ? 'ACTIVE TELEMETRY' : 'PERSISTENT DISCONNECTED'}
                                 </span>
                             </div>
                             <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl space-y-1">
@@ -292,8 +292,8 @@ const UsersPage: React.FC = () => {
                                     <span className="text-gray-200 font-bold">{selectedUser.email}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-gray-500 text-[9px] font-black uppercase tracking-widest">Clerk Node ID</span>
-                                    <code className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">{selectedUser.clerkUserId}</code>
+                                    <span className="text-gray-500 text-[9px] font-black uppercase tracking-widest">Firebase Node ID</span>
+                                    <code className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">{selectedUser.firebaseUid}</code>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-gray-500 text-[9px] font-black uppercase tracking-widest">Account Created</span>

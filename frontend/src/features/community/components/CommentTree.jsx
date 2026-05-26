@@ -23,7 +23,7 @@ const CommentItem = ({ comment, depth, i, selectedPost, getTimeAgo, setReplyingT
           className="w-10 h-10 rounded-full bg-muted overflow-hidden shrink-0 border-2 border-border/50 shadow-lg group-hover:border-primary/50 transition-colors cursor-pointer"
           onClick={(e) => {
             e.stopPropagation();
-            navigate(`/user/profile/${comment.clerkUserId}`);
+            navigate(`/user/profile/${comment.firebaseUid}`);
           }}
         >
           {comment.userId?.profilepicture ? (
@@ -38,11 +38,11 @@ const CommentItem = ({ comment, depth, i, selectedPost, getTimeAgo, setReplyingT
               className="font-black text-sm tracking-tight cursor-pointer hover:text-primary transition-colors flex items-center gap-2"
               onClick={(e) => {
                 e.stopPropagation();
-                navigate(`/user/profile/${comment.clerkUserId}`);
+                navigate(`/user/profile/${comment.firebaseUid}`);
               }}
             >
               {comment.userId?.fullname || comment.userId?.username || 'Traveler'}
-              {selectedPost && comment.clerkUserId === selectedPost.clerkUserId && (
+              {selectedPost && comment.firebaseUid === selectedPost.firebaseUid && (
                 <Badge className="bg-primary/20 text-primary border-none shadow-none text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">Author</Badge>
               )}
             </span>

@@ -10,8 +10,8 @@ import getFullURL from "../../../shared/services/getFullURL.service";
 export const createBooking = async (req: Request, res: Response) => {
     const fullUrl = getFullURL(req);
     try {
-        const clerkUserId = req.auth()?.userId;
-        if (!clerkUserId) {
+        const firebaseUid = (req as any).user?.firebaseUid;
+        if (!firebaseUid) {
             return res.status(StatusCodes.UNAUTHORIZED).json({
                 status: "Failed",
                 message: "Unauthorized"
@@ -27,10 +27,10 @@ export const createBooking = async (req: Request, res: Response) => {
             });
         }
 
-        // In a real app, we'd find the userId from clerkUserId first
+        // In a real app, we'd find the userId from firebaseUid first
         // For now, let's assume the user exists
         const bookingData = {
-            clerkUserId,
+            firebaseUid,
             userId: (req as any).user?._id, // Assume middleware attaches this
             type,
             referenceId,
@@ -68,15 +68,15 @@ export const createBooking = async (req: Request, res: Response) => {
 export const getMyBookings = async (req: Request, res: Response) => {
     const fullUrl = getFullURL(req);
     try {
-        const clerkUserId = req.auth()?.userId;
-        if (!clerkUserId) {
+        const firebaseUid = (req as any).user?.firebaseUid;
+        if (!firebaseUid) {
             return res.status(StatusCodes.UNAUTHORIZED).json({
                 status: "Failed",
                 message: "Unauthorized"
             });
         }
 
-        const bookings = await Booking.find({ clerkUserId })
+        const bookings = await Booking.find({ firebaseUid })
             .populate('referenceId')
             .populate('roomId');
 

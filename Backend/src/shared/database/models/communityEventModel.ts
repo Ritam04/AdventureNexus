@@ -6,7 +6,7 @@ export interface ICommunityEvent extends Document {
     date: Date;
     type: 'Webinar' | 'In-Person';
     location?: string;
-    attendees: string[]; // clerkUserIds
+    attendees: string[]; // firebaseUids
     imageUrl?: string;
     createdAt: Date;
 }

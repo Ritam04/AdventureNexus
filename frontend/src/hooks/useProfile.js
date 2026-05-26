@@ -6,8 +6,8 @@ import toast from 'react-hot-toast';
 
 export const useProfile = () => {
     const { getToken } = useAuth();
-    const { user: clerkUser } = useUser();
-    const clerkUserId = clerkUser?.clerkUserId || clerkUser?.id || clerkUser?._id;
+    const { user: firebaseUser } = useUser();
+    const firebaseUid = firebaseUser?.firebaseUid || firebaseUser?.id || firebaseUser?._id;
 
     const [profile, setProfile] = useState(null);
     const [stats, setStats] = useState({
@@ -30,11 +30,11 @@ export const useProfile = () => {
 
     // Fetch primary profile data and stats
     const fetchProfile = useCallback(async () => {
-        if (!clerkUserId) return;
+        if (!firebaseUid) return;
         setLoadingProfile(true);
         try {
             const token = await getToken();
-            const res = await profileService.getProfile(clerkUserId, token);
+            const res = await profileService.getProfile(firebaseUid, token);
             if (res.success) {
                 setProfile(res.data.profile);
                 setStats(res.data.stats);
@@ -45,29 +45,29 @@ export const useProfile = () => {
         } finally {
             setLoadingProfile(false);
         }
-    }, [clerkUserId, getToken]);
+    }, [firebaseUid, getToken]);
 
     // Fetch content for a specific tab lazily
     const fetchTabData = useCallback(async (tabKey) => {
-        if (!clerkUserId || tabData[tabKey] !== null) return; // Cached
+        if (!firebaseUid || tabData[tabKey] !== null) return; // Cached
         setLoadingTab(prev => ({ ...prev, [tabKey]: true }));
         try {
             const token = await getToken();
             let data = [];
             if (tabKey === 'posts') {
-                const res = await profileService.getPosts(clerkUserId, token);
+                const res = await profileService.getPosts(firebaseUid, token);
                 data = res.data || [];
             } else if (tabKey === 'experiences') {
-                const res = await profileService.getExperiences(clerkUserId, token);
+                const res = await profileService.getExperiences(firebaseUid, token);
                 data = res.data || [];
             } else if (tabKey === 'comments') {
-                const res = await profileService.getComments(clerkUserId, token);
+                const res = await profileService.getComments(firebaseUid, token);
                 data = res.data || [];
             } else if (tabKey === 'likes') {
-                const res = await profileService.getLikes(clerkUserId, token);
+                const res = await profileService.getLikes(firebaseUid, token);
                 data = res.data || [];
             } else if (tabKey === 'groups') {
-                const res = await profileService.getGroups(clerkUserId, token);
+                const res = await profileService.getGroups(firebaseUid, token);
                 data = res.data || [];
             }
 
@@ -78,7 +78,7 @@ export const useProfile = () => {
         } finally {
             setLoadingTab(prev => ({ ...prev, [tabKey]: false }));
         }
-    }, [clerkUserId, getToken, tabData]);
+    }, [firebaseUid, getToken, tabData]);
 
     // Refresh everything
     const refreshProfile = useCallback(() => {
@@ -93,10 +93,10 @@ export const useProfile = () => {
     }, [fetchProfile]);
 
     useEffect(() => {
-        if (clerkUserId) {
+        if (firebaseUid) {
             fetchProfile();
         }
-    }, [clerkUserId, fetchProfile]);
+    }, [firebaseUid, fetchProfile]);
 
     // Update profile
     const updateProfileData = async (formData) => {
