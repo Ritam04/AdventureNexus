@@ -224,11 +224,16 @@ const AdventureNexusReviews = () => {
         try {
             const reviewData = {
                 ...newReview,
-                userName: user.fullName || user.username || 'Traveler',
-                userAvatar: user.imageUrl,
-                userId: user.id, // Clerk ID stored as string in this model
-                clerkUserId: user.id
+                userName: user.fullName || user.username || user.displayName || 'Traveler',
+                userAvatar: user.imageUrl || user.photoURL,
+                userId: user.clerkUserId || user.id || user._id, // Clerk ID stored as string in this model
+                clerkUserId: user.clerkUserId || user.id || user._id
             };
+
+            // Remove empty tripId to avoid Mongoose CastError to ObjectId
+            if (!reviewData.tripId || reviewData.tripId === '') {
+                delete reviewData.tripId;
+            }
 
             const token = await getToken();
             await reviewService.createReview(reviewData, token);
