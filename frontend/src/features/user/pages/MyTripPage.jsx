@@ -536,9 +536,54 @@ const MyTripsPage = () => {
     }
   };
 
-  const saveSettings = () => {
-    toast.success("Trip settings updated successfully!");
+  const saveSettings = async () => {
+    if (!selectedTrip) return;
+
+    const originalTrip = selectedTrip;
+    const updatedTrip = {
+      ...selectedTrip,
+      title: settingsForm.title,
+      // If demo trip or updating, keep status or set based on isPublic
+      status: settingsForm.isPublic ? 'upcoming' : 'completed'
+    };
+
+    // 1. Optimistic Update of local state
+    setTrips(prev => prev.map(t => t.id === selectedTrip.id ? updatedTrip : t));
+    setSelectedTrip(updatedTrip);
     setIsSettingsModalOpen(false);
+
+    // 2. Perform background API call to persist the changes if it's not a demo/mock trip
+    if (selectedTrip.id && !selectedTrip.id.startsWith('demo-')) {
+      try {
+        const token = await getToken();
+        const headers = {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        };
+
+        const response = await fetch(`${backendUrl}/api/v1/plans/${selectedTrip.id}`, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify({
+            name: settingsForm.title
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save settings on server');
+        }
+
+        toast.success("Trip settings saved successfully!");
+      } catch (error) {
+        console.error('Error saving trip settings:', error);
+        toast.error("Saved locally, but failed to sync to server.");
+        // Rollback state on failure
+        setTrips(prev => prev.map(t => t.id === originalTrip.id ? originalTrip : t));
+        setSelectedTrip(originalTrip);
+      }
+    } else {
+      toast.success("Trip settings updated locally!");
+    }
   };
 
   const getStatusColor = (status) => {

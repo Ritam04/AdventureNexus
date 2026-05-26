@@ -15,6 +15,21 @@ const connection = async (url: string, attempt = 1): Promise<void> => {
     if (attempt === 1) {
         mongoose.connection.on('connected', () => {
             logger.info('Connected to database successfully');
+            
+            // Auto-drop deprecated unique index from Clerk auth if it exists
+            const db = mongoose.connection.db;
+            if (db) {
+                db.collection('users').dropIndex('clerkUserId_1')
+                    .then(() => {
+                        logger.info('✅ Successfully dropped deprecated clerkUserId_1 unique index');
+                    })
+                    .catch((err: any) => {
+                        // Ignore IndexNotFound errors, as they are expected once the index is gone
+                        if (err.codeName !== 'IndexNotFound' && err.code !== 27) {
+                            logger.warn('⚠️ Attempted to drop deprecated index clerkUserId_1:', err.message);
+                        }
+                    });
+            }
         });
 
         mongoose.connection.on('error', (err) => {

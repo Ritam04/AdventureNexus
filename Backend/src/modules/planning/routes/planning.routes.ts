@@ -9,6 +9,7 @@ import { savePlanToUser } from '../controllers/savePlanToUserController';
 import { unsavePlanFromUser } from '../controllers/unsavePlanFromUserController';
 import { createPlan } from '../controllers/newPlanController';
 import { getMyPlans } from '../controllers/getMyPlansController';
+import { updatePlan } from '../controllers/updatePlanController';
 import protect from '../../../shared/middleware/firebaseAuthMiddleware';
 import { cacheMiddleware } from '../../../shared/middleware/cacheMiddleware';
 import { CACHE_CONFIG } from '../../../shared/config/cache.config';
@@ -64,6 +65,12 @@ route.delete("/:planId/save", protect, unsavePlanFromUser);
  * @desc Fetch a plan by ID publicly (for shared links).
  */
 route.get("/public/:id", cacheMiddleware({ prefix: CACHE_CONFIG.PREFIX.PLAN }), getPlanById);
+
+/**
+ * @route PUT /api/v1/plans/:id
+ * @desc Update a manually created or generated plan.
+ */
+route.put("/:id", protect, updatePlan);
 
 /**
  * @route DELETE /api/v1/plans/:id

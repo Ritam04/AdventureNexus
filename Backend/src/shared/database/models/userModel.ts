@@ -125,9 +125,11 @@ userSchema.post('save', function (error: any, doc: any, next: any) {
             next(new Error('User with this Firebase UID already exists'));
         } else if (error.keyPattern.username) {
             next(new Error('Username already taken'));
-            next(new Error('Phone number already registered'));
+        } else if (error.keyPattern.email) {
+            next(new Error('Email already registered'));
         } else {
-            next(new Error('Duplicate field error'));
+            const fields = Object.keys(error.keyPattern).join(', ');
+            next(new Error(`Duplicate field error: ${fields}`));
         }
     } else {
         next(error);

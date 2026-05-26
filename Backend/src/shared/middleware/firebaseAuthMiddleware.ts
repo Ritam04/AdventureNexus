@@ -62,7 +62,7 @@ export const protect = async (req: Request, res: Response, next: NextFunction): 
         if (!user) {
             // Check if user exists by email (migration from Clerk)
             if (decodedToken.email) {
-                user = await User.findOne({ email: decodedToken.email });
+                user = await User.findOne({ email: decodedToken.email.toLowerCase().trim() });
             }
 
             if (user) {
@@ -79,7 +79,7 @@ export const protect = async (req: Request, res: Response, next: NextFunction): 
 
                 user = new User({
                     firebaseUid,
-                    email: decodedToken.email || `${firebaseUid}@placeholder.com`,
+                    email: decodedToken.email ? decodedToken.email.toLowerCase().trim() : `${firebaseUid}@placeholder.com`,
                     username: safeUsername,
                     fullname: decodedToken.name || '',
                     profilepicture: decodedToken.picture || '',
