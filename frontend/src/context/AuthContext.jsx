@@ -25,7 +25,17 @@ export function AuthProvider({ children }) {
             const response = await axios.get(`${api_url}/api/v1/users/profile`, {
               headers: { Authorization: `Bearer ${token}` }
             });
-            setUser(response.data.userData || response.data.data || response.data);
+            const fetchedUser = response.data.userData || response.data.data || response.data;
+            if (fetchedUser) {
+                // Map profilepicture to imageUrl for frontend compatibility
+                if (fetchedUser.profilepicture) fetchedUser.imageUrl = fetchedUser.profilepicture;
+                // Map fullname to fullName
+                if (fetchedUser.fullname) fetchedUser.fullName = fetchedUser.fullname;
+                // Force firebaseUid and id to ensure hooks like useProfile always get the correct Firebase UID
+                fetchedUser.firebaseUid = fetchedUser.firebaseUid || firebaseUser.uid;
+                fetchedUser.id = fetchedUser.id || firebaseUser.uid;
+            }
+            setUser(fetchedUser);
           } catch (error) {
             console.error("Error fetching user profile:", error);
             // If user doesn't exist, we might need to create them or wait for signup flow

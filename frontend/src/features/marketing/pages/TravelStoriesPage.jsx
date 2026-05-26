@@ -29,7 +29,7 @@ import { io } from 'socket.io-client';
 
 const TravelStoriesPage = () => {
     const navigate = useNavigate();
-    const { userId: currentClerkId, getToken } = useAuth();
+    const { userId: currentFirebaseUid, getToken } = useAuth();
     const { user } = useUser();
     const [stories, setStories] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -101,7 +101,7 @@ const TravelStoriesPage = () => {
     };
 
     const handleLikeStory = async (storyId) => {
-        if (!currentClerkId) return toast.error('Please sign in to like stories');
+        if (!currentFirebaseUid) return toast.error('Please sign in to like stories');
         try {
             const token = await getToken();
             const res = await communityService.toggleLikeStory(storyId, token);
@@ -265,9 +265,9 @@ const TravelStoriesPage = () => {
                                                 <div className="flex items-center gap-4 text-white">
                                                     <button
                                                         onClick={() => handleLikeStory(story._id)}
-                                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10 transition-all ${story.likes?.includes(currentClerkId) ? 'bg-primary/20 border-primary/40' : 'bg-white/5 hover:bg-white/10'}`}
+                                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10 transition-all ${story.likes?.includes(currentFirebaseUid) ? 'bg-primary/20 border-primary/40' : 'bg-white/5 hover:bg-white/10'}`}
                                                     >
-                                                        <Heart size={14} className={story.likes?.includes(currentClerkId) ? 'fill-primary text-primary' : ''} />
+                                                        <Heart size={14} className={story.likes?.includes(currentFirebaseUid) ? 'fill-primary text-primary' : ''} />
                                                         <span className="text-[10px] font-black">{story.likes?.length || 0}</span>
                                                     </button>
                                                     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 backdrop-blur-md border border-white/10">

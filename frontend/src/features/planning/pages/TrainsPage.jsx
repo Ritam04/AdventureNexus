@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '@/context/AuthContext';
+import { useUser, useAuth } from '@/context/AuthContext';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import {
@@ -291,6 +291,7 @@ const LiveStatusModal = ({ trainNumber, trainName, onClose }) => {
 // ── Booking Modal (Multi-step) ────────────────────────────────────────────────
 const BookingModal = ({ train, selectedClass, onClose, onSuccess }) => {
     const { user, isSignedIn } = useUser();
+    const { getToken } = useAuth();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
@@ -330,7 +331,7 @@ const BookingModal = ({ train, selectedClass, onClose, onSuccess }) => {
                 passengersCount: parseInt(form.passengersCount),
                 fareAmount: totalFare
             };
-            const token = await window.__clerkSession?.getToken?.();
+            const token = await getToken();
             const res = await axios.post(`${BACKEND_URL}/api/v1/trains/book`, payload, {
                 headers: { Authorization: `Bearer ${token || ''}` },
                 withCredentials: true

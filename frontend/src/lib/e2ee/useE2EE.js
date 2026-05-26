@@ -164,7 +164,7 @@ export const useE2EE = (firebaseUid, getToken) => {
                 return message._decryptedContent;
             }
             // If we don't have the cached plaintext, try decrypting with recipient's key
-            otherPartyPublicKey = await getRecipientPublicKey(message._recipientClerkUserId || '');
+            otherPartyPublicKey = await getRecipientPublicKey(message._recipientFirebaseUid || '');
         } else {
             otherPartyPublicKey = await getRecipientPublicKey(senderFirebaseUid);
         }

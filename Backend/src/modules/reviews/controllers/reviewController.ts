@@ -3,6 +3,7 @@ import Review from '../../../shared/database/models/reviewModel';
 import { StatusCodes } from 'http-status-codes';
 import logger from '../../../shared/utils/logger';
 import { cacheService, CACHE_CONFIG } from '../../../shared/utils/cacheService';
+import User from '../../../shared/database/models/userModel';
 
 // Get all reviews with optional filtering and sorting
 export const getAllReviews = async (req: Request, res: Response) => {
@@ -47,16 +48,32 @@ export const getAllReviews = async (req: Request, res: Response) => {
             .populate('tripId')
             .sort(sortOption)
             .skip(skip)
-            .limit(limit);
+            .limit(limit)
+            .lean();
+            
         const total = await Review.countDocuments(query);
+
+        // Fetch users for these reviews to enrich with latest profile picture
+        const firebaseUids = [...new Set(reviews.map((r: any) => r.firebaseUid || r.userId).filter(Boolean))];
+        const users = await User.find({ firebaseUid: { $in: firebaseUids } }).lean();
+        const userMap = new Map(users.map(u => [u.firebaseUid, u]));
+
+        const enrichedReviews = reviews.map((review: any) => {
+            const user = userMap.get(review.firebaseUid || review.userId);
+            if (user) {
+                review.userAvatar = review.userAvatar || user.profilepicture || '';
+                review.userName = review.userName || user.username || user.fullname || user.firstName || 'Traveler';
+            }
+            return review;
+        });
 
         res.status(StatusCodes.OK).json({
             success: true,
-            count: reviews.length,
+            count: enrichedReviews.length,
             total,
             totalPages: Math.ceil(total / limit),
             currentPage: page,
-            data: reviews
+            data: enrichedReviews
         });
     } catch (error) {
         logger.error('Error fetching reviews:', error);

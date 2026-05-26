@@ -142,13 +142,13 @@ export const encryptForGroup = (plaintext, members, senderSecretKeyBase64, sende
  * Find and decrypt the copy of a group message intended for this user.
  * 
  * @param {Array<{recipientId: string, encryptedContent: string, nonce: string}>} encryptedCopies
- * @param {string} myClerkUserId - Current user's firebase ID
+ * @param {string} myFirebaseUid - Current user's firebase ID
  * @param {string} senderPublicKeyBase64 - The sender's public key
  * @param {string} mySecretKeyBase64 - Current user's secret key
  * @returns {string|null} Decrypted plaintext
  */
-export const decryptFromGroup = (encryptedCopies, myClerkUserId, senderPublicKeyBase64, mySecretKeyBase64) => {
-    const myCopy = encryptedCopies.find(c => c.recipientId === myClerkUserId);
+export const decryptFromGroup = (encryptedCopies, myFirebaseUid, senderPublicKeyBase64, mySecretKeyBase64) => {
+    const myCopy = encryptedCopies.find(c => c.recipientId === myFirebaseUid);
     if (!myCopy) {
         console.warn('[E2EE] No encrypted copy found for this user in group message');
         return null;
