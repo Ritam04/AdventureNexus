@@ -3,6 +3,7 @@ import Group from '../../../shared/database/models/groupModel';
 import GroupMembership from '../../../shared/database/models/groupMembershipModel';
 import User from '../../../shared/database/models/userModel';
 import mongoose from 'mongoose';
+import { deleteFromCloudinary } from '../../../shared/services/cloudinaryService';
 
 export const createGroup = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -361,7 +362,12 @@ export const updateGroup = async (req: Request, res: Response): Promise<void> =>
 
         if (name) group.name = name;
         if (description !== undefined) group.description = description;
-        if (coverImage) group.coverImage = coverImage;
+        if (coverImage && coverImage !== group.coverImage) {
+            if (group.coverImage) {
+                await deleteFromCloudinary(group.coverImage);
+            }
+            group.coverImage = coverImage;
+        }
         if (privacy) {
             group.privacy = privacy;
             group.isPrivate = privacy === 'PRIVATE';

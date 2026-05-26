@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import CommunityPost from '../../../shared/database/models/communityPostModel';
 import logger from '../../../shared/utils/logger';
+import { deleteFromCloudinary } from '../../../shared/services/cloudinaryService';
 
 export const updatePost = async (req: Request, res: Response) => {
     try {
@@ -68,6 +69,13 @@ export const deletePost = async (req: Request, res: Response) => {
                 success: false,
                 message: 'You are not authorized to delete this post'
             });
+        }
+
+        // Delete images from Cloudinary
+        if (post.images && post.images.length > 0) {
+            for (const imgUrl of post.images) {
+                await deleteFromCloudinary(imgUrl);
+            }
         }
 
         await CommunityPost.findByIdAndDelete(id);

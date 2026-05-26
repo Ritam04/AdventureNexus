@@ -4,6 +4,7 @@ import createError from 'http-errors';
 import logger from '../../../shared/utils/logger';
 import cloudinary from '../../../shared/services/cloudinaryService';
 import fs from 'fs';
+import { deleteFromCloudinary } from '../../../shared/services/cloudinaryService';
 
 /**
  * Controller to update User Profile.
@@ -53,8 +54,18 @@ export const updateProfile = async (
         if (username !== undefined) updateData.username = username;
 
         // 3. Handle Image Upload to Cloudinary
+        let oldProfilePic: string | undefined;
+        let oldCoverPic: string | undefined;
+
         if (req.file) {
             try {
+                // Fetch existing user to get old images before updating
+                const existingUser = await User.findOne({ firebaseUid });
+                if (existingUser) {
+                    oldProfilePic = existingUser.profilepicture;
+                    oldCoverPic = existingUser.coverImage;
+                }
+
                 const result = await cloudinary.uploader.upload(req.file.path, {
                     folder: 'adventurenexus/profiles',
                     width: 800,
@@ -64,8 +75,14 @@ export const updateProfile = async (
                 // If it's a cover image update
                 if (req.body.imageType === 'cover') {
                     updateData.coverImage = result.secure_url;
+                    if (oldCoverPic) {
+                        await deleteFromCloudinary(oldCoverPic);
+                    }
                 } else if (req.body.imageType === 'profile') {
                     updateData.profilepicture = result.secure_url;
+                    if (oldProfilePic) {
+                        await deleteFromCloudinary(oldProfilePic);
+                    }
                 }
 
                 // Delete the file from local storage after upload
