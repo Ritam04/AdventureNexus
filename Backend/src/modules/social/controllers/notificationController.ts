@@ -15,8 +15,8 @@ export const getNotifications = async (req: Request, res: Response) => {
             .limit(50);
 
         // Fetch sender user profiles in batch
-        const senderClerkUserIds = Array.from(new Set(notifications.map(n => n.senderFirebaseUid)));
-        const senders = await User.find({ firebaseUid: { $in: senderClerkUserIds } })
+        const senderFirebaseUids = Array.from(new Set(notifications.map(n => n.senderFirebaseUid)));
+        const senders = await User.find({ firebaseUid: { $in: senderFirebaseUids } })
             .select('username profilepicture fullname firebaseUid');
 
         const senderMap = new Map(senders.map(s => [s.firebaseUid, s]));

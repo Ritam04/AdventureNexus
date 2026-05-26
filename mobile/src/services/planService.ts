@@ -108,7 +108,7 @@ export const reviewService = {
         userName: string;
         userAvatar: string;
         userId: string;
-        clerkUserId: string;
+        firebaseUid: string;
         tripDuration: string;
         travelers: string;
         images?: string[];
@@ -140,16 +140,16 @@ export const userService = {
 
 export const communityService = {
     // GET user profile by clerk ID
-    async getUserProfile(token: string, clerkUserId: string) {
-        const res = await api.get(`/community/profile/${clerkUserId}`, {
+    async getUserProfile(token: string, firebaseUid: string) {
+        const res = await api.get(`/community/profile/${firebaseUid}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         return res.data;
     },
 
     // POST toggle follow
-    async toggleFollow(token: string, targetClerkUserId: string) {
-        const res = await api.post('/community/follow', { targetClerkUserId }, {
+    async toggleFollow(token: string, targetFirebaseUid: string) {
+        const res = await api.post('/community/follow', { targetFirebaseUid }, {
             headers: { Authorization: `Bearer ${token}` }
         });
         return res.data;

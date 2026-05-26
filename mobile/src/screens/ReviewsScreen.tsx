@@ -129,7 +129,7 @@ export default function ReviewsScreen({ navigation }: any) {
                 userName: user.fullName || user.username || 'Traveler',
                 userAvatar: user.imageUrl || '',
                 userId: user.id || '',
-                clerkUserId: user.id || '',
+                firebaseUid: user.id || '',
                 tripDuration: '3 Days',
                 travelers: '1',
             });
@@ -158,8 +158,8 @@ export default function ReviewsScreen({ navigation }: any) {
                 <TouchableOpacity
                     style={styles.avatarContainer}
                     onPress={() => {
-                        const cid = item.clerkUserId || item.userId;
-                        if (cid) navigation.navigate('UserProfile', { clerkUserId: cid });
+                        const cid = item.firebaseUid || item.userId;
+                        if (cid) navigation.navigate('UserProfile', { firebaseUid: cid });
                     }}
                     activeOpacity={0.7}
                 >
@@ -181,8 +181,8 @@ export default function ReviewsScreen({ navigation }: any) {
                 <TouchableOpacity
                     style={{ flex: 1 }}
                     onPress={() => {
-                        const cid = item.clerkUserId || item.userId;
-                        if (cid) navigation.navigate('UserProfile', { clerkUserId: cid });
+                        const cid = item.firebaseUid || item.userId;
+                        if (cid) navigation.navigate('UserProfile', { firebaseUid: cid });
                     }}
                     activeOpacity={0.7}
                 >

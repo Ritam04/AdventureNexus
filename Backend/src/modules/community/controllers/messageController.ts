@@ -8,13 +8,13 @@ import logger from '../../../shared/utils/logger';
  */
 export const getMessageHistory = async (req: Request, res: Response) => {
     try {
-        const { otherClerkUserId } = req.params;
-        const currentClerkUserId = (req as any).user?.firebaseUid;
+        const { otherFirebaseUid } = req.params;
+        const currentFirebaseUid = (req as any).user?.firebaseUid;
 
         const messages = await Message.find({
             $or: [
-                { senderFirebaseUid: currentClerkUserId, recipientFirebaseUid: otherClerkUserId },
-                { senderFirebaseUid: otherClerkUserId, recipientFirebaseUid: currentClerkUserId }
+                { senderFirebaseUid: currentFirebaseUid, recipientFirebaseUid: otherFirebaseUid },
+                { senderFirebaseUid: otherFirebaseUid, recipientFirebaseUid: currentFirebaseUid }
             ]
         }).sort({ createdAt: 1 });
 

@@ -11,7 +11,7 @@ import { MapPin, Star, Globe, ChevronLeft, UserPlus, UserMinus, MessageSquare, G
 import { StatusBar } from 'expo-status-bar';
 
 export default function UserProfileScreen({ route, navigation }: any) {
-    const { clerkUserId } = route.params;
+    const { firebaseUid } = route.params;
     const { getToken } = useAuth();
 
     const [profile, setProfile] = useState<any>(null);
@@ -28,7 +28,7 @@ export default function UserProfileScreen({ route, navigation }: any) {
 
             const token = await getToken();
             if (token) {
-                const res = await communityService.getUserProfile(token, clerkUserId);
+                const res = await communityService.getUserProfile(token, firebaseUid);
                 if (res.success) {
                     setProfile(res.data.profile);
                     setActivity(res.data.activity);
@@ -45,7 +45,7 @@ export default function UserProfileScreen({ route, navigation }: any) {
 
     useEffect(() => {
         fetchProfile();
-    }, [clerkUserId]);
+    }, [firebaseUid]);
 
     const onRefresh = () => fetchProfile(true);
 
@@ -54,7 +54,7 @@ export default function UserProfileScreen({ route, navigation }: any) {
             setTogglingFollow(true);
             const token = await getToken();
             if (token) {
-                const res = await communityService.toggleFollow(token, clerkUserId);
+                const res = await communityService.toggleFollow(token, firebaseUid);
                 if (res.success) {
                     setProfile((prev: any) => ({
                         ...prev,

@@ -8,7 +8,7 @@ import ExperienceComment from '../../../shared/database/models/experienceComment
 import GroupMembership from '../../../shared/database/models/groupMembershipModel';
 import logger from '../../../shared/utils/logger';
 
-const getUserByClerkIdWithSync = async (firebaseUid: string) => {
+const getUserByFirebaseUidWithSync = async (firebaseUid: string) => {
     let user = await User.findOne({ firebaseUid });
     // JIT Provisioning handles Firebase sync in the protect middleware before reaching controllers.
     return user;
@@ -24,7 +24,7 @@ export const getUserDashboardProfile = async (req: Request, res: Response, next:
             return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: 'Firebase User ID is required' });
         }
 
-        const user = await getUserByClerkIdWithSync(firebaseUid);
+        const user = await getUserByFirebaseUidWithSync(firebaseUid);
         if (!user) {
             return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'User not found' });
         }
@@ -171,7 +171,7 @@ export const getUserDashboardLikes = async (req: Request, res: Response, next: N
 export const getUserDashboardGroups = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
         const { firebaseUid } = req.params;
-        const user = await getUserByClerkIdWithSync(firebaseUid);
+        const user = await getUserByFirebaseUidWithSync(firebaseUid);
         if (!user) {
             return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'User not found' });
         }

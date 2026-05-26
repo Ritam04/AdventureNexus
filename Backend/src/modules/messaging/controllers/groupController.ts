@@ -9,21 +9,21 @@ import { broadcastRealtimeEvent } from '../../../shared/socket/socket';
 export const createGroup = async (req: Request, res: Response) => {
     try {
         const { groupName, participants, groupImage = "" } = req.body;
-        const creatorClerkUserId = (req as any).user?.firebaseUid;
+        const creatorFirebaseUid = (req as any).user?.firebaseUid;
 
         if (!groupName || !participants || !Array.isArray(participants)) {
             return res.status(400).json({ success: false, message: 'Invalid group data' });
         }
 
         // Include creator in participants
-        const allParticipants = Array.from(new Set([...participants, creatorClerkUserId]));
+        const allParticipants = Array.from(new Set([...participants, creatorFirebaseUid]));
 
         const group = new Conversation({
             participants: allParticipants,
             isGroup: true,
             groupName,
             groupImage,
-            admins: [creatorClerkUserId]
+            admins: [creatorFirebaseUid]
         });
 
         await group.save();

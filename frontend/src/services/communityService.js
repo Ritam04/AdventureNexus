@@ -179,8 +179,8 @@ export const communityService = {
         return response.data;
     },
 
-    getMessageHistory: async (otherClerkUserId, token) => {
-        const response = await axios.get(`${api_url}/api/v1/community/messages/${otherClerkUserId}`, {
+    getMessageHistory: async (otherFirebaseUid, token) => {
+        const response = await axios.get(`${api_url}/api/v1/community/messages/${otherFirebaseUid}`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }

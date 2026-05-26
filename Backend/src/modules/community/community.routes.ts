@@ -152,11 +152,11 @@ route.get('/notifications', protect, getNotifications);
 route.patch('/notifications/:notificationId', protect, markAsRead);
 
 /**
- * @route GET /api/v1/community/messages/:otherClerkUserId
+ * @route GET /api/v1/community/messages/:otherFirebaseUid
  * @desc Get message history with a user
  * @access Private
  */
-route.get('/messages/:otherClerkUserId', protect, getMessageHistory);
+route.get('/messages/:otherFirebaseUid', protect, getMessageHistory);
 
 /**
  * @route POST /api/v1/community/messages
