@@ -11,6 +11,14 @@ import {
   Dialog,
   DialogContent
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -30,11 +38,13 @@ import L from 'leaflet';
 import axios from "axios";
 import {
   Bot,
+  Bed,
   Calendar,
   CalendarDays,
   ChevronDown,
   Clock,
   DollarSign,
+  ExternalLink,
   Heart,
   Hotel,
   IndianRupee,
@@ -62,6 +72,7 @@ import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import { useAuth } from '@/context/AuthContext';
 import { format, addDays } from "date-fns";
+import { openHotelSearch, HOTEL_PROVIDERS, extractLocation } from "@/lib/hotelRedirect";
 
 // Fix for default Leaflet marker icon not showing
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -75,6 +86,87 @@ let DefaultIcon = L.icon({
 });
 
 L.Marker.prototype.options.icon = DefaultIcon;
+
+
+// ──────────────────────────────────────────────
+// Explore Stays Button — Reusable sub-component
+// ──────────────────────────────────────────────
+const ExploreStaysButton = ({ result, fromDate, toDate, travelers, variant = "card" }) => {
+  const handleProviderClick = (providerId, e) => {
+    if (e) e.stopPropagation();
+
+    const dateParams = {};
+    if (fromDate) dateParams.checkin = fromDate;
+    if (toDate) dateParams.checkout = toDate;
+    if (travelers) dateParams.adults = parseInt(travelers) || 2;
+
+    const opened = openHotelSearch(result, providerId, dateParams);
+    if (!opened) {
+      toast.error("Could not determine destination. Please try again.");
+    } else {
+      const loc = extractLocation(result);
+      toast.success(`Opening ${HOTEL_PROVIDERS.find(p => p.id === providerId)?.name} for ${loc.city || loc.full}...`);
+    }
+  };
+
+  // Compact card variant
+  if (variant === "card") {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className="border-input text-foreground hover:bg-emerald-500/10 hover:text-emerald-500 hover:border-emerald-500/30 group/hotel transition-all"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Bed size={16} className="mr-1.5 group-hover/hotel:text-emerald-500 transition-colors" />
+            <span className="hidden sm:inline">Stays</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          className="bg-popover border-border min-w-[220px] p-1.5 rounded-xl shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <DropdownMenuLabel className="text-xs text-muted-foreground font-semibold px-3 py-1.5">
+            Find Hotels & Stays
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator className="bg-border" />
+          {HOTEL_PROVIDERS.map((provider) => (
+            <DropdownMenuItem
+              key={provider.id}
+              className="flex items-center gap-3 cursor-pointer text-sm py-2.5 px-3 rounded-lg focus:bg-accent focus:text-accent-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+              onClick={(e) => handleProviderClick(provider.id, e)}
+            >
+              <span className="text-lg leading-none">{provider.emoji}</span>
+              <div className="flex-1">
+                <span className="font-medium">{provider.name}</span>
+              </div>
+              <ExternalLink size={12} className="text-muted-foreground" />
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
+
+  // Full modal variant with bigger buttons
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      {HOTEL_PROVIDERS.map((provider) => (
+        <button
+          key={provider.id}
+          onClick={(e) => handleProviderClick(provider.id, e)}
+          className={`group flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-0.5`}
+        >
+          <span className="text-2xl group-hover:scale-110 transition-transform duration-300">{provider.emoji}</span>
+          <span className="text-xs font-semibold text-card-foreground group-hover:text-primary transition-colors">{provider.name}</span>
+          <ExternalLink size={10} className="text-muted-foreground group-hover:text-primary transition-colors" />
+        </button>
+      ))}
+    </div>
+  );
+};
 
 
 // SearchPage component allows users to search for trips using AI-powered criteria
@@ -1049,6 +1141,13 @@ const SearchPage = () => {
                               >
                                 View Details
                               </Button>
+                              <ExploreStaysButton
+                                result={result}
+                                fromDate={fromDate}
+                                toDate={toDate}
+                                travelers={travelers}
+                                variant="card"
+                              />
                               <Button
                                 variant="outline"
                                 className="border-input text-foreground hover:bg-accent hover:text-accent-foreground group/map"
@@ -1232,6 +1331,13 @@ const SearchPage = () => {
                               >
                                 View Details
                               </Button>
+                              <ExploreStaysButton
+                                result={result}
+                                fromDate={fromDate}
+                                toDate={toDate}
+                                travelers={travelers}
+                                variant="card"
+                              />
                               <Button
                                 variant="outline"
                                 className="border-input text-foreground hover:bg-accent hover:text-accent-foreground group/map"
@@ -1349,6 +1455,25 @@ const SearchPage = () => {
                       </div>
                     </div>
                   )}
+
+
+                  {/* Explore Stays — Hotel Booking Platforms */}
+                  <div>
+                    <h3 className="text-xl font-semibold mb-4 text-foreground font-outfit flex items-center">
+                      <Bed className="mr-2 text-emerald-500" size={22} />
+                      Explore Stays
+                    </h3>
+                    <p className="text-muted-foreground text-sm mb-4">
+                      Find the best hotels and accommodations for your trip
+                    </p>
+                    <ExploreStaysButton
+                      result={selectedDestination}
+                      fromDate={fromDate}
+                      toDate={toDate}
+                      travelers={travelers}
+                      variant="modal"
+                    />
+                  </div>
 
 
                   {/* Tabs for Detailed Info */}
