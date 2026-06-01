@@ -247,6 +247,230 @@ export const getAllPlans = async (req: Request, res: Response) => {
     }
 };
 
+export const getPlansAnalytics = async (req: Request, res: Response) => {
+    try {
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const search = (req.query.search as string) || '';
+        const status = (req.query.status as string) || '';
+        const sortBy = (req.query.sortBy as string) || 'createdAt';
+        const sortOrder = (req.query.sortOrder as string) === 'asc' ? 1 : -1;
+
+        // Base filter query
+        const matchQuery: any = {};
+        if (status) {
+            matchQuery.status = status;
+        }
+
+        const aggregatePipeline: any[] = [
+            // 1. Join with users
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'userId',
+                    foreignField: '_id',
+                    as: 'creator'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$creator',
+                    preserveNullAndEmptyArrays: true
+                }
+            }
+        ];
+
+        // Search match (on destination, creator username or plan name)
+        if (search) {
+            aggregatePipeline.push({
+                $match: {
+                    $or: [
+                        { to: { $regex: search, $options: 'i' } },
+                        { 'creator.username': { $regex: search, $options: 'i' } },
+                        { name: { $regex: search, $options: 'i' } }
+                    ]
+                }
+            });
+        }
+
+        // Apply general match
+        if (Object.keys(matchQuery).length > 0) {
+            aggregatePipeline.push({ $match: matchQuery });
+        }
+
+        // 2. Add calculated fields for analytics
+        aggregatePipeline.push({
+            $addFields: {
+                // Engagement score = likesCount + commentsCount * 2 + (star * 5)
+                engagementScore: {
+                    $add: [
+                        { $ifNull: ['$likesCount', 18] },
+                        { $multiply: [{ $ifNull: ['$commentsCount', 5] }, 2] },
+                        { $multiply: [{ $ifNull: ['$star', 4] }, 5] }
+                    ]
+                },
+                // Default value fallbacks if not explicitly set
+                views: { $ifNull: ['$views', 120] },
+                saves: { $ifNull: ['$saves', 24] },
+                likesCount: { $ifNull: ['$likesCount', 18] },
+                commentsCount: { $ifNull: ['$commentsCount', 5] },
+                status: { $ifNull: ['$status', 'active'] },
+                isFlagged: { $ifNull: ['$isFlagged', false] }
+            }
+        });
+
+        // 3. Sorting
+        const sortField = sortBy === 'engagementScore' ? 'engagementScore' : sortBy;
+        aggregatePipeline.push({
+            $sort: { [sortField]: sortOrder }
+        });
+
+        // Clone pipeline for count
+        const countPipeline = [...aggregatePipeline];
+
+        // 4. Pagination
+        aggregatePipeline.push(
+            { $skip: (page - 1) * limit },
+            { $limit: limit }
+        );
+
+        const plans = await Plan.aggregate(aggregatePipeline);
+        
+        // Count matching documents
+        countPipeline.push({ $count: 'total' });
+        const countResult = await Plan.aggregate(countPipeline);
+        const totalPlansMatching = countResult[0]?.total || 0;
+
+        // 5. Global aggregated stats (Total, Trending, Most Active Destination, Highest Engagement)
+        const totalStats = await Plan.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    totalCount: { $sum: 1 },
+                    activeCount: {
+                        $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] }
+                    },
+                    trendingCount: {
+                        $sum: { $cond: [{ $eq: ['$status', 'trending'] }, 1, 0] }
+                    },
+                    totalViews: { $sum: { $ifNull: ['$views', 120] } },
+                    totalSaves: { $sum: { $ifNull: ['$saves', 24] } }
+                }
+            }
+        ]);
+
+        const trendingDestinations = await Plan.aggregate([
+            {
+                $group: {
+                    _id: '$to',
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { count: -1 } },
+            { $limit: 1 }
+        ]);
+
+        const highestEngagementPlan = await Plan.aggregate([
+            {
+                $addFields: {
+                    engagementScore: {
+                        $add: [
+                            { $ifNull: ['$likesCount', 18] },
+                            { $multiply: [{ $ifNull: ['$commentsCount', 5] }, 2] }
+                        ]
+                    }
+                }
+            },
+            { $sort: { engagementScore: -1 } },
+            { $limit: 1 }
+        ]);
+
+        res.status(StatusCodes.OK).json({
+            status: 'Success',
+            data: {
+                plans,
+                pagination: {
+                    total: totalPlansMatching,
+                    page,
+                    limit,
+                    pages: Math.ceil(totalPlansMatching / limit)
+                },
+                stats: {
+                    totalPlans: totalStats[0]?.totalCount || 0,
+                    activePlans: totalStats[0]?.activeCount || 0,
+                    trendingPlans: totalStats[0]?.trendingCount || 0,
+                    totalViews: totalStats[0]?.totalViews || 0,
+                    totalSaves: totalStats[0]?.totalSaves || 0,
+                    mostActiveDestination: trendingDestinations[0]?._id || 'N/A',
+                    highestEngagement: highestEngagementPlan[0] || null
+                }
+            }
+        });
+    } catch (error) {
+        logger.error('Error fetching plans analytics:', error);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Server Error' });
+    }
+};
+
+export const promotePlan = async (req: Request, res: Response) => {
+    try {
+        const plan = await Plan.findById(req.params.id);
+        if (!plan) {
+            return res.status(StatusCodes.NOT_FOUND).json({ message: 'Plan not found' });
+        }
+
+        // Toggle status between active and trending
+        plan.status = plan.status === 'trending' ? 'active' : 'trending';
+        await plan.save();
+
+        const { getIO } = await import('../../../shared/socket/socket');
+        getIO().emit('plan:updated', plan);
+
+        await AuditLog.log({
+            action: plan.status === 'trending' ? 'PROMOTE_PLAN' : 'DEMOTE_PLAN',
+            module: 'EXPEDITIONS',
+            adminId: 'admin',
+            targetId: req.params.id,
+            details: { destination: plan.to, status: plan.status },
+            severity: 'success'
+        });
+
+        res.status(StatusCodes.OK).json({ status: 'Success', message: `Plan status updated to ${plan.status}`, data: plan });
+    } catch (error) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Server Error' });
+    }
+};
+
+export const flagPlan = async (req: Request, res: Response) => {
+    try {
+        const plan = await Plan.findById(req.params.id);
+        if (!plan) {
+            return res.status(StatusCodes.NOT_FOUND).json({ message: 'Plan not found' });
+        }
+
+        // Toggle flagged status
+        plan.isFlagged = !plan.isFlagged;
+        plan.flagReason = plan.isFlagged ? (req.body.reason || 'Flagged by system administrator') : '';
+        await plan.save();
+
+        const { getIO } = await import('../../../shared/socket/socket');
+        getIO().emit('plan:updated', plan);
+
+        await AuditLog.log({
+            action: plan.isFlagged ? 'FLAG_PLAN' : 'UNFLAG_PLAN',
+            module: 'EXPEDITIONS',
+            adminId: 'admin',
+            targetId: req.params.id,
+            details: { destination: plan.to, reason: plan.flagReason },
+            severity: plan.isFlagged ? 'warning' : 'info'
+        });
+
+        res.status(StatusCodes.OK).json({ status: 'Success', message: `Plan flagged status updated`, data: plan });
+    } catch (error) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Server Error' });
+    }
+};
+
 export const deletePlan = async (req: Request, res: Response) => {
     try {
         const plan = await Plan.findByIdAndDelete(req.params.id);

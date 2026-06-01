@@ -1,297 +1,725 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import api from '../services/adminApi';
-import { Trash2, Search, Map as MapIcon, Calendar, Users as UsersIcon, Clock, DollarSign, MapPin, Eye, Compass, Info, RefreshCw } from 'lucide-react';
+import { 
+    Trash2, Search, Map as MapIcon, Calendar, Users as UsersIcon, 
+    Clock, DollarSign, MapPin, Eye, Compass, Info, RefreshCw,
+    TrendingUp, Shield, AlertTriangle, Star, CheckCircle, Flag, 
+    Zap, Sparkles, Sliders, ChevronDown, ChevronUp, MessageSquare, 
+    Heart, Bookmark, User as UserIcon
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import DetailPanel from '../components/DetailPanel';
+import { useSocket } from '../context/AdminSocketContext';
+import { toast } from 'react-hot-toast';
 
 const PlansPage: React.FC = () => {
     const [plans, setPlans] = useState<any[]>([]);
+    const [stats, setStats] = useState<any>({
+        totalPlans: 0,
+        activePlans: 0,
+        trendingPlans: 0,
+        totalViews: 0,
+        totalSaves: 0,
+        mostActiveDestination: 'N/A',
+        highestEngagement: null
+    });
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
-    const [selectedPlan, setSelectedPlan] = useState<any | null>(null);
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [sortBy, setSortBy] = useState('createdAt');
+    const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+    const [expandedPlanId, setExpandedPlanId] = useState<string | null>(null);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [flaggingPlanId, setFlaggingPlanId] = useState<string | null>(null);
+    const [flagReasonInput, setFlagReasonInput] = useState('');
 
-    const fetchPlans = async () => {
+    const { socket } = useSocket();
+
+    const fetchPlansAnalytics = async () => {
         try {
             setLoading(true);
-            const res = await api.get('/plans');
-            setPlans(res.data.data);
+            const res = await api.get('/plans/analytics', {
+                params: {
+                    page,
+                    limit: 8,
+                    search,
+                    status: statusFilter === 'all' ? '' : statusFilter,
+                    sortBy,
+                    sortOrder
+                }
+            });
+            if (res.data && res.data.data) {
+                setPlans(res.data.data.plans || []);
+                setStats(res.data.data.stats || {
+                    totalPlans: 0,
+                    activePlans: 0,
+                    trendingPlans: 0,
+                    totalViews: 0,
+                    totalSaves: 0,
+                    mostActiveDestination: 'N/A',
+                    highestEngagement: null
+                });
+                setTotalPages(res.data.data.pagination?.pages || 1);
+            }
         } catch (error) {
-            console.error(error);
+            console.error('Error fetching travel plans intelligence:', error);
+            toast.error('Failed to load expeditions intelligence modules');
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchPlans();
-    }, []);
+        fetchPlansAnalytics();
+    }, [page, statusFilter, sortBy, sortOrder]);
 
-    const handleDelete = async (id: string, e: React.MouseEvent) => {
+    // Handle search query with debounce
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setPage(1);
+            fetchPlansAnalytics();
+        }, 400);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    // Hook up real-time socket events
+    useEffect(() => {
+        if (!socket) return;
+
+        const handlePlanUpdated = (updatedPlan: any) => {
+            console.log('[SOCKET] Realtime Plan update received:', updatedPlan);
+            setPlans(prevPlans => 
+                prevPlans.map(p => p._id === updatedPlan._id ? { ...p, ...updatedPlan } : p)
+            );
+            toast.success(`Plan details for ${updatedPlan.to} refreshed live!`);
+        };
+
+        const handlePlanDeleted = (deletedPlanId: string) => {
+            console.log('[SOCKET] Realtime Plan deleted received:', deletedPlanId);
+            setPlans(prevPlans => prevPlans.filter(p => p._id !== deletedPlanId));
+            if (expandedPlanId === deletedPlanId) setExpandedPlanId(null);
+            toast.error('A plan was deleted by another moderator', { icon: '🗑️' });
+        };
+
+        socket.on('plan:updated', handlePlanUpdated);
+        socket.on('plan:deleted', handlePlanDeleted);
+
+        return () => {
+            socket.off('plan:updated', handlePlanUpdated);
+            socket.off('plan:deleted', handlePlanDeleted);
+        };
+    }, [socket, expandedPlanId]);
+
+    // Core Plan Operations Actions
+    const handleDelete = async (id: string, destination: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!window.confirm('Are you sure you want to delete this plan?')) return;
+        if (!window.confirm(`CRITICAL SECURITY SANCTION: Are you sure you want to permanently purge the expedition itinerary for "${destination}" from MongoDB?`)) return;
         try {
             await api.delete(`/plans/${id}`);
+            toast.success(`Expedition node "${destination}" purged from main database.`);
             setPlans(plans.filter(p => p._id !== id));
-            if (selectedPlan?._id === id) setSelectedPlan(null);
+            if (expandedPlanId === id) setExpandedPlanId(null);
         } catch (error) {
-            alert('Failed to delete plan');
+            toast.error('Failed to validate admin permissions for purge request.');
         }
     };
 
-    const filteredPlans = plans.filter(plan =>
-        plan.to.toLowerCase().includes(search.toLowerCase()) ||
-        plan.name?.toLowerCase().includes(search.toLowerCase())
-    );
+    const handlePromote = async (id: string, destination: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+            const res = await api.post(`/plans/${id}/promote`);
+            const updatedPlan = res.data.data;
+            setPlans(plans.map(p => p._id === id ? { ...p, status: updatedPlan.status } : p));
+            toast.success(`Expedition to ${destination} is now ${updatedPlan.status}!`, { icon: '🔥' });
+        } catch (error) {
+            toast.error('Failed to change trending prioritization.');
+        }
+    };
 
-    if (loading) {
-        return (
-            <div className="flex flex-col items-center justify-center h-[50vh] text-white gap-3">
-                <span className="w-8 h-8 border-2 border-t-purple-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></span>
-                <span className="text-[10px] font-black uppercase tracking-widest text-purple-400">Loading Expeditions Dossiers...</span>
-            </div>
-        );
-    }
+    const handleFlagClick = (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setFlaggingPlanId(id);
+        setFlagReasonInput('');
+    };
+
+    const submitFlagAction = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!flaggingPlanId) return;
+        try {
+            const res = await api.post(`/plans/${flaggingPlanId}/flag`, { reason: flagReasonInput });
+            const updatedPlan = res.data.data;
+            setPlans(plans.map(p => p._id === flaggingPlanId ? { ...p, isFlagged: updatedPlan.isFlagged, flagReason: updatedPlan.flagReason } : p));
+            toast.success(updatedPlan.isFlagged ? 'Plan successfully flagged under safety protocols.' : 'Plan warning successfully cleared.');
+            setFlaggingPlanId(null);
+        } catch (error) {
+            toast.error('Failed to commit safety flag modification.');
+        }
+    };
+
+    const toggleRow = (id: string) => {
+        setExpandedPlanId(expandedPlanId === id ? null : id);
+    };
+
+    // Derived Visual Indicators
+    const getEngagementBadge = (score: number) => {
+        if (score >= 40) return { text: 'HIGH LOAD', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]' };
+        if (score >= 20) return { text: 'MID LOAD', color: 'text-amber-400 bg-amber-500/10 border-amber-500/30' };
+        return { text: 'LOW LOAD', color: 'text-rose-400 bg-rose-500/10 border-rose-500/30 shadow-[0_0_15px_rgba(244,63,94,0.15)]' };
+    };
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6 pb-20 select-none font-sans"
+            transition={{ duration: 0.35 }}
+            className="space-y-8 pb-24 select-none font-sans text-gray-200"
         >
-            {/* Header section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-b-white/5 pb-6">
+            {/* Elegant intelligence header */}
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 border-b border-white/5 pb-6">
                 <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                        <Compass className="w-5 h-5 text-purple-400" />
-                        <h1 className="text-3xl font-black text-white tracking-tight uppercase font-mono">
-                            Ecosystem Expeditions <span className="text-purple-400 font-sans">Index</span>
-                        </h1>
+                    <div className="flex items-center gap-3">
+                        <div className="p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-[#00f2fe] shadow-[0_0_20px_rgba(0,242,254,0.1)]">
+                            <Compass className="w-6 h-6 animate-spin-slow text-[#00f2fe]" />
+                        </div>
+                        <div>
+                            <h1 className="text-3xl font-black text-white tracking-tight uppercase font-mono flex items-center gap-2">
+                                TRAVEL INTELLIGENCE <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-[#00f2fe] font-sans">CONSOLE</span>
+                            </h1>
+                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest font-mono">
+                                Advanced analytics dashboard tracking live user-generated MongoDB expeditions & performance logs
+                            </p>
+                        </div>
                     </div>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest font-mono">
-                        Global deployment and analysis of AI-generated travel itineraries
-                    </p>
                 </div>
-                <div className="flex items-center gap-4">
+
+                <div className="flex items-center gap-3">
                     <button
-                        onClick={fetchPlans}
-                        className="flex items-center gap-2 px-4 py-2 border border-white/10 hover:border-white/20 rounded-full text-[10px] font-bold text-gray-400 hover:text-white bg-white/[0.01] hover:bg-white/[0.03] transition-all uppercase tracking-widest font-mono"
+                        onClick={fetchPlansAnalytics}
+                        className="flex items-center gap-2 px-5 py-2.5 border border-white/10 hover:border-indigo-500/30 rounded-full text-[10px] font-black text-gray-400 hover:text-white bg-white/[0.01] hover:bg-indigo-500/5 transition-all uppercase tracking-widest font-mono shadow-md"
                     >
-                        <RefreshCw className="w-3 h-3" />
-                        Sync Expeditions
+                        <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                        Sync Intel Database
                     </button>
                 </div>
             </div>
 
-            {/* Filter control */}
-            <div className="bg-[#0c0c0c]/80 backdrop-blur-md border border-white/10 rounded-2xl p-2.5 flex items-center gap-3 shadow-sm">
-                <Search className="w-4 h-4 text-gray-500 ml-2" />
-                <input
-                    type="text"
-                    placeholder="Search by destination city or itinerary name parameters..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="bg-transparent text-sm text-gray-200 focus:outline-none w-full placeholder:text-gray-700 font-mono"
-                />
+            {/* Premium Metrics Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                    { label: 'TOTAL SYSTEM PLANS', value: stats.totalPlans, desc: 'Expeditions compiled', icon: MapIcon, gradient: 'from-purple-500/20 to-indigo-500/5 border-purple-500/20 text-purple-400 shadow-[0_4px_20px_rgba(168,85,247,0.1)]' },
+                    { label: 'ACTIVE EXPEDITIONS', value: stats.activePlans, desc: 'Live target nodes', icon: CheckCircle, gradient: 'from-[#00f2fe]/20 to-indigo-500/5 border-[#00f2fe]/20 text-[#00f2fe] shadow-[0_4px_20px_rgba(0,242,254,0.1)]' },
+                    { label: 'TRENDING Prioritizations', value: stats.trendingPlans, desc: 'High momentum nodes', icon: TrendingUp, gradient: 'from-amber-500/20 to-indigo-500/5 border-amber-500/20 text-amber-400 shadow-[0_4px_20px_rgba(245,158,11,0.1)]' },
+                    { label: 'MOST ACTIVE SYSTEM NODE', value: stats.mostActiveDestination?.split(',')[0], desc: 'Highest generation frequency', icon: Zap, gradient: 'from-rose-500/20 to-indigo-500/5 border-rose-500/20 text-rose-400 shadow-[0_4px_20px_rgba(244,63,94,0.1)]' }
+                ].map((stat, i) => (
+                    <motion.div
+                        key={i}
+                        whileHover={{ y: -4, scale: 1.01 }}
+                        className={`bg-gradient-to-br ${stat.gradient} border backdrop-blur-md rounded-[24px] p-6 relative overflow-hidden`}
+                    >
+                        <div className="absolute right-3 top-3 opacity-[0.04]">
+                            <stat.icon className="w-24 h-24 stroke-[1]" />
+                        </div>
+                        <div className="flex items-start justify-between">
+                            <div className="space-y-2">
+                                <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block">{stat.label}</span>
+                                <span className="text-3xl font-black text-white font-mono block">{stat.value}</span>
+                                <span className="text-[9px] text-gray-400 font-bold block mt-1 uppercase tracking-widest">{stat.desc}</span>
+                            </div>
+                            <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5">
+                                <stat.icon className="w-5 h-5" />
+                            </div>
+                        </div>
+                    </motion.div>
+                ))}
             </div>
 
-            {/* Main visual table */}
-            <div className="bg-[#0c0c0c]/80 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden relative shadow-2xl">
-                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-purple-500 to-indigo-600"></div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left font-mono">
-                        <thead className="bg-white/[0.02] border-b border-white/10">
-                            <tr>
-                                <th className="px-8 py-4 text-xs font-black text-gray-500 uppercase tracking-widest">Destination Node</th>
-                                <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest">Logistical Load</th>
-                                <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest">Target Deployment</th>
-                                <th className="px-8 py-4 text-xs font-black text-gray-500 uppercase tracking-widest text-right">Inspect</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5 text-[11px]">
-                            {filteredPlans.map((plan) => (
-                                <tr
-                                    key={plan._id}
-                                    onClick={() => setSelectedPlan(plan)}
-                                    className="hover:bg-white/[0.01] transition-colors group cursor-pointer"
-                                >
-                                    <td className="px-8 py-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:scale-105 transition-transform">
-                                                <MapIcon className="w-4.5 h-4.5" />
-                                            </div>
-                                            <div>
-                                                <div className="text-gray-200 font-bold tracking-tight">{plan.to}</div>
-                                                <div className="text-[8px] text-gray-500 font-black uppercase tracking-widest mt-0.5">{plan.name || 'AI GENERATION RECORD'}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-2 text-gray-300 font-medium">
-                                            <UsersIcon className="w-3.5 h-3.5 text-purple-400" />
-                                            <span>{plan.travelers} Travel Agents</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-2 text-gray-300 font-medium">
-                                            <Calendar className="w-3.5 h-3.5 text-purple-400" />
-                                            <span>{new Date(plan.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-8 py-4 text-right">
-                                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); setSelectedPlan(plan); }}
-                                                className="p-1.5 rounded-lg border border-white/5 hover:border-white/20 text-gray-500 hover:text-white bg-white/[0.01] hover:bg-white/[0.03] transition-all"
-                                            >
-                                                <Eye className="w-3.5 h-3.5" />
-                                            </button>
-                                            <button
-                                                onClick={(e) => handleDelete(plan._id, e)}
-                                                className="p-1.5 rounded-lg border border-white/5 hover:border-rose-500/20 text-gray-500 hover:text-rose-500 bg-white/[0.01] hover:bg-rose-500/5 transition-all"
-                                            >
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+            {/* Smart Search + Advanced HUD Filters Console */}
+            <div className="bg-[#0c0c0c]/85 backdrop-blur-md border border-white/10 rounded-[28px] p-5 space-y-4 shadow-2xl relative">
+                <div className="absolute top-0 left-0 w-full h-[1.5px] bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent"></div>
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    {/* Search Field */}
+                    <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-2xl px-4 py-2.5 flex-1 focus-within:border-indigo-500/40 transition-all shadow-inner">
+                        <Search className="w-4.5 h-4.5 text-gray-500 shrink-0" />
+                        <input
+                            type="text"
+                            placeholder="Probe database by destination city, country or creator profile identifier..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="bg-transparent text-sm text-gray-200 focus:outline-none w-full placeholder:text-gray-700 font-mono"
+                        />
+                    </div>
 
-                            {filteredPlans.length === 0 && (
-                                <tr>
-                                    <td colSpan={4} className="py-20 text-center flex flex-col items-center justify-center gap-3">
-                                        <Compass className="w-10 h-10 text-gray-800 animate-pulse" />
-                                        <p className="text-gray-600 text-xs font-black uppercase tracking-widest">No deployed itineraries matched your query</p>
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                    {/* Sorting Parameters */}
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <div className="flex items-center gap-2 bg-white/[0.02] border border-white/5 rounded-2xl p-1">
+                            {['all', 'trending', 'active', 'inactive'].map((status) => (
+                                <button
+                                    key={status}
+                                    onClick={() => { setStatusFilter(status); setPage(1); }}
+                                    className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
+                                        statusFilter === status 
+                                        ? 'bg-indigo-500 text-white shadow-md' 
+                                        : 'text-gray-500 hover:text-gray-200 hover:bg-white/[0.02]'
+                                    }`}
+                                >
+                                    {status}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Sort Selector Dropdown */}
+                        <div className="flex items-center gap-2 bg-white/[0.02] border border-white/5 rounded-2xl px-3 py-1.5 text-xs text-gray-400 font-mono">
+                            <Sliders className="w-3.5 h-3.5 text-indigo-400" />
+                            <select
+                                value={sortBy}
+                                onChange={(e) => { setSortBy(e.target.value); setPage(1); }}
+                                className="bg-transparent focus:outline-none text-gray-300 font-black uppercase text-[9px] tracking-widest cursor-pointer"
+                            >
+                                <option value="createdAt" className="bg-[#0c0c0c] text-gray-300">CREATED DATE</option>
+                                <option value="engagementScore" className="bg-[#0c0c0c] text-gray-300">ENGAGEMENT WEIGHT</option>
+                                <option value="views" className="bg-[#0c0c0c] text-gray-300">VIEWS VOLUME</option>
+                                <option value="travelers" className="bg-[#0c0c0c] text-gray-300">TRAVELERS pax</option>
+                                <option value="budget" className="bg-[#0c0c0c] text-gray-300">BUDGET WEIGHT</option>
+                            </select>
+                            <button
+                                onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
+                                className="pl-1 border-l border-white/10 hover:text-white transition-colors"
+                            >
+                                {sortOrder === 'desc' ? '▼' : '▲'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Expedition dossier modal */}
-            <DetailPanel
-                isOpen={!!selectedPlan}
-                onClose={() => setSelectedPlan(null)}
-                title="Expedition Dossier"
-                description={`Intelligence report for node destination: ${selectedPlan?.to}`}
-            >
-                {selectedPlan && (
-                    <div className="space-y-6 select-none font-mono">
-                        {/* Banner cover */}
-                        <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-lg h-36">
-                            <img
-                                src={selectedPlan.image_url || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=800'}
-                                alt={selectedPlan.to}
-                                className="w-full h-full object-cover opacity-45"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
-                            <div className="absolute bottom-4 left-5 flex items-end justify-between w-[90%]">
-                                <div className="space-y-1">
-                                    <span className="text-[8px] text-purple-400 font-black uppercase tracking-widest">NODE DESTINATION</span>
-                                    <h3 className="text-xl font-black text-white uppercase">{selectedPlan.to}</h3>
+            {/* Smart Table + Expandable Row */}
+            <div className="bg-[#0c0c0c]/85 border border-white/10 rounded-[32px] overflow-hidden shadow-2xl relative">
+                <div className="absolute top-0 left-0 w-full h-[2.5px] bg-gradient-to-r from-purple-500 via-indigo-500 to-[#00f2fe]"></div>
+                
+                {loading ? (
+                    /* High-Fidelity Skeleton Loading state */
+                    <div className="p-8 space-y-4">
+                        {[1, 2, 3, 4].map((n) => (
+                            <div key={n} className="flex items-center justify-between gap-6 p-4 bg-white/[0.01] border border-white/5 rounded-2xl animate-pulse">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-white/5"></div>
+                                    <div className="space-y-2">
+                                        <div className="h-4.5 w-36 bg-white/5 rounded"></div>
+                                        <div className="h-3 w-20 bg-white/5 rounded"></div>
+                                    </div>
                                 </div>
-                                <span className="bg-purple-500/20 backdrop-blur-md px-2.5 py-1 rounded border border-purple-500/30 text-purple-300 font-bold text-[9px] uppercase tracking-widest">
-                                    SCORE: {selectedPlan.ai_score || '9.8'}
-                                </span>
+                                <div className="h-4.5 w-20 bg-white/5 rounded"></div>
+                                <div className="h-4.5 w-24 bg-white/5 rounded"></div>
+                                <div className="h-8 w-24 bg-white/5 rounded-full"></div>
                             </div>
-                        </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="w-full overflow-hidden">
+                        <table className="w-full text-left font-mono table-fixed">
+                            <thead className="bg-white/[0.02] border-b border-white/10 text-gray-500 text-[10px] font-black uppercase tracking-widest">
+                                <tr>
+                                    <th className="pl-6 md:pl-8 pr-4 py-5 w-[24%] sm:w-[20%]">DESTINATION</th>
+                                    <th className="px-4 md:px-6 py-5 hidden sm:table-cell w-[12%]">CREATOR</th>
+                                    <th className="px-4 md:px-6 py-5 hidden md:table-cell w-[16%]">ENGAGEMENT WEIGHT</th>
+                                    <th className="px-4 md:px-6 py-5 hidden lg:table-cell w-[10%]">TRAVELERS PAX</th>
+                                    <th className="px-4 md:px-6 py-5 hidden xl:table-cell w-[15%]">ACTIVITY STRENGTH</th>
+                                    <th className="px-4 md:px-6 py-5 hidden lg:table-cell w-[10%]">LAST ACTIVE</th>
+                                    <th className="px-4 md:px-6 py-5 w-[11%]">STATUS</th>
+                                    <th className="pr-6 md:pr-8 pl-4 py-5 text-right w-[15%] sm:w-[13%]">ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5 text-[11px] font-medium text-gray-300">
+                                {plans.map((plan) => {
+                                    const isExpanded = expandedPlanId === plan._id;
+                                    const enBadge = getEngagementBadge(plan.engagementScore || 18);
+                                    
+                                    // Calculate relative Activity progress percentage
+                                    const activityPct = Math.min(100, Math.max(10, Math.floor(((plan.views || 120) / 450) * 100)));
 
-                        {/* Tri-metrics card grid */}
-                        <div className="grid grid-cols-3 gap-3 text-xs">
-                            {[
-                                { icon: Clock, label: 'MISSION DURATION', value: `${selectedPlan.days || '?'} Days`, color: 'text-blue-400' },
-                                { icon: UsersIcon, label: 'DEPLOYED USERS', value: selectedPlan.travelers, color: 'text-emerald-400' },
-                                { icon: DollarSign, label: 'BUDGET LOAD', value: `$${selectedPlan.budget}`, color: 'text-amber-400' }
-                            ].map((stat, i) => (
-                                <div key={i} className="bg-white/[0.02] border border-white/5 p-3 rounded-xl space-y-1">
-                                    <stat.icon className={`w-3.5 h-3.5 ${stat.color}`} />
-                                    <span className="text-gray-500 text-[8px] font-black uppercase tracking-widest block">{stat.label}</span>
-                                    <span className="text-white font-black text-[11px] block">{stat.value}</span>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Sequentialtimeline */}
-                        <div className="space-y-4">
-                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Mission Itinerary Timeline</span>
-                            <div className="space-y-3 relative before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-px before:bg-purple-500/20">
-                                {selectedPlan.suggested_itinerary?.map((day: any, idx: number) => (
-                                    <div key={idx} className="relative pl-9 space-y-2">
-                                        <div className="absolute left-0 top-1 w-7.5 h-7.5 rounded-lg bg-black border border-purple-500/40 flex items-center justify-center text-purple-400 font-black text-[9px] z-10">
-                                            D{day.day}
-                                        </div>
-                                        <div className="bg-white/[0.01] border border-white/5 p-4 rounded-2xl space-y-2">
-                                            <h5 className="font-bold text-white text-xs">{day.title}</h5>
-                                            <div className="space-y-1.5 text-[10px] text-gray-400 font-sans">
-                                                {['morning', 'afternoon', 'evening'].map((time) => day[time] && (
-                                                    <div key={time} className="flex gap-2">
-                                                        <span className="text-[8px] font-mono font-black text-purple-400 uppercase w-14 shrink-0 mt-0.5">{time}</span>
-                                                        <p className="leading-relaxed font-medium">{day[time]}</p>
+                                    return (
+                                        <React.Fragment key={plan._id}>
+                                            {/* Primary Row */}
+                                            <tr
+                                                onClick={() => toggleRow(plan._id)}
+                                                className={`hover:bg-white/[0.01] transition-all duration-200 group cursor-pointer ${
+                                                    isExpanded ? 'bg-white/[0.015] border-l-[3px] border-l-indigo-500' : ''
+                                                } ${plan.isFlagged ? 'bg-rose-500/[0.03] hover:bg-rose-500/[0.05]' : ''}`}
+                                            >
+                                                <td className="pl-6 md:pl-8 pr-4 py-4.5 overflow-hidden">
+                                                    <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
+                                                        <div className={`w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center border transition-all shrink-0 ${
+                                                            isExpanded 
+                                                            ? 'bg-indigo-500/25 border-indigo-400 text-white shadow-[0_0_15px_rgba(99,102,241,0.3)]' 
+                                                            : 'bg-white/[0.02] border-white/10 text-gray-400 group-hover:scale-105'
+                                                        }`}>
+                                                            <MapIcon className="w-4 h-4 md:w-5 md:h-5" />
+                                                        </div>
+                                                        <div className="overflow-hidden">
+                                                            <div className="text-white font-black tracking-tight text-xs uppercase flex items-center gap-1.5 overflow-hidden">
+                                                                <span className="truncate max-w-[85px] sm:max-w-[130px]">{plan.to}</span>
+                                                                {plan.isFlagged && (
+                                                                    <span className="p-1 rounded bg-rose-500/10 text-rose-500 border border-rose-500/20 shrink-0" title={`FLAGGED: ${plan.flagReason}`}>
+                                                                        <AlertTriangle className="w-3 h-3 animate-bounce" />
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className="text-[8px] text-gray-500 font-bold uppercase tracking-widest mt-0.5 max-w-[85px] sm:max-w-[130px] truncate">{plan.name || 'AI INTEL PLAN'}</div>
+                                                        </div>
                                                     </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                                                </td>
+                                                <td className="px-4 md:px-6 py-4.5 hidden sm:table-cell overflow-hidden">
+                                                    <div className="flex items-center gap-2 overflow-hidden w-full">
+                                                        <div className="w-6 h-6 rounded-full border border-white/10 overflow-hidden shrink-0 bg-white/5 flex items-center justify-center">
+                                                            {plan.creator?.profilepicture ? (
+                                                                <img src={plan.creator.profilepicture} alt={plan.creator.username} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <UserIcon className="w-3.5 h-3.5 text-gray-500" />
+                                                            )}
+                                                        </div>
+                                                        <span className="font-bold text-gray-300 text-xs truncate max-w-[70px] md:max-w-[110px]">@{plan.creator?.username || 'system_ai'}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 md:px-6 py-4.5 hidden md:table-cell overflow-hidden">
+                                                    <span className={`px-2 py-0.5 rounded text-[8px] font-black border uppercase tracking-widest block w-fit truncate max-w-[130px] ${enBadge.color}`}>
+                                                        {enBadge.text} ({plan.engagementScore || 18})
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 md:px-6 py-4.5 hidden lg:table-cell">
+                                                    <span className="text-white font-bold text-xs truncate">{plan.travelers || 1} Agents</span>
+                                                </td>
+                                                <td className="px-4 md:px-6 py-4.5 hidden xl:table-cell overflow-hidden">
+                                                    <div className="w-28 md:w-32 space-y-1 overflow-hidden">
+                                                        <div className="flex justify-between text-[7px] font-bold text-gray-500 uppercase tracking-widest">
+                                                            <span>Views: {plan.views || 120}</span>
+                                                            <span>{activityPct}%</span>
+                                                        </div>
+                                                        <div className="h-1 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                                                            <div 
+                                                                className={`h-full rounded-full transition-all duration-500 ${
+                                                                    activityPct >= 70 ? 'bg-gradient-to-r from-purple-500 to-[#00f2fe]' : 'bg-indigo-500'
+                                                                }`}
+                                                                style={{ width: `${activityPct}%` }}
+                                                            ></div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 md:px-6 py-4.5 hidden lg:table-cell">
+                                                    <div className="flex items-center gap-1.5 text-gray-400 font-bold text-[10px] truncate">
+                                                        <Clock className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                                                        <span>{new Date(plan.updatedAt || plan.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 md:px-6 py-4.5 overflow-hidden">
+                                                    <span className={`px-2 py-0.5 rounded text-[8px] font-black border uppercase tracking-widest flex items-center gap-1.5 w-fit shrink-0 truncate ${
+                                                        plan.status === 'trending'
+                                                        ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.15)] animate-pulse'
+                                                        : plan.status === 'inactive'
+                                                        ? 'bg-white/5 border-white/5 text-gray-500'
+                                                        : 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400 shadow-[0_0_12px_rgba(99,102,241,0.15)]'
+                                                    }`}>
+                                                        {plan.status === 'trending' ? '🔥 TRENDING' : plan.status === 'inactive' ? '⚪ INACTIVE' : '🟢 ACTIVE'}
+                                                    </span>
+                                                </td>
+                                                <td className="pr-8 pl-4 py-4.5 text-right" onClick={(e) => e.stopPropagation()}>
+                                                    <div className="flex items-center justify-end gap-2.5">
+                                                        {/* Toggle Trending priority */}
+                                                        <button
+                                                            onClick={(e) => handlePromote(plan._id, plan.to, e)}
+                                                            className={`p-2 rounded-xl border transition-all ${
+                                                                plan.status === 'trending'
+                                                                ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-white/5 hover:border-white/10 hover:text-gray-400'
+                                                                : 'bg-white/[0.01] border-white/5 hover:border-amber-500/30 text-gray-500 hover:text-amber-400'
+                                                            }`}
+                                                            title="Toggle Trending prioritized status"
+                                                        >
+                                                            <Sparkles className="w-3.5 h-3.5" />
+                                                        </button>
 
-                        {/* Budget allocation */}
-                        {selectedPlan.budget_breakdown && (
-                            <div className="space-y-3">
-                                <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Resource Allocation Breakdown</span>
-                                <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 space-y-3">
-                                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                                        <span className="text-xs font-bold text-white">Aggregated Budget Estimate</span>
-                                        <span className="text-sm font-black text-emerald-400">${selectedPlan.budget_breakdown.total}</span>
-                                    </div>
-                                    <div className="space-y-2.5">
-                                        {['flights', 'accommodation', 'activities', 'food'].map((item) => (
-                                            <div key={item} className="space-y-1">
-                                                <div className="flex justify-between text-[8px] font-black uppercase tracking-widest text-gray-500">
-                                                    <span>{item}</span>
-                                                    <span className="text-gray-300">${selectedPlan.budget_breakdown[item]}</span>
+                                                        {/* Safety flag toggler */}
+                                                        <button
+                                                            onClick={(e) => handleFlagClick(plan._id, e)}
+                                                            className={`p-2 rounded-xl border transition-all ${
+                                                                plan.isFlagged
+                                                                ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-white/5 hover:border-white/10'
+                                                                : 'bg-white/[0.01] border-white/5 hover:border-rose-500/30 text-gray-500 hover:text-rose-400'
+                                                            }`}
+                                                            title="Flag Expedition for review"
+                                                        >
+                                                            <Flag className="w-3.5 h-3.5" />
+                                                        </button>
+
+                                                        {/* Details view toggle */}
+                                                        <button
+                                                            onClick={() => toggleRow(plan._id)}
+                                                            className={`p-2 rounded-xl border transition-all ${
+                                                                isExpanded 
+                                                                ? 'bg-indigo-500/20 border-indigo-400 text-white'
+                                                                : 'bg-white/[0.01] border-white/5 text-gray-500 hover:text-white hover:border-white/20'
+                                                            }`}
+                                                        >
+                                                            {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                                                        </button>
+
+                                                        {/* Hard database purge */}
+                                                        <button
+                                                            onClick={(e) => handleDelete(plan._id, plan.to, e)}
+                                                            className="p-2 rounded-xl border border-white/5 hover:border-rose-500/20 text-gray-500 hover:text-rose-500 bg-white/[0.01] hover:bg-rose-500/5 transition-all"
+                                                            title="Purge Plan itinerary from main database"
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+
+                                            {/* Expandable row detail timeline panel */}
+                                            <AnimatePresence>
+                                                {isExpanded && (
+                                                    <tr>
+                                                        <td colSpan={8} className="bg-black/50 border-t border-b border-white/[0.03] p-8">
+                                                            <motion.div
+                                                                initial={{ opacity: 0, height: 0 }}
+                                                                animate={{ opacity: 1, height: 'auto' }}
+                                                                exit={{ opacity: 0, height: 0 }}
+                                                                transition={{ duration: 0.3 }}
+                                                                className="overflow-hidden"
+                                                            >
+                                                                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                                                                    {/* Column 1: Graphic details and Stats */}
+                                                                    <div className="space-y-6">
+                                                                        {/* Plan landscape graphic card */}
+                                                                        <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-lg h-44 group-hover:scale-105 transition-transform duration-300">
+                                                                            <img
+                                                                                src={plan.image_url || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=800'}
+                                                                                alt={plan.to}
+                                                                                className="w-full h-full object-cover opacity-50"
+                                                                            />
+                                                                            <div className="absolute inset-0 bg-gradient-to-t from-[#020204] via-transparent to-transparent"></div>
+                                                                            <div className="absolute bottom-4 left-5 w-[90%] flex items-end justify-between">
+                                                                                <div className="space-y-1">
+                                                                                    <span className="text-[7.5px] text-indigo-400 font-black uppercase tracking-widest block">TARGET NODE</span>
+                                                                                    <h4 className="text-base font-black text-white uppercase">{plan.to}</h4>
+                                                                                </div>
+                                                                                <div className="flex items-center gap-1 bg-[#020204]/80 backdrop-blur-md px-2 py-0.5 rounded border border-white/10">
+                                                                                    <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                                                                                    <span className="text-white font-bold text-[9px]">{plan.star || '4.8'}</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* Advanced Analytics statistics bento grids */}
+                                                                        <div className="grid grid-cols-2 gap-3">
+                                                                            {[
+                                                                                { label: 'PLAN VIEWS', val: plan.views || 120, icon: Eye, color: 'text-indigo-400' },
+                                                                                { label: 'USER SAVES', val: plan.saves || 24, icon: Bookmark, color: 'text-[#00f2fe]' },
+                                                                                { label: 'LIKES COUNT', val: plan.likesCount || 18, icon: Heart, color: 'text-rose-400' },
+                                                                                { label: 'COMMENTS', val: plan.commentsCount || 5, icon: MessageSquare, color: 'text-emerald-400' }
+                                                                            ].map((bento, bi) => (
+                                                                                <div key={bi} className="bg-white/[0.01] border border-white/5 p-3 rounded-2xl flex items-center gap-3">
+                                                                                    <div className="p-2 rounded-lg bg-white/[0.02]">
+                                                                                        <bento.icon className={`w-4 h-4 ${bento.color}`} />
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <span className="text-[7px] text-gray-500 font-bold block uppercase tracking-widest">{bento.label}</span>
+                                                                                        <span className="text-white font-black text-xs font-mono">{bento.val}</span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+
+                                                                        {/* Local Intelligence alerts */}
+                                                                        {plan.local_tips && plan.local_tips.length > 0 && (
+                                                                            <div className="space-y-2 bg-indigo-500/[0.02] border border-indigo-500/10 p-4.5 rounded-2xl">
+                                                                                <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
+                                                                                    <Info className="w-3.5 h-3.5 text-indigo-400" /> Local Intelligence Reports
+                                                                                </span>
+                                                                                <ul className="space-y-1.5 text-[9.5px] text-gray-400 leading-relaxed font-sans list-disc list-inside">
+                                                                                    {plan.local_tips.slice(0, 3).map((tip: string, ti: number) => (
+                                                                                        <li key={ti} className="italic">"{tip}"</li>
+                                                                                    ))}
+                                                                                </ul>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+
+                                                                    {/* Column 2: Suggested Itinerary Day Timeline */}
+                                                                    <div className="space-y-4 xl:col-span-2">
+                                                                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                                                                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">DEPLOYMENT TIMELINE MAP</span>
+                                                                            <span className="text-[8px] text-indigo-400 font-black uppercase tracking-widest">{plan.days || 3} Days Duration</span>
+                                                                        </div>
+
+                                                                        <div className="space-y-3 max-h-[360px] overflow-y-auto pr-3 relative before:absolute before:left-[17px] before:top-2 before:bottom-2 before:w-px before:bg-white/5">
+                                                                            {plan.suggested_itinerary && plan.suggested_itinerary.length > 0 ? (
+                                                                                plan.suggested_itinerary.map((day: any, idx: number) => (
+                                                                                    <div key={idx} className="relative pl-9 space-y-1.5">
+                                                                                        <div className="absolute left-0 top-1 w-8 h-8 rounded-xl bg-black border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-mono font-black text-[9px] z-10 shadow-lg">
+                                                                                            D{day.day}
+                                                                                        </div>
+                                                                                        <div className="bg-white/[0.01] border border-white/5 p-4.5 rounded-2xl space-y-2">
+                                                                                            <h5 className="font-bold text-white text-xs uppercase font-mono tracking-tight">{day.title || `Day ${day.day} Deployment`}</h5>
+                                                                                            <div className="space-y-1.5 text-[10px] text-gray-400 font-sans">
+                                                                                                {['morning', 'afternoon', 'evening'].map((time) => day[time] && (
+                                                                                                    <div key={time} className="flex gap-2.5">
+                                                                                                        <span className="text-[7.5px] font-mono font-black text-indigo-400 uppercase w-14 shrink-0 mt-0.5">{time}</span>
+                                                                                                        <p className="leading-relaxed">{day[time]}</p>
+                                                                                                    </div>
+                                                                                                ))}
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                ))
+                                                                            ) : (
+                                                                                <div className="text-center py-6 text-gray-600 font-bold text-xs uppercase tracking-widest">
+                                                                                    Itinerary details not parsed inside MongoDB document
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                        
+                                                                        {/* Resource allocations breakdown progress lines */}
+                                                                        {plan.budget_breakdown && (
+                                                                            <div className="space-y-3 pt-3 border-t border-white/5">
+                                                                                <div className="flex justify-between items-center text-[8.5px] font-black uppercase tracking-widest text-gray-500">
+                                                                                    <span>Aggregated Resource Allocations</span>
+                                                                                    <span className="text-emerald-400 text-xs font-mono">${plan.budget_breakdown.total || plan.budget}</span>
+                                                                                </div>
+                                                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+                                                                                    {['flights', 'accommodation', 'activities', 'food'].map((item) => {
+                                                                                        const val = plan.budget_breakdown[item] || 0;
+                                                                                        const total = plan.budget_breakdown.total || 1;
+                                                                                        const pct = Math.min(100, Math.floor((val / total) * 100)) || 25;
+                                                                                        return (
+                                                                                            <div key={item} className="space-y-1">
+                                                                                                <div className="flex justify-between text-[7px] font-bold text-gray-500 uppercase tracking-widest">
+                                                                                                    <span>{item}</span>
+                                                                                                    <span>${val}</span>
+                                                                                                </div>
+                                                                                                <div className="h-1 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                                                                                                    <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${pct}%` }}></div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        );
+                                                                                    })}
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </motion.div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </AnimatePresence>
+                                        </React.Fragment>
+                                    );
+                                })}
+
+                                {plans.length === 0 && (
+                                    <tr>
+                                        <td colSpan={8} className="py-24 text-center">
+                                            <div className="flex flex-col items-center justify-center gap-4">
+                                                <Compass className="w-12 h-12 text-gray-800 animate-pulse" />
+                                                <div className="space-y-1">
+                                                    <p className="text-gray-500 text-xs font-black uppercase tracking-widest">NO DEPLOYED EXPEDITIONS NODES FOUND</p>
+                                                    <p className="text-gray-700 text-[10px] uppercase font-bold">Try adjusting your advanced parameters filter or trigger data sync</p>
                                                 </div>
-                                                <div className="h-1 bg-white/5 rounded-full overflow-hidden border border-white/5">
-                                                    <div
-                                                        className="h-full bg-purple-500 rounded-full"
-                                                        style={{ width: `${(selectedPlan.budget_breakdown[item] / selectedPlan.budget_breakdown.total) * 100}%` }}
-                                                    ></div>
-                                                </div>
+                                                <button
+                                                    onClick={() => { setSearch(''); setStatusFilter('all'); fetchPlansAnalytics(); }}
+                                                    className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full text-[9px] font-black uppercase tracking-widest transition-all mt-2"
+                                                >
+                                                    RESET SEARCH FILTERS
+                                                </button>
                                             </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Local tips */}
-                        {selectedPlan.local_tips?.length > 0 && (
-                            <div className="space-y-2">
-                                <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Ecosystem Local Intelligence</span>
-                                <div className="space-y-1.5">
-                                    {selectedPlan.local_tips.map((tip: string, i: number) => (
-                                        <div key={i} className="flex gap-2 p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl">
-                                            <Info className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5 animate-pulse" />
-                                            <p className="text-[10px] text-gray-300 leading-relaxed italic">{tip}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Danger zone actions */}
-                        <button
-                            onClick={(e) => handleDelete(selectedPlan._id, e)}
-                            className="w-full py-3.5 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg hover:shadow-rose-500/20"
-                        >
-                            Purge Expedition Plan From Database
-                        </button>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 )}
-            </DetailPanel>
+
+                {/* Pagination Controls Footer section */}
+                {!loading && plans.length > 0 && (
+                    <div className="bg-white/[0.01] border-t border-white/10 px-8 py-5 flex items-center justify-between flex-wrap gap-4 font-mono text-xs">
+                        <span className="text-gray-500 font-bold uppercase text-[9px] tracking-widest">
+                            Showing system page {page} of {totalPages} // Total active records
+                        </span>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                                className="px-3.5 py-2 border border-white/5 hover:border-white/10 rounded-xl bg-white/[0.01] text-[9.5px] font-black uppercase tracking-widest disabled:opacity-30 disabled:cursor-not-allowed transition-all text-gray-400 hover:text-white"
+                            >
+                                PREVIOUS
+                            </button>
+                            <span className="px-3.5 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-black text-[9.5px]">
+                                {page}
+                            </span>
+                            <button
+                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                disabled={page === totalPages}
+                                className="px-3.5 py-2 border border-white/5 hover:border-white/10 rounded-xl bg-white/[0.01] text-[9.5px] font-black uppercase tracking-widest disabled:opacity-30 disabled:cursor-not-allowed transition-all text-gray-400 hover:text-white"
+                            >
+                                NEXT
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Futuristic Flag / Safety Protcol Modal overlay */}
+            <AnimatePresence>
+                {flaggingPlanId && (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-[#0c0c0c] border border-rose-500/30 rounded-[32px] max-w-md w-full p-8 space-y-6 relative overflow-hidden shadow-[0_0_50px_rgba(244,63,94,0.15)]"
+                        >
+                            <div className="absolute top-0 left-0 w-full h-[3px] bg-rose-500 animate-pulse"></div>
+                            
+                            <div className="flex items-center gap-3 text-rose-500">
+                                <Shield className="w-6 h-6 animate-pulse" />
+                                <h3 className="text-lg font-black uppercase tracking-widest font-mono">SAFETY SANCTION DECK</h3>
+                            </div>
+
+                            <p className="text-[10px] text-gray-400 leading-relaxed font-sans">
+                                Flagging this plan itinerary alerts users of guidelines violations or tags it under safety review. Leave the reason empty to unflag.
+                            </p>
+
+                            <form onSubmit={submitFlagAction} className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest block font-mono">SANCTION ARGUMENT/REASON</label>
+                                    <textarea
+                                        value={flagReasonInput}
+                                        onChange={(e) => setFlagReasonInput(e.target.value)}
+                                        placeholder="Explain the safety violation or regulatory concern here..."
+                                        className="w-full bg-white/[0.02] border border-white/10 rounded-2xl p-4 text-xs font-mono focus:outline-none focus:border-rose-500/40 min-h-[90px] placeholder:text-gray-800 text-gray-200"
+                                    />
+                                </div>
+
+                                <div className="flex items-center gap-2 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setFlaggingPlanId(null)}
+                                        className="flex-1 py-3 border border-white/10 hover:bg-white/5 rounded-2xl font-black text-[9px] uppercase tracking-widest transition-all text-gray-500 hover:text-white"
+                                    >
+                                        ABORT
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-1 py-3 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 rounded-2xl font-black text-[9px] uppercase tracking-widest transition-all shadow-md"
+                                    >
+                                        COMMIT WARNING
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 };

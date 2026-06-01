@@ -6,6 +6,9 @@ import {
     deleteUser,
     toggleBanUser,
     getAllPlans,
+    getPlansAnalytics,
+    promotePlan,
+    flagPlan,
     deletePlan,
     getAllReviews,
     deleteReview,
@@ -53,7 +56,10 @@ router.get('/users', getAllUsers);
 router.post('/users/:id/ban', toggleBanUser);
 router.delete('/users/:id', deleteUser);
 
+router.get('/plans/analytics', getPlansAnalytics);
 router.get('/plans', getAllPlans);
+router.post('/plans/:id/promote', promotePlan);
+router.post('/plans/:id/flag', flagPlan);
 router.delete('/plans/:id', deletePlan);
 
 router.get('/reviews', getAllReviews);

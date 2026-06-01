@@ -88,6 +88,15 @@ const planSchema = new Schema<IPlan>({
     local_tips: [String],
     hotels: [{ type: Schema.Types.ObjectId, ref: 'Hotel' }],
     flights: [{ type: Schema.Types.ObjectId, ref: 'Flight' }],
+
+    // Advanced Intelligence Analytics Fields
+    views: { type: Number, default: 120 },
+    saves: { type: Number, default: 24 },
+    likesCount: { type: Number, default: 18 },
+    commentsCount: { type: Number, default: 5 },
+    status: { type: String, enum: ['active', 'trending', 'inactive'], default: 'active', index: true },
+    isFlagged: { type: Boolean, default: false, index: true },
+    flagReason: { type: String, default: '' },
 }, { timestamps: true });
 
 

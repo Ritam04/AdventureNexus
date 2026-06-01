@@ -87,4 +87,13 @@ export interface IPlan extends Document {
     // raw AI response data for processing
     hotel_options?: any[];
     flight_options?: any[];
+
+    // Advanced Intelligence Analytics Fields
+    views?: number;
+    saves?: number;
+    likesCount?: number;
+    commentsCount?: number;
+    status?: 'active' | 'trending' | 'inactive';
+    isFlagged?: boolean;
+    flagReason?: string;
 }
