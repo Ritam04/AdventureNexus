@@ -4,6 +4,7 @@ import {
     getDashboardStats,
     getAllUsers,
     deleteUser,
+    toggleBanUser,
     getAllPlans,
     deletePlan,
     getAllReviews,
@@ -49,6 +50,7 @@ router.get('/activity', getDashboardActivityLogs);
 router.get('/stats', getDashboardStats);
 
 router.get('/users', getAllUsers);
+router.post('/users/:id/ban', toggleBanUser);
 router.delete('/users/:id', deleteUser);
 
 router.get('/plans', getAllPlans);

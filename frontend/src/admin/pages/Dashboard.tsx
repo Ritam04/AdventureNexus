@@ -151,7 +151,7 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* TOP Grid: Live Metrics MetricsGrid */}
-            {metrics && <MetricsGrid metrics={metrics} />}
+            {metrics && <MetricsGrid metrics={metrics} timeSeries={timeSeries} />}
 
             {/* GRAFANA PANEL TITLE */}
             <div className="flex items-center gap-2 border-b border-white/5 pb-2 pt-4 font-mono">
@@ -159,106 +159,60 @@ const Dashboard: React.FC = () => {
                 <span className="text-xs font-black uppercase text-gray-400 tracking-widest">Ecosystem Metrics / Grafana Visualization Panels</span>
             </div>
 
-            {/* 7 SEPARATE CHART PANELS (HIGH-DENSITY GRAFANA GRID) */}
+            {/* 4 SPECIFIC CHART PANELS (PREMIUM OBSERVAIBILITY GRID) */}
             {timeSeries && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 font-mono">
-                    {/* PANEL 1: User Registrations */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 font-mono">
+                    {/* LINE CHART: User Growth over time */}
                     <ChartCard
-                        title="Operator Registration Ingestion"
-                        subtitle="24h Ingestion Velocity"
-                        type="area"
-                        data={timeSeries.hourlyRegistrations}
-                        dataKey="registrations"
-                        xKey="hour"
-                        color="#10b981"
-                        glow="rgba(16, 185, 129, 0.4)"
-                        gradientId="regGrad"
+                        title="User Growth Acceleration"
+                        subtitle="Cumulative Registration Trend"
+                        type="line"
+                        data={timeSeries.userGrowthTrend || []}
+                        dataKey="count"
+                        xKey="date"
+                        color="#6366f1"
+                        glow="rgba(99, 102, 241, 0.4)"
+                        gradientId="growthGrad"
                     />
 
-                    {/* PANEL 2: Community Posts */}
+                    {/* BAR CHART: Posts per day */}
                     <ChartCard
-                        title="Social Post Ingestion Rate"
-                        subtitle="7-Day Feed Volume"
+                        title="Social Content Ingestion Rate"
+                        subtitle="Daily Combined Posts (7d)"
                         type="bar"
-                        data={timeSeries.dailyPosts}
+                        data={timeSeries.dailyPosts || []}
                         dataKey="count"
                         xKey="date"
                         color="#8b5cf6"
                         glow="rgba(139, 92, 246, 0.4)"
-                        gradientId="postGrad"
+                        gradientId="postCombinedGrad"
                     />
 
-                    {/* PANEL 3: Experiences Shared */}
+                    {/* AREA CHART: API Latency Trend */}
                     <ChartCard
-                        title="Shared Travel Experience Dispatches"
-                        subtitle="7-Day Expeditions Volume"
-                        type="line"
-                        data={timeSeries.dailyExperiences}
-                        dataKey="count"
-                        xKey="date"
-                        color="#ec4899"
-                        glow="rgba(236, 72, 153, 0.4)"
-                        gradientId="expGrad"
-                    />
-
-                    {/* PANEL 4: Comments Created */}
-                    <ChartCard
-                        title="Ecosystem Engagement (Comments)"
-                        subtitle="7-Day Conversation Metrics"
-                        type="line"
-                        data={timeSeries.dailyComments}
-                        dataKey="count"
-                        xKey="date"
-                        color="#06b6d4"
-                        glow="rgba(6, 182, 212, 0.4)"
-                        gradientId="commentGrad"
-                    />
-
-                    {/* PANEL 5: Likes/Reactions */}
-                    <ChartCard
-                        title="Reactions & Appraisals Tracked"
-                        subtitle="7-Day Appreciation Density"
+                        title="API Latency & Server Ingest Rate"
+                        subtitle="Response Performance Metrics (ms)"
                         type="area"
-                        data={timeSeries.dailyLikes}
-                        dataKey="count"
+                        data={timeSeries.apiLatency || []}
+                        dataKey="value"
                         xKey="date"
-                        color="#f43f5e"
-                        glow="rgba(244, 63, 94, 0.4)"
-                        gradientId="likeGrad"
+                        color="#38bdf8"
+                        glow="rgba(56, 189, 248, 0.4)"
+                        gradientId="latencyCombinedGrad"
                     />
 
-                    {/* PANEL 6: Group Membership Joins */}
+                    {/* PIE CHART: Content Distribution */}
                     <ChartCard
-                        title="Nexus Group Join Ingestions"
-                        subtitle="7-Day Memberships Activity"
-                        type="bar"
-                        data={timeSeries.dailyGroups}
-                        dataKey="count"
-                        xKey="date"
-                        color="#f59e0b"
-                        glow="rgba(245, 158, 11, 0.4)"
-                        gradientId="groupGrad"
+                        title="Ecosystem Content Distribution"
+                        subtitle="Aggregate Posts, Comments & Likes"
+                        type="pie"
+                        data={timeSeries.contentDistribution || []}
                     />
-
-                    {/* PANEL 7: API Latency */}
-                    <div className="md:col-span-2">
-                        <ChartCard
-                            title="Master Core Telemetry API Latency"
-                            subtitle="Core Server Response Rates (ms)"
-                            type="area"
-                            data={timeSeries.apiLatency}
-                            dataKey="value"
-                            xKey="date"
-                            color="#3b82f6"
-                            glow="rgba(59, 130, 246, 0.4)"
-                            gradientId="latencyGrad"
-                        />
-                    </div>
                 </div>
             )}
 
             {/* MIDDLE Grid: Live Activity Feed Sidebar & Systems */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-mono">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-sans">
                 {/* Live Activity Logs Feed (2 Columns) */}
                 <div className="lg:col-span-2">
                     <LiveActivityFeed events={events} loading={eventsLoading} />
@@ -276,7 +230,7 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* BOTTOM Grid: Audit Log Trail */}
-            <div className="grid grid-cols-1 gap-6 font-mono">
+            <div className="grid grid-cols-1 gap-6 font-sans">
                 <SystemLogsPanel />
             </div>
         </motion.div>

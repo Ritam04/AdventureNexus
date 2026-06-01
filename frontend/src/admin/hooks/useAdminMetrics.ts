@@ -3,10 +3,29 @@ import { useSocket } from '../context/AdminSocketContext';
 import api from '../services/adminApi';
 
 export interface ObservabilityMetrics {
+    // User Metrics
     totalUsers: number;
     activeUsers: number;
-    postsCreatedToday: number;
-    experiencesCreatedToday: number;
+    newUsersToday: number;
+    userGrowthRate: number;
+
+    // Content Metrics
+    totalPosts: number;
+    postsToday: number;
+    commentsToday: number;
+    likesToday: number;
+
+    // Engagement Metrics
+    avgLikesPerPost: number;
+    avgCommentsPerPost: number;
+    activeSessions: number;
+
+    // System Metrics
+    apiRequestCount: number;
+    avgLatency: number;
+    errorRate: number;
+
+    // Fallbacks for legacy compatibility
     commentsCount: number;
     likesCount: number;
     groupJoins: number;
@@ -21,6 +40,8 @@ export interface TimeSeriesData {
     dailyLikes: { date: string; count: number }[];
     dailyGroups: { date: string; count: number }[];
     apiLatency: { date: string; value: number }[];
+    userGrowthTrend: { date: string; count: number }[];
+    contentDistribution: { name: string; value: number; color: string }[];
 }
 
 export interface SystemHealthMetrics {

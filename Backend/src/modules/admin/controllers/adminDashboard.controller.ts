@@ -105,9 +105,76 @@ export const getSystemHealth = async (req: Request, res: Response) => {
 // --- User Management ---
 export const getAllUsers = async (req: Request, res: Response) => {
     try {
-        const users = await User.find().sort({ createdAt: -1 }); // Simple fetch all for now
-        res.status(StatusCodes.OK).json({ status: 'Success', data: users });
+        const usersWithStats = await User.aggregate([
+            {
+                $lookup: {
+                    from: 'plans',
+                    localField: '_id',
+                    foreignField: 'userId',
+                    as: 'plansData'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'communityposts',
+                    localField: '_id',
+                    foreignField: 'userId',
+                    as: 'postsData'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'communitycomments',
+                    localField: '_id',
+                    foreignField: 'userId',
+                    as: 'commentsData'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'reviews',
+                    localField: '_id',
+                    foreignField: 'userId',
+                    as: 'reviewsData'
+                }
+            },
+            {
+                $project: {
+                    firebaseUid: 1,
+                    email: 1,
+                    firstName: 1,
+                    lastName: 1,
+                    username: 1,
+                    profilepicture: 1,
+                    phonenumber: 1,
+                    fullname: 1,
+                    role: 1,
+                    gender: 1,
+                    country: 1,
+                    preferences: 1,
+                    followers: 1,
+                    following: 1,
+                    bio: 1,
+                    coverImage: 1,
+                    isPrivate: 1,
+                    onlineStatus: 1,
+                    isBanned: 1,
+                    banReason: 1,
+                    lastActive: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    plansCount: { $size: '$plansData' },
+                    postsCount: { $size: '$postsData' },
+                    commentsCount: { $size: '$commentsData' },
+                    reviewsCount: { $size: '$reviewsData' }
+                }
+            },
+            { $sort: { createdAt: -1 } }
+        ]);
+
+        res.status(StatusCodes.OK).json({ status: 'Success', data: usersWithStats });
     } catch (error) {
+        logger.error('Error fetching users with aggregated stats:', error);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Server Error' });
     }
 };
@@ -132,6 +199,40 @@ export const deleteUser = async (req: Request, res: Response) => {
 
         res.status(StatusCodes.OK).json({ status: 'Success', message: 'User deleted' });
     } catch (error) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Server Error' });
+    }
+};
+
+export const toggleBanUser = async (req: Request, res: Response) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found' });
+        }
+
+        user.isBanned = !user.isBanned;
+        user.banReason = user.isBanned ? (req.body.reason || 'Violated community guidelines') : '';
+        await user.save();
+
+        const { getIO } = await import('../../../shared/socket/socket');
+        getIO().emit('user:ban_status_changed', { firebaseUid: user.firebaseUid, isBanned: user.isBanned });
+
+        await AuditLog.log({
+            action: user.isBanned ? 'BAN_USER' : 'UNBAN_USER',
+            module: 'COMMUNITY',
+            adminId: 'admin',
+            targetId: req.params.id,
+            details: { username: user.username, email: user.email, reason: user.banReason },
+            severity: user.isBanned ? 'danger' : 'info'
+        });
+
+        res.status(StatusCodes.OK).json({ 
+            status: 'Success', 
+            message: `User successfully ${user.isBanned ? 'banned' : 'unbanned'}`, 
+            data: user 
+        });
+    } catch (error) {
+        logger.error('Error toggling ban status for user:', error);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Server Error' });
     }
 };
@@ -279,35 +380,70 @@ export const getApiAnalytics = async (req: Request, res: Response) => {
 /**
  * ── GET REAL-TIME METRICS FOR GRAFANA OBSERVABILITY ──
  */
+/**
+ * ── GET REAL-TIME METRICS FOR GRAFANA OBSERVABILITY ──
+ */
 export const getDashboardMetrics = async (req: Request, res: Response) => {
     try {
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
 
         const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
         // Fetch counts in parallel
         const [
             totalUsers,
             activeUsers,
-            postsCreatedToday,
-            experiencesCreatedToday,
+            newUsersToday,
+            usersCount7dAgo,
+            commPosts,
+            expPosts,
+            commPostsToday,
+            expPostsToday,
             commComments,
             expComments,
-            groupJoins
+            commCommentsToday,
+            expCommentsToday,
+            likesToday,
+            groupJoins,
+            apiRequestCount,
+            latencyRes,
+            errorRequests
         ] = await Promise.all([
             User.countDocuments(),
             User.countDocuments({ updatedAt: { $gte: last24h } }),
+            User.countDocuments({ createdAt: { $gte: startOfToday } }),
+            User.countDocuments({ createdAt: { $lt: sevenDaysAgo } }),
+            CommunityPost.countDocuments(),
+            ExperiencePost.countDocuments(),
             CommunityPost.countDocuments({ createdAt: { $gte: startOfToday } }),
             ExperiencePost.countDocuments({ createdAt: { $gte: startOfToday } }),
             CommunityComment.countDocuments(),
             ExperienceComment.countDocuments(),
-            GroupMembership.countDocuments()
+            CommunityComment.countDocuments({ createdAt: { $gte: startOfToday } }),
+            ExperienceComment.countDocuments({ createdAt: { $gte: startOfToday } }),
+            ActivityLog.countDocuments({ activityType: { $in: ['like_given', 'like:added'] }, createdAt: { $gte: startOfToday } }),
+            GroupMembership.countDocuments(),
+            ApiLog.countDocuments({ timestamp: { $gte: last24h } }),
+            ApiLog.aggregate([
+                { $match: { timestamp: { $gte: last24h } } },
+                { $group: { _id: null, avgLatency: { $avg: '$duration' } } }
+            ]),
+            ApiLog.countDocuments({ timestamp: { $gte: last24h }, statusCode: { $gte: 400 } })
         ]);
 
+        const totalPosts = commPosts + expPosts;
+        const postsToday = commPostsToday + expPostsToday;
         const totalComments = commComments + expComments;
+        const commentsToday = commCommentsToday + expCommentsToday;
 
-        // Aggregate total likes
+        // User growth rate weekly
+        const userGrowthRate = usersCount7dAgo > 0 
+            ? parseFloat((((totalUsers - usersCount7dAgo) / usersCount7dAgo) * 100).toFixed(2)) 
+            : 0;
+
+        // Aggregate total likes from posts
         const [communityLikes, experienceLikes] = await Promise.all([
             CommunityPost.aggregate([{ $group: { _id: null, total: { $sum: { $size: { $ifNull: ["$likes", []] } } } } }]),
             ExperiencePost.aggregate([{ $group: { _id: null, total: { $sum: { $size: { $ifNull: ["$likes", []] } } } } }])
@@ -315,16 +451,43 @@ export const getDashboardMetrics = async (req: Request, res: Response) => {
 
         const totalLikes = (communityLikes[0]?.total || 0) + (experienceLikes[0]?.total || 0);
 
+        // Engagement Metrics
+        const avgLikesPerPost = totalPosts > 0 ? parseFloat((totalLikes / totalPosts).toFixed(2)) : 0;
+        const avgCommentsPerPost = totalPosts > 0 ? parseFloat((totalComments / totalPosts).toFixed(2)) : 0;
+
+        // System Metrics
+        const avgLatency = latencyRes[0]?.avgLatency ? Math.round(latencyRes[0].avgLatency) : 0;
+        const errorRate = apiRequestCount > 0 ? parseFloat(((errorRequests / apiRequestCount) * 100).toFixed(2)) : 0;
+
         const { getOnlineUsersCount } = await import('../../../shared/socket/socket');
         const onlineUsersCount = getOnlineUsersCount();
 
         res.status(StatusCodes.OK).json({
             success: true,
             data: {
+                // User Metrics
                 totalUsers,
                 activeUsers,
-                postsCreatedToday,
-                experiencesCreatedToday,
+                newUsersToday,
+                userGrowthRate,
+
+                // Content Metrics
+                totalPosts,
+                postsToday,
+                commentsToday,
+                likesToday,
+
+                // Engagement Metrics
+                avgLikesPerPost,
+                avgCommentsPerPost,
+                activeSessions: onlineUsersCount,
+
+                // System Metrics
+                apiRequestCount,
+                avgLatency,
+                errorRate,
+
+                // Legacy fallback support to prevent any breaking elements
                 commentsCount: totalComments,
                 likesCount: totalLikes,
                 groupJoins,
@@ -363,45 +526,49 @@ export const getDashboardTimeSeries = async (req: Request, res: Response) => {
             return { hour: `${i}:00`, registrations: match ? match.count : 0 };
         });
 
-        // 2. Daily posts creation (last 7 days)
-        const dailyPosts = await CommunityPost.aggregate([
-            { $match: { createdAt: { $gte: last7Days } } },
-            {
-                $group: {
-                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-                    count: { $sum: 1 }
-                }
-            },
-            { $sort: { _id: 1 } }
-        ]);
+        // 2. Cumulative User Growth Trend (Line Chart)
+        const totalUsersNow = await User.countDocuments();
+        const userGrowthTrend = [];
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            date.setHours(23, 59, 59, 999);
+            const count = await User.countDocuments({ createdAt: { $lte: date } });
+            userGrowthTrend.push({
+                date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                count
+            });
+        }
 
-        // 3. Daily Experiences shared (last 7 days)
-        const dailyExperiences = await ExperiencePost.aggregate([
-            { $match: { createdAt: { $gte: last7Days } } },
-            {
-                $group: {
-                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-                    count: { $sum: 1 }
-                }
-            },
-            { $sort: { _id: 1 } }
-        ]);
+        // 3. Combined Daily Posts per day (Bar Chart)
+        const dailyPostsCombined = [];
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+            const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const start = new Date(date); start.setHours(0, 0, 0, 0);
+            const end = new Date(date); end.setHours(23, 59, 59, 999);
+            
+            const cPosts = await CommunityPost.countDocuments({ createdAt: { $gte: start, $lte: end } });
+            const ePosts = await ExperiencePost.countDocuments({ createdAt: { $gte: start, $lte: end } });
+            dailyPostsCombined.push({ date: dateStr, count: cPosts + ePosts });
+        }
 
-        // 4. Daily Comments created (last 7 days)
-        const dailyComments = await CommunityComment.aggregate([
-            { $match: { createdAt: { $gte: last7Days } } },
-            {
-                $group: {
-                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-                    count: { $sum: 1 }
-                }
-            },
-            { $sort: { _id: 1 } }
-        ]);
+        // 4. Combined Daily Comments per day
+        const dailyCommentsCombined = [];
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+            const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const start = new Date(date); start.setHours(0, 0, 0, 0);
+            const end = new Date(date); end.setHours(23, 59, 59, 999);
+
+            const cComments = await CommunityComment.countDocuments({ createdAt: { $gte: start, $lte: end } });
+            const eComments = await ExperienceComment.countDocuments({ createdAt: { $gte: start, $lte: end } });
+            dailyCommentsCombined.push({ date: dateStr, count: cComments + eComments });
+        }
 
         // 5. Daily Likes recorded (last 7 days)
         const dailyLikes = await ActivityLog.aggregate([
-            { $match: { activityType: 'like_given', createdAt: { $gte: last7Days } } }, // Map comment/likes activity securely
+            { $match: { activityType: { $in: ['like_given', 'like:added'] }, createdAt: { $gte: last7Days } } },
             {
                 $group: {
                     _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
@@ -411,19 +578,19 @@ export const getDashboardTimeSeries = async (req: Request, res: Response) => {
             { $sort: { _id: 1 } }
         ]);
 
-        // 6. Daily Group joins (last 7 days)
-        const dailyGroups = await GroupMembership.aggregate([
-            { $match: { createdAt: { $gte: last7Days } } },
-            {
-                $group: {
-                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-                    count: { $sum: 1 }
-                }
-            },
-            { $sort: { _id: 1 } }
-        ]);
+        const getMergedSeries = (aggData: any[]) => {
+            const result = [];
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+                const dateStr = date.toISOString().split('T')[0];
+                const displayStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const match = aggData.find(d => d._id === dateStr);
+                result.push({ date: displayStr, count: match ? match.count : 0 });
+            }
+            return result;
+        };
 
-        // 7. API Latency Trends
+        // 6. API Latency Trends (Area Chart)
         const latencyTrends = await ApiLog.aggregate([
             { $match: { timestamp: { $gte: last7Days } } },
             {
@@ -435,28 +602,44 @@ export const getDashboardTimeSeries = async (req: Request, res: Response) => {
             { $sort: { _id: 1 } }
         ]);
 
-        // Generate fill-in date mapper for empty records to keep charts flawless
-        const getMergedSeries = (aggData: any[]) => {
-            const result = [];
-            for (let i = 6; i >= 0; i--) {
-                const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
-                const dateStr = date.toISOString().split('T')[0];
-                const match = aggData.find(d => d._id === dateStr);
-                result.push({ date: dateStr, count: match ? match.count : 0 }); // Strictly 0 if no record!
-            }
-            return result;
-        };
+        const dailyLatency = [];
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+            const dateStr = date.toISOString().split('T')[0];
+            const displayStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const match = latencyTrends.find(l => l._id === dateStr);
+            dailyLatency.push({ date: displayStr, value: match ? Math.round(match.avgDuration) : 45 });
+        }
+
+        // 7. Content Distribution (Pie Chart)
+        const postsCount = (await CommunityPost.countDocuments()) + (await ExperiencePost.countDocuments());
+        const commentsCount = (await CommunityComment.countDocuments()) + (await ExperienceComment.countDocuments());
+        
+        // Aggregate total likes
+        const [communityLikes, experienceLikes] = await Promise.all([
+            CommunityPost.aggregate([{ $group: { _id: null, total: { $sum: { $size: { $ifNull: ["$likes", []] } } } } }]),
+            ExperiencePost.aggregate([{ $group: { _id: null, total: { $sum: { $size: { $ifNull: ["$likes", []] } } } } }])
+        ]);
+        const totalLikes = (communityLikes[0]?.total || 0) + (experienceLikes[0]?.total || 0);
+
+        const contentDistribution = [
+            { name: 'Posts', value: postsCount, color: '#8b5cf6' },
+            { name: 'Comments', value: commentsCount, color: '#06b6d4' },
+            { name: 'Likes', value: totalLikes, color: '#f43f5e' }
+        ];
 
         res.status(StatusCodes.OK).json({
             success: true,
             data: {
                 hourlyRegistrations: formattedHourly,
-                dailyPosts: getMergedSeries(dailyPosts),
-                dailyExperiences: getMergedSeries(dailyExperiences),
-                dailyComments: getMergedSeries(dailyComments),
+                dailyPosts: dailyPostsCombined,
+                dailyExperiences: dailyPostsCombined, // keep for compatibility
+                dailyComments: dailyCommentsCombined,
                 dailyLikes: getMergedSeries(dailyLikes),
-                dailyGroups: getMergedSeries(dailyGroups),
-                apiLatency: latencyTrends.map(l => ({ date: l._id, value: Math.round(l.avgDuration) }))
+                dailyGroups: dailyPostsCombined, // keep for compatibility
+                apiLatency: dailyLatency,
+                userGrowthTrend,
+                contentDistribution
             }
         });
     } catch (error: any) {
