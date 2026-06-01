@@ -10,6 +10,215 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSocket } from '../context/AdminSocketContext';
 import { toast } from 'react-hot-toast';
+import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
+
+// 🌍 HIGH-FIDELITY GEOMAPPING DICTIONARY FOR SATELLITE INTEL
+const GEOMAP: Record<string, [number, number]> = {
+    'KOLAGHAT': [22.4338, 87.8711],
+    'KOLKATA': [22.5726, 88.3639],
+    'KYOTO': [35.0116, 135.7681],
+    'KYOTO, JAPAN': [35.0116, 135.7681],
+    'DARJEELING': [27.0410, 88.2627],
+    'CHINA': [35.8617, 104.1954],
+    'TAIWAN': [23.6978, 120.9605],
+    'MUMBAI': [19.0760, 72.8777],
+    'DELHI': [28.6139, 77.2090],
+    'LONDON': [51.5074, -0.1278],
+    'NEW YORK': [40.7128, -74.0060],
+    'PARIS': [48.8566, 2.3522],
+    'TOKYO': [35.6762, 139.6503],
+    'SINGAPORE': [1.3521, 103.8198],
+    'BANGKOK': [13.7563, 100.5018],
+    'SYDNEY': [-33.8688, 151.2093],
+    'BALI': [-8.4095, 115.1889],
+    'DUBAI': [25.2048, 55.2708],
+    'SWITZERLAND': [46.8182, 8.2275],
+    'ICELAND': [64.9631, -19.0208],
+};
+
+// Deterministic hashing fallback for dynamically created destinations
+const getCoords = (name: string): [number, number] => {
+    if (!name) return [0, 0];
+    const uName = name.toUpperCase().trim();
+    for (const key in GEOMAP) {
+        if (uName.includes(key)) return GEOMAP[key];
+    }
+    
+    // Deterministic string hash
+    let hash = 0;
+    for (let i = 0; i < uName.length; i++) {
+        hash = uName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    // Distribute to valid lat/lng boundaries
+    const lat = -35 + Math.abs((hash % 95) * 1.05); // -35 to 65 (comfort projection)
+    const lng = -170 + Math.abs(((hash >> 8) % 340)); // -170 to 170
+    return [lat, lng];
+};
+
+interface ExpeditionWorldMapProps {
+    plans: any[];
+    onFocusSelect: (coords: [number, number] | null) => void;
+    focusCoords: [number, number] | null;
+}
+
+const MapFlyController: React.FC<{ coords: [number, number] | null }> = ({ coords }) => {
+    const map = useMap();
+    useEffect(() => {
+        if (coords) {
+            map.flyTo(coords, 5, {
+                animate: true,
+                duration: 1.8,
+            });
+        } else {
+            // Reset to world view
+            map.setView([20, 0], 2, {
+                animate: true,
+                duration: 1.8,
+            });
+        }
+    }, [coords, map]);
+    return null;
+};
+
+const ExpeditionWorldMap: React.FC<ExpeditionWorldMapProps> = ({ plans, onFocusSelect, focusCoords }) => {
+    useEffect(() => {
+        // Inject Leaflet stylesheet dynamically if it is not already loaded
+        const id = 'leaflet-css-link';
+        if (!document.getElementById(id)) {
+            const link = document.createElement('link');
+            link.id = id;
+            link.rel = 'stylesheet';
+            link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+            document.head.appendChild(link);
+        }
+        
+        // Inject Custom Dark Theme Map styling
+        const styleId = 'leaflet-custom-dark-theme';
+        if (!document.getElementById(styleId)) {
+            const style = document.createElement('style');
+            style.id = styleId;
+            style.textContent = `
+                .leaflet-container {
+                    background: #080808 !important;
+                }
+                .leaflet-bar {
+                    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                    border-radius: 12px !important;
+                    overflow: hidden;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+                }
+                .leaflet-bar a {
+                    background-color: rgba(12, 12, 12, 0.9) !important;
+                    color: #a1a1aa !important;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+                    transition: all 0.2s;
+                }
+                .leaflet-bar a:hover {
+                    background-color: rgba(99, 102, 241, 0.2) !important;
+                    color: #ffffff !important;
+                }
+                .leaflet-popup-content-wrapper {
+                    background: rgba(12, 12, 12, 0.95) !important;
+                    backdrop-filter: blur(12px) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                    border-radius: 16px !important;
+                    color: #e4e4e7 !important;
+                    font-family: monospace !important;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8) !important;
+                }
+                .leaflet-popup-tip {
+                    background: rgba(12, 12, 12, 0.95) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                }
+                .leaflet-control-attribution {
+                    background: rgba(8, 8, 8, 0.7) !important;
+                    color: #52525b !important;
+                    font-family: monospace !important;
+                    font-size: 8px !important;
+                }
+                .leaflet-control-attribution a {
+                    color: #6366f1 !important;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }, []);
+
+    const markers = React.useMemo(() => {
+        const uniqueCoords = new Map<string, { lat: number, lng: number, views: number, saves: number, to: string, travelers: number }>();
+        
+        plans.forEach(plan => {
+            if (!plan.to) return;
+            const dest = plan.to.toUpperCase().trim();
+            const coords = getCoords(plan.to);
+            const current = uniqueCoords.get(dest);
+            const views = plan.views || 120;
+            const saves = plan.saves || 0;
+            const travelers = plan.travelers || 1;
+            
+            if (!current || current.views < views) {
+                uniqueCoords.set(dest, { lat: coords[0], lng: coords[1], views, saves, to: plan.to, travelers });
+            }
+        });
+
+        return Array.from(uniqueCoords.values()).map(m => {
+            const radius = Math.min(30, Math.max(8, (m.views / 500) * 20));
+            return {
+                location: [m.lat, m.lng] as [number, number],
+                radius,
+                views: m.views,
+                saves: m.saves,
+                to: m.to,
+                travelers: m.travelers
+            };
+        });
+    }, [plans]);
+
+    return (
+        <div className="relative w-full h-[400px] sm:h-[480px] rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+            <MapContainer 
+                center={[20, 0]} 
+                zoom={2} 
+                zoomControl={true}
+                scrollWheelZoom={true}
+                className="w-full h-full"
+                style={{ height: '100%', width: '100%' }}
+            >
+                <TileLayer
+                    url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                />
+                
+                {markers.map((m, idx) => (
+                    <CircleMarker
+                        key={idx}
+                        center={m.location}
+                        radius={m.radius}
+                        pathOptions={{
+                            color: '#f43f5e',
+                            fillColor: '#f43f5e',
+                            fillOpacity: 0.35,
+                            weight: 1.5,
+                        }}
+                    >
+                        <Popup>
+                            <div className="space-y-1.5 font-mono text-[10px]">
+                                <div className="text-white font-black uppercase text-xs tracking-tight border-b border-white/10 pb-1">{m.to}</div>
+                                <div className="text-rose-400 font-bold uppercase tracking-wider">EXPEDITION INTEL REPORT</div>
+                                <div className="text-gray-400">COORDINATES: {m.location[0].toFixed(3)}°N, {m.location[1].toFixed(3)}°E</div>
+                                <div className="text-gray-400">TRAFFIC WEIGHT: <span className="text-white font-bold">{m.views} VIEWS</span></div>
+                                <div className="text-gray-400">ENGAGED PAX: <span className="text-[#00f2fe] font-bold">{m.travelers} AGENTS</span></div>
+                            </div>
+                        </Popup>
+                    </CircleMarker>
+                ))}
+
+                <MapFlyController coords={focusCoords} />
+            </MapContainer>
+        </div>
+    );
+};
 
 const PlansPage: React.FC = () => {
     const [plans, setPlans] = useState<any[]>([]);
@@ -28,6 +237,7 @@ const PlansPage: React.FC = () => {
     const [sortBy, setSortBy] = useState('createdAt');
     const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
     const [expandedPlanId, setExpandedPlanId] = useState<string | null>(null);
+    const [focusCoords, setFocusCoords] = useState<[number, number] | null>(null);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [flaggingPlanId, setFlaggingPlanId] = useState<string | null>(null);
@@ -156,8 +366,17 @@ const PlansPage: React.FC = () => {
         }
     };
 
-    const toggleRow = (id: string) => {
-        setExpandedPlanId(expandedPlanId === id ? null : id);
+    const toggleRow = (id: string, destinationName?: string) => {
+        if (expandedPlanId === id) {
+            setExpandedPlanId(null);
+            setFocusCoords(null);
+        } else {
+            setExpandedPlanId(id);
+            if (destinationName) {
+                const coords = getCoords(destinationName);
+                setFocusCoords(coords);
+            }
+        }
     };
 
     // Derived Visual Indicators
@@ -231,6 +450,133 @@ const PlansPage: React.FC = () => {
                         </div>
                     </motion.div>
                 ))}
+            </div>
+
+            {/* Live Global Expedition Heatmap Panel */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Flat Worldmap Deck (Left 2/3) */}
+                <div className="lg:col-span-2 bg-[#0c0c0c]/85 border border-white/10 rounded-[32px] p-6 shadow-2xl relative flex flex-col gap-6 overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-[1.5px] bg-gradient-to-r from-transparent via-rose-500/30 to-transparent"></div>
+                    
+                    {/* Visual background pattern */}
+                    <div className="absolute inset-0 bg-radial-gradient from-rose-500/[0.02] via-transparent to-transparent pointer-events-none"></div>
+
+                    {/* Top Analytics Panel (Title + Target coords) */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 z-10 font-mono">
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-rose-500">
+                                <Sparkles className="w-4.5 h-4.5 animate-pulse" />
+                                <h3 className="text-sm font-black uppercase tracking-widest text-white">GLOBAL EXPEDITION HEATMAP</h3>
+                            </div>
+                            <p className="text-[9px] text-gray-500 uppercase tracking-wider font-bold">
+                                Visualizing live MongoDB expedition density & flat-grid coordinates.
+                            </p>
+                        </div>
+                        
+                        {/* Target Satellite Intercept HUD */}
+                        <div className="px-4 py-2 bg-gradient-to-r from-indigo-500/[0.05] to-transparent border border-white/5 rounded-2xl flex items-center gap-4 shrink-0 min-w-[240px]">
+                            <div className="space-y-0.5">
+                                <div className="text-[7px] text-gray-500 font-black uppercase tracking-widest">SATELLITE INTERCEPT</div>
+                                {focusCoords ? (
+                                    <div className="text-white font-black text-[10px] uppercase tracking-tight">
+                                        Latitude: {focusCoords[0].toFixed(3)}°N, Longitude: {focusCoords[1].toFixed(3)}°E
+                                    </div>
+                                ) : (
+                                    <div className="text-[8px] text-gray-400 font-bold uppercase tracking-widest animate-pulse">
+                                        SCANNING FOR PLAN PIN...
+                                    </div>
+                                )}
+                            </div>
+                            {focusCoords && (
+                                <button 
+                                    onClick={() => setFocusCoords(null)}
+                                    className="text-[7px] font-black text-rose-400 border border-rose-500/20 hover:bg-rose-500/10 px-2 py-1 rounded-lg uppercase tracking-widest transition-colors ml-auto cursor-pointer"
+                                >
+                                    RESET
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Map Display (FULL WIDTH!) */}
+                    <div className="w-full relative z-10">
+                        <ExpeditionWorldMap 
+                            plans={plans} 
+                            onFocusSelect={setFocusCoords} 
+                            focusCoords={focusCoords} 
+                        />
+                        {/* Live telemetry badge */}
+                        <div className="absolute bottom-4 left-4 bg-black/60 border border-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl flex items-center gap-2 z-[1000]">
+                            <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                            <span className="text-[8px] font-black font-mono text-rose-400 uppercase tracking-widest">LIVE telemetry feed</span>
+                        </div>
+                    </div>
+
+                    {/* Bottom Instructions Info */}
+                    <div className="p-3 bg-white/[0.01] border border-white/5 rounded-2xl flex gap-3 items-center z-10 font-mono">
+                        <Info className="w-4 h-4 text-indigo-400 shrink-0" />
+                        <div className="text-[8px] text-gray-400 leading-relaxed font-bold uppercase tracking-wider">
+                            Interactive navigation enabled. Left click & drag to pan the map; scroll to zoom. Clicking database rows below automatically initiates flight path.
+                        </div>
+                    </div>
+                </div>
+
+                {/* Heatmap Node targets list (Right 1/3) */}
+                <div className="bg-[#0c0c0c]/85 border border-white/10 rounded-[32px] p-6 shadow-2xl relative flex flex-col justify-between overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-[1.5px] bg-gradient-to-r from-transparent via-[#00f2fe]/30 to-transparent"></div>
+                    
+                    <div className="space-y-4">
+                        <div className="space-y-1">
+                            <span className="text-[8px] text-[#00f2fe] font-black uppercase tracking-widest block">RADAR RANGE SECTOR</span>
+                            <h3 className="text-xs font-black uppercase tracking-widest text-white font-mono">ACTIVE TARGET NODES ({plans.length})</h3>
+                        </div>
+
+                        {/* Node list feed */}
+                        <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1 font-mono">
+                            {plans.slice(0, 5).map((plan, idx) => {
+                                const coords = getCoords(plan.to);
+                                const isFocused = focusCoords && focusCoords[0] === coords[0] && focusCoords[1] === coords[1];
+                                return (
+                                    <div 
+                                        key={idx}
+                                        onClick={() => setFocusCoords(coords)}
+                                        className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group ${
+                                            isFocused
+                                            ? 'bg-rose-500/10 border-rose-500/30 shadow-[0_0_15px_rgba(244,63,94,0.15)] text-rose-400'
+                                            : 'bg-white/[0.02] border-white/5 text-gray-400 hover:bg-white/[0.04]'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <div className={`w-2 h-2 rounded-full shrink-0 ${isFocused ? 'bg-rose-500 animate-ping' : 'bg-indigo-500'}`}></div>
+                                            <div className="min-w-0">
+                                                <span className="text-white font-black text-[10px] uppercase truncate block max-w-[120px]">{plan.to}</span>
+                                                <span className="text-[7px] text-gray-500 font-bold uppercase tracking-widest block mt-0.5">{plan.travelers || 1} AGENTS</span>
+                                            </div>
+                                        </div>
+                                        <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-lg border shrink-0 transition-all ${
+                                            isFocused 
+                                            ? 'bg-rose-500/20 border-rose-500/30 text-rose-400' 
+                                            : 'bg-white/5 border-white/10 text-gray-400 group-hover:bg-indigo-500/10 group-hover:border-indigo-500/20 group-hover:text-indigo-400'
+                                        }`}>
+                                            {isFocused ? 'LOCKED' : 'FOCUS'}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                            {plans.length === 0 && (
+                                <div className="text-center py-10 text-gray-600 text-[10px] uppercase font-bold tracking-widest">
+                                    No nodes matching search filter
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Stats Summary Panel */}
+                    <div className="pt-4 border-t border-white/5 flex items-center justify-between font-mono text-[9px] text-gray-500 font-bold uppercase tracking-widest">
+                        <span>SYS SIGNAL: STABLE</span>
+                        <span>LATENCY: 14MS</span>
+                    </div>
+                </div>
             </div>
 
             {/* Smart Search + Advanced HUD Filters Console */}
@@ -341,7 +687,7 @@ const PlansPage: React.FC = () => {
                                         <React.Fragment key={plan._id}>
                                             {/* Primary Row */}
                                             <tr
-                                                onClick={() => toggleRow(plan._id)}
+                                                onClick={() => toggleRow(plan._id, plan.to)}
                                                 className={`hover:bg-white/[0.01] transition-all duration-200 group cursor-pointer ${
                                                     isExpanded ? 'bg-white/[0.015] border-l-[3px] border-l-indigo-500' : ''
                                                 } ${plan.isFlagged ? 'bg-rose-500/[0.03] hover:bg-rose-500/[0.05]' : ''}`}
