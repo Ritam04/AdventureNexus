@@ -13,6 +13,7 @@ import NavBar from '@/components/NavBar';
 import { PostCard } from '../components/PostCard';
 import { StoryBar } from '../components/StoryBar';
 import { CommentTree } from '../components/CommentTree';
+import { PostSkeleton } from '@/components/skeleton';
 
 export const SocialHubPage = () => {
   const { getToken } = useAuth();
@@ -445,28 +446,29 @@ export const SocialHubPage = () => {
       <div className="container mx-auto px-4 max-w-7xl relative z-10">
         
         {/* Top Navigation / Search Bar */}
-        <div className="flex items-center justify-between mb-8 bg-card/40 backdrop-blur-2xl p-4 rounded-3xl border border-white/5 shadow-2xl">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center text-primary border border-primary/30 shadow-inner">
-              <Globe size={24} />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8 bg-card/40 backdrop-blur-2xl p-4 sm:p-4 rounded-2xl sm:rounded-3xl border border-white/5 shadow-2xl">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-primary/20 flex items-center justify-center text-primary border border-primary/30 shadow-inner shrink-0">
+              <Globe size={20} />
             </div>
             <div>
-              <h1 className="text-xl font-black tracking-tighter">Nexus <span className="text-primary">Hub</span></h1>
+              <h1 className="text-lg sm:text-xl font-black tracking-tighter">Nexus <span className="text-primary">Hub</span></h1>
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Discover The World</p>
             </div>
           </div>
           
-          <div className="flex-1 max-w-xl mx-8 relative hidden md:block">
+          {/* Search — visible on all screens */}
+          <div className="flex-1 w-full sm:max-w-xl sm:mx-8 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
             <Input 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search groups, hashtags, or destinations..." 
-              className="w-full bg-muted/40 border-none rounded-full pl-12 h-12 text-sm font-medium focus-visible:ring-primary/30"
+              className="w-full bg-muted/40 border-none rounded-full pl-12 h-11 sm:h-12 text-sm font-medium focus-visible:ring-primary/30"
             />
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-4">
             <Button size="icon" variant="ghost" className="rounded-full hover:bg-primary/20 hover:text-primary transition-colors">
               <Bell size={20} />
             </Button>
@@ -669,18 +671,10 @@ export const SocialHubPage = () => {
               {/* Main Feed List (Only shown if browsing general Global posts, or if a Community filter is active) */}
               {!(activeTab === 'communities' && !selectedCommunity) && (
                 isPostsLoading ? (
-                  [1, 2].map(i => (
-                    <div key={i} className="h-96 rounded-[2rem] bg-card/40 backdrop-blur-xl border border-white/5 shadow-xl animate-pulse flex flex-col p-6 gap-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-muted/50" />
-                        <div className="space-y-2">
-                          <div className="h-4 w-32 bg-muted/50 rounded-full" />
-                          <div className="h-3 w-24 bg-muted/50 rounded-full" />
-                        </div>
-                      </div>
-                      <div className="flex-1 bg-muted/30 rounded-2xl" />
-                    </div>
-                  ))
+                  <div className="space-y-6">
+                    <PostSkeleton />
+                    <PostSkeleton />
+                  </div>
                 ) : posts.length === 0 ? (
                   <div className="text-center py-20 bg-card/30 backdrop-blur-md rounded-[2.5rem] border border-white/5">
                     <Globe className="mx-auto text-muted-foreground mb-4 opacity-50" size={48} />
@@ -755,7 +749,7 @@ export const SocialHubPage = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-card border border-white/10 w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto"
+              className="bg-card border border-white/10 w-full max-w-lg rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto"
             >
               <button 
                 onClick={() => setIsCreatePostOpen(false)}
@@ -851,7 +845,7 @@ export const SocialHubPage = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-[#0f0f13] border border-white/10 w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto"
+              className="bg-[#0f0f13] border border-white/10 w-full max-w-lg rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto"
             >
               <button 
                 onClick={() => setEditingPost(null)}
@@ -939,7 +933,7 @@ export const SocialHubPage = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-card border border-white/10 w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto"
+              className="bg-card border border-white/10 w-full max-w-lg rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto"
             >
               <button 
                 onClick={() => setIsCreateGroupOpen(false)}
@@ -1013,7 +1007,7 @@ export const SocialHubPage = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="bg-card border-l border-white/10 w-full max-w-2xl h-full shadow-2xl relative z-10 flex flex-col"
+              className="bg-card border-l border-white/10 w-full sm:max-w-2xl h-full shadow-2xl relative z-10 flex flex-col"
             >
               {/* Header */}
               <div className="p-6 border-b border-white/5 flex items-center justify-between shrink-0">

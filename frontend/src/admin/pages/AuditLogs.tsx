@@ -5,6 +5,7 @@ import {
     Info, Calendar, Fingerprint, RefreshCw, Terminal, Eye, EyeOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AdminTablePageSkeleton } from '@/components/skeleton';
 
 interface AuditLog {
     _id: string;
@@ -63,12 +64,7 @@ const AuditLogs: React.FC = () => {
     };
 
     if (loading) {
-        return (
-            <div className="flex flex-col items-center justify-center h-[50vh] text-white gap-3">
-                <span className="w-8 h-8 border-2 border-t-cyan-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></span>
-                <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400">Loading Audit Stream...</span>
-            </div>
-        );
+        return <AdminTablePageSkeleton cols={6} />;
     }
 
     return (
@@ -83,7 +79,7 @@ const AuditLogs: React.FC = () => {
                 <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                         <Terminal className="w-5 h-5 text-indigo-400" />
-                        <h1 className="text-3xl font-black text-white tracking-tight uppercase font-mono">
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight uppercase font-mono">
                             Audit Logs <span className="text-indigo-400 font-sans">Trail</span>
                         </h1>
                     </div>
@@ -94,7 +90,7 @@ const AuditLogs: React.FC = () => {
                 <div className="flex items-center gap-4">
                     <button
                         onClick={fetchLogs}
-                        className="flex items-center gap-2 px-4 py-2 border border-white/10 hover:border-white/20 rounded-full text-[10px] font-bold text-gray-400 hover:text-white bg-white/[0.01] hover:bg-white/[0.03] transition-all uppercase tracking-widest font-mono"
+                        className="flex items-center gap-2 px-3 sm:px-4 py-2 border border-white/10 hover:border-white/20 rounded-full text-[9px] sm:text-[10px] font-bold text-gray-400 hover:text-white bg-white/[0.01] hover:bg-white/[0.03] transition-all uppercase tracking-widest font-mono"
                     >
                         <RefreshCw className="w-3 h-3" />
                         Refresh Logs
@@ -140,12 +136,12 @@ const AuditLogs: React.FC = () => {
                     <table className="w-full text-left font-mono">
                         <thead className="bg-white/[0.02] border-b border-white/10">
                             <tr>
-                                <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest">Date / Time</th>
-                                <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest">Module</th>
-                                <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest">Action Type</th>
-                                <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest">Details Preview</th>
-                                <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest text-center">Severity</th>
-                                <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest text-right">Inspect</th>
+                                <th className="px-4 sm:px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Date / Time</th>
+                                <th className="px-4 sm:px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Module</th>
+                                <th className="px-4 sm:px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Action Type</th>
+                                <th className="px-4 sm:px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest hidden lg:table-cell">Details Preview</th>
+                                <th className="px-4 sm:px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest text-center whitespace-nowrap">Severity</th>
+                                <th className="px-4 sm:px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest text-right">Inspect</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5 text-[11px]">
@@ -170,7 +166,7 @@ const AuditLogs: React.FC = () => {
                                                     <span className="text-[9px] text-gray-600 font-medium">Operator: {log.adminId}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-gray-400 font-medium max-w-xs truncate">
+                                            <td className="px-4 sm:px-6 py-4 text-gray-400 font-medium max-w-xs truncate hidden lg:table-cell">
                                                 {JSON.stringify(log.details)}
                                             </td>
                                             <td className="px-6 py-4 text-center">

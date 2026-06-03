@@ -10,6 +10,7 @@ import SystemHealthPanel from '../components/SystemHealthPanel';
 import SystemLogsPanel from '../components/SystemLogsPanel';
 import ToxicityRadar from '../components/ToxicityRadar';
 import api from '../services/adminApi';
+import { AdminDashboardSkeleton } from '@/components/skeleton';
 
 const Dashboard: React.FC = () => {
     const {
@@ -65,18 +66,7 @@ const Dashboard: React.FC = () => {
     };
 
     if (metricsLoading && !metrics) {
-        return (
-            <div className="flex flex-col items-center justify-center h-[70vh] text-white gap-4">
-                <div className="relative w-16 h-16">
-                    <div className="absolute inset-0 border-4 border-emerald-500/10 rounded-full"></div>
-                    <div className="absolute inset-0 border-4 border-t-emerald-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
-                </div>
-                <div className="flex flex-col items-center gap-1 font-mono">
-                    <span className="text-xs font-black tracking-widest text-emerald-400 uppercase animate-pulse">Initializing Observability Tunnel...</span>
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">AdventureNexus Command Center</span>
-                </div>
-            </div>
-        );
+        return <AdminDashboardSkeleton />;
     }
 
     if (metricsError || eventsError) {
@@ -107,11 +97,11 @@ const Dashboard: React.FC = () => {
             className="space-y-6 pb-20 select-none font-sans"
         >
             {/* Header telemetry info */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/5 pb-6">
+            <div className="flex flex-col gap-4 sm:gap-6 border-b border-white/5 pb-6">
                 <div className="flex flex-col gap-1.5 font-mono">
                     <div className="flex items-center gap-2">
-                        <div className={`w-2.5 h-2.5 rounded-full ${simulatorActive ? 'bg-indigo-500 animate-ping' : 'bg-emerald-500 animate-pulse'}`}></div>
-                        <h1 className="text-3xl font-black text-white tracking-tight uppercase">
+                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${simulatorActive ? 'bg-indigo-500 animate-ping' : 'bg-emerald-500 animate-pulse'}`}></div>
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight uppercase">
                             Core Observability <span className="text-emerald-400 font-sans">Panel</span>
                         </h1>
                     </div>
@@ -120,12 +110,12 @@ const Dashboard: React.FC = () => {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                     {/* Live Traffic Simulator controls */}
                     <button
                         onClick={handleToggleSimulator}
                         disabled={simulatorLoading}
-                        className={`flex items-center gap-2 px-4 py-2 border rounded-full text-[10px] font-bold transition-all uppercase tracking-widest font-mono ${
+                        className={`flex items-center gap-2 px-3 sm:px-4 py-2 border rounded-full text-[9px] sm:text-[10px] font-bold transition-all uppercase tracking-widest font-mono ${
                             simulatorActive 
                             ? 'border-indigo-500/30 text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/15 shadow-[0_0_15px_rgba(99,102,241,0.25)]' 
                             : 'border-white/10 text-gray-400 hover:text-white bg-white/[0.01] hover:bg-white/[0.03]'
@@ -133,15 +123,17 @@ const Dashboard: React.FC = () => {
                         title="Toggle synthetic mock operational traffic feed"
                     >
                         {simulatorActive ? <Square className="w-3 h-3 fill-indigo-400" /> : <Play className="w-3 h-3 fill-gray-400 hover:fill-white" />}
-                        {simulatorActive ? 'STOP TRAFFIC SIMULATION' : 'START TRAFFIC SIMULATION'}
+                        <span className="hidden sm:inline">{simulatorActive ? 'STOP TRAFFIC SIMULATION' : 'START TRAFFIC SIMULATION'}</span>
+                        <span className="sm:hidden">{simulatorActive ? 'STOP SIM' : 'START SIM'}</span>
                     </button>
 
                     <button
                         onClick={handleManualRefresh}
-                        className="flex items-center gap-2 px-4 py-2 border border-white/10 hover:border-white/20 rounded-full text-[10px] font-bold text-gray-400 hover:text-white bg-white/[0.01] hover:bg-white/[0.03] transition-all uppercase tracking-widest font-mono"
+                        className="flex items-center gap-2 px-3 sm:px-4 py-2 border border-white/10 hover:border-white/20 rounded-full text-[9px] sm:text-[10px] font-bold text-gray-400 hover:text-white bg-white/[0.01] hover:bg-white/[0.03] transition-all uppercase tracking-widest font-mono"
                     >
                         <RefreshCw className="w-3 h-3" />
-                        SYNC CORE SYSTEMS
+                        <span className="hidden sm:inline">SYNC CORE SYSTEMS</span>
+                        <span className="sm:hidden">SYNC</span>
                     </button>
                     <div className="hidden lg:flex items-center gap-2.5 bg-white/[0.01] border border-white/10 rounded-full px-4 py-2 font-mono text-[10px] font-bold text-emerald-400">
                         <Activity className="w-3.5 h-3.5 animate-pulse" />

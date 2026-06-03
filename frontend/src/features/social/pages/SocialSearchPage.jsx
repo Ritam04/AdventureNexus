@@ -8,6 +8,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ParallaxCard } from '@/components/ParallaxCard';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 
@@ -51,30 +52,30 @@ const SocialSearchPage = () => {
                     <motion.h1 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-7xl font-black text-white tracking-tighter uppercase"
+                        className="text-4xl sm:text-7xl font-black text-white tracking-tighter uppercase"
                     >
                         Find Your <span className="text-blue-500 italic">Pack</span>
                     </motion.h1>
-                    <p className="text-white/40 max-w-xl mx-auto text-lg font-medium">
+                    <p className="text-white/40 max-w-xl mx-auto text-base sm:text-lg font-medium px-4">
                         Connect with travelers, explorers, and adventure seekers from all around the globe.
                     </p>
                 </div>
 
                 {/* Search Bar */}
-                <div className="relative max-w-3xl mx-auto mb-20 group">
+                <div className="relative max-w-3xl mx-auto mb-16 sm:mb-20 group px-4 sm:px-0">
                     <div className="absolute inset-0 bg-blue-500/20 blur-[100px] rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity duration-1000" />
-                    <div className="relative bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-2 flex items-center backdrop-blur-3xl shadow-2xl">
-                        <div className="pl-6 pr-4 text-white/20 group-focus-within:text-blue-500 transition-colors">
-                            <Search size={28} />
+                    <div className="relative bg-white/[0.03] border border-white/10 rounded-2xl sm:rounded-[2.5rem] p-2 flex items-center backdrop-blur-3xl shadow-2xl">
+                        <div className="pl-4 sm:pl-6 pr-2 sm:pr-4 text-white/20 group-focus-within:text-blue-500 transition-colors">
+                            <Search size={24} className="sm:w-[28px] sm:h-[28px]" />
                         </div>
                         <Input 
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder="Search by username or name..." 
-                            className="bg-transparent border-none text-2xl h-16 text-white placeholder:text-white/10 focus-visible:ring-0"
+                            className="bg-transparent border-none text-base sm:text-2xl h-12 sm:h-16 text-white placeholder:text-white/10 focus-visible:ring-0 pl-1"
                         />
-                        <Button className="h-16 w-16 rounded-[2rem] bg-white text-black hover:bg-white/90 shrink-0">
-                            <SlidersHorizontal size={24} />
+                        <Button className="h-12 w-12 sm:h-16 sm:w-16 rounded-xl sm:rounded-[2rem] bg-white text-black hover:bg-white/90 shrink-0">
+                            <SlidersHorizontal size={20} className="sm:w-[24px] sm:h-[24px]" />
                         </Button>
                     </div>
                 </div>
@@ -107,8 +108,8 @@ const SocialSearchPage = () => {
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     transition={{ delay: i * 0.1 }}
                                 >
-                                    <Card 
-                                        className="bg-white/[0.02] border-white/5 rounded-[3rem] overflow-hidden group hover:bg-white/[0.05] hover:border-white/10 transition-all duration-500 cursor-pointer"
+                                    <ParallaxCard 
+                                        className="bg-white/[0.02] border border-white/5 rounded-[3rem] overflow-hidden group hover:bg-white/[0.05] hover:border-white/10 transition-all duration-500 cursor-pointer"
                                         onClick={() => navigate(`/profile/${u.username}`)}
                                     >
                                         <CardContent className="p-8 space-y-6">
@@ -162,7 +163,7 @@ const SocialSearchPage = () => {
                                                 </Button>
                                             </div>
                                         </CardContent>
-                                    </Card>
+                                    </ParallaxCard>
                                 </motion.div>
                             ))
                         ) : query && !loading && (

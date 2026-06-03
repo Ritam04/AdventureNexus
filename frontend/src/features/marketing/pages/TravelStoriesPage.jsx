@@ -20,6 +20,7 @@ import NavBar from '@/components/NavBar';
 import Footer from '@/components/mvpblocks/footer-newsletter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ParallaxCard } from '@/components/ParallaxCard';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -120,14 +121,14 @@ const TravelStoriesPage = () => {
 
             <main className="max-w-7xl mx-auto px-4 py-12">
                 {/* Hero Section */}
-                <div className="relative mb-20 overflow-hidden rounded-[3rem] bg-muted/30 p-12 lg:p-20 flex flex-col items-center text-center">
+                <div className="relative mb-12 sm:mb-20 overflow-hidden rounded-[2.5rem] sm:rounded-[3rem] bg-muted/30 p-6 sm:p-12 lg:p-20 flex flex-col items-center text-center">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="relative z-10"
                     >
                         <Badge className="mb-6 bg-primary/20 text-primary border-none px-4 py-1 font-black text-[10px] uppercase tracking-[0.2em]">Travel Stories</Badge>
-                        <h1 className="text-5xl lg:text-7xl font-black italic tracking-tighter leading-none mb-6">
+                        <h1 className="text-3xl sm:text-5xl lg:text-7xl font-black italic tracking-tighter leading-none mb-6">
                             Share Your <span className="text-primary italic">Adventure.</span>
                         </h1>
                         <p className="text-xl text-muted-foreground max-w-2xl font-medium leading-relaxed opacity-80">
@@ -137,8 +138,8 @@ const TravelStoriesPage = () => {
                 </div>
 
                 {/* Actions Bar */}
-                <div className="flex flex-col md:flex-row gap-6 mb-16 items-center justify-between">
-                    <div className="flex flex-1 gap-4 w-full md:max-w-xl">
+                <div className="flex flex-col md:flex-row gap-6 mb-12 sm:mb-16 items-center justify-between w-full">
+                    <div className="flex flex-col sm:flex-row flex-1 gap-4 w-full md:max-w-xl">
                         <div className="relative flex-1">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                             <Input
@@ -148,7 +149,7 @@ const TravelStoriesPage = () => {
                                 onChange={(e) => setSearch(e.target.value)}
                             />
                         </div>
-                        <div className="relative w-40">
+                        <div className="relative w-full sm:w-40">
                             <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                             <Input
                                 placeholder="Location"
@@ -161,7 +162,7 @@ const TravelStoriesPage = () => {
 
                     <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                         <DialogTrigger asChild>
-                            <Button className="h-14 px-8 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-2xl shadow-primary/20 hover:scale-105 transition-transform group">
+                            <Button className="w-full md:w-auto h-14 px-8 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-2xl shadow-primary/20 hover:scale-105 transition-transform group">
                                 <Plus className="mr-2 group-hover:rotate-90 transition-transform" size={20} /> Share My Story
                             </Button>
                         </DialogTrigger>
@@ -169,7 +170,7 @@ const TravelStoriesPage = () => {
                             <DialogHeader className="p-8 border-b border-border bg-muted/20">
                                 <DialogTitle className="text-3xl font-black italic tracking-tight">Post adventure story</DialogTitle>
                             </DialogHeader>
-                            <form onSubmit={handleCreateStory} className="p-8 space-y-6">
+                            <form onSubmit={handleCreateStory} className="p-5 sm:p-8 space-y-6">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Catchy Title</label>
                                     <Input
@@ -179,7 +180,7 @@ const TravelStoriesPage = () => {
                                         onChange={(e) => setNewStory({ ...newStory, title: e.target.value })}
                                     />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Location</label>
                                         <Input
@@ -258,7 +259,7 @@ const TravelStoriesPage = () => {
                                 transition={{ delay: idx * 0.1 }}
                                 className="group relative"
                             >
-                                <Card className="h-full rounded-[2.5rem] overflow-hidden bg-card border-none shadow-[0_20px_50px_rgba(0,0,0,0.1)] group-hover:shadow-[0_40px_80px_rgba(79,70,229,0.15)] transition-all duration-700">
+                                <ParallaxCard className="h-full rounded-[2.5rem] overflow-hidden bg-card border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.1)] group-hover:shadow-[0_40px_80px_rgba(79,70,229,0.15)] transition-all duration-700">
                                     <div className="aspect-[4/5] overflow-hidden relative">
                                         {story.images?.[0] ? (
                                             <img src={story.images[0]} alt={story.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
@@ -297,7 +298,7 @@ const TravelStoriesPage = () => {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="p-8 pb-10">
+                                    <div className="p-5 sm:p-8 pb-8 sm:pb-10">
                                         <p className="text-muted-foreground line-clamp-3 text-sm font-medium leading-relaxed mb-6 opacity-70 italic">
                                             "{story.content}"
                                         </p>
@@ -309,7 +310,7 @@ const TravelStoriesPage = () => {
                                             View Full Journey <ArrowRight size={14} className="ml-2 group-hover:translate-x-1 transition-transform" />
                                         </Button>
                                     </div>
-                                </Card>
+                                </ParallaxCard>
                             </motion.div>
                         ))}
                     </div>

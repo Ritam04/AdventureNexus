@@ -24,7 +24,7 @@ import {
   Bookmark,
   Share2
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { communityService } from '@/services/communityService';
 import toast from 'react-hot-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -38,6 +38,7 @@ import { StoryBar } from '../../community/components/StoryBar';
 
 const CommunityPage = () => {
   const navigate = useNavigate();
+  const dragControls = useDragControls();
   const { getToken, userId: firebaseUid, isLoaded: isAuthLoaded } = useAuth();
   const { user } = useUser();
   const [posts, setPosts] = useState([]);
@@ -833,7 +834,27 @@ const CommunityPage = () => {
           <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
             <DialogContent className="sm:max-w-[800px] max-h-[90vh] flex flex-col p-0 overflow-hidden bg-card border-border shadow-2xl rounded-3xl">
               {selectedPost && (
-                <>
+                <motion.div 
+                  drag="y"
+                  dragListener={false}
+                  dragControls={dragControls}
+                  dragConstraints={{ top: 0, bottom: 0 }}
+                  dragElastic={{ top: 0, bottom: 0.5 }}
+                  onDragEnd={(e, info) => {
+                    if (info.offset.y > 150) {
+                      setIsDetailModalOpen(false);
+                    }
+                  }}
+                  className="flex flex-col h-full w-full overflow-hidden"
+                >
+                  {/* Swipe Handle */}
+                  <div 
+                    onPointerDown={(e) => dragControls.start(e)}
+                    className="w-full py-3 flex items-center justify-center cursor-row-resize select-none bg-muted/10 shrink-0 border-b border-border/5"
+                  >
+                    <div className="w-12 h-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors" />
+                  </div>
+
                   <DialogHeader className="p-8 border-b border-border bg-muted/20 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl" />
                     <div className="flex items-center gap-3 mb-6 relative z-10">
@@ -904,7 +925,7 @@ const CommunityPage = () => {
                   </div>
 
                   {/* Reply Input */}
-                  <div className="p-6 border-t border-border bg-card/80 backdrop-blur-xl">
+                  <div className="p-6 border-t border-border bg-card/80 backdrop-blur-xl shrink-0">
                     {replyingTo && (
                         <div className="flex items-center justify-between bg-primary/10 text-primary px-4 py-2 rounded-xl mb-4 text-sm font-bold">
                             <span>Replying to comment...</span>
@@ -926,7 +947,7 @@ const CommunityPage = () => {
                       </Button>
                     </form>
                   </div>
-                </>
+                </motion.div>
               )}
             </DialogContent>
           </Dialog>

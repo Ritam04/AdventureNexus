@@ -4,6 +4,7 @@ import { useUser, useAuth } from '@/context/AuthContext';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/mvpblocks/footer-newsletter';
 import { Button } from '@/components/ui/button';
+import { ParallaxCard } from '@/components/ParallaxCard';
 import { Badge } from '@/components/ui/badge';
 import {
   Heart, MessageCircle, Bookmark, Share2, MapPin, Star, X, Send,
@@ -261,7 +262,7 @@ const ExperiencesPage = () => {
               const isLiked = post.likes?.includes(firebaseUid);
               const isSaved = post.saves?.includes(firebaseUid);
               return (
-                <motion.div key={post._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-[#090A0F]/80 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden hover:border-indigo-500/10 transition-all cursor-pointer" onClick={() => openDetail(post)}>
+                <ParallaxCard key={post._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-[#090A0F]/80 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden hover:border-indigo-500/10 transition-all cursor-pointer" onClick={() => openDetail(post)}>
                   {/* User Header */}
                   <div className="flex items-center gap-3 p-5 pb-3">
                     <div className="w-10 h-10 rounded-full bg-indigo-600/20 border border-white/10 flex items-center justify-center text-sm font-bold text-indigo-400 overflow-hidden shrink-0">
@@ -324,7 +325,7 @@ const ExperiencesPage = () => {
                       )}
                     </div>
                   </div>
-                </motion.div>
+                </ParallaxCard>
               );
             })}
           </div>

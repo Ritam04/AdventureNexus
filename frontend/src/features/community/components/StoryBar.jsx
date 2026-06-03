@@ -1,10 +1,12 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { PlusCircle } from 'lucide-react';
 
 export const StoryBar = ({ stories, isStoriesLoading }) => {
   const navigate = useNavigate();
+  const containerRef = useRef(null);
+  const [constraints, setConstraints] = useState({ left: 0, right: 0 });
 
   // Memoize grouped stories logic
   const groupedStories = useMemo(() => {
@@ -25,9 +27,25 @@ export const StoryBar = ({ stories, isStoriesLoading }) => {
     return Object.values(reduced);
   }, [stories]);
 
+  useEffect(() => {
+    if (containerRef.current) {
+      const containerWidth = containerRef.current.offsetWidth;
+      const contentWidth = containerRef.current.scrollWidth;
+      setConstraints({
+        left: -Math.max(0, contentWidth - containerWidth),
+        right: 0
+      });
+    }
+  }, [stories, isStoriesLoading, groupedStories]);
+
   return (
-    <div className="overflow-x-auto pb-4 scrollbar-hide">
-      <div className="flex gap-4">
+    <div ref={containerRef} className="overflow-hidden pb-4 cursor-grab active:cursor-grabbing select-none">
+      <motion.div 
+        drag="x"
+        dragConstraints={constraints}
+        dragElastic={0.1}
+        className="flex gap-4 w-max"
+      >
         {/* Add Story Button */}
         <motion.div 
           whileHover={{ scale: 1.05 }}
@@ -57,7 +75,7 @@ export const StoryBar = ({ stories, isStoriesLoading }) => {
               <div className="w-16 h-16 rounded-full border-2 border-pink-500 p-0.5 shadow-lg shadow-pink-500/20 relative">
                 <img 
                   src={groupedStory.userId?.profilepicture || 'https://via.placeholder.com/150'} 
-                  className="w-full h-full rounded-full object-cover"
+                  className="w-full h-full rounded-full object-cover pointer-events-none"
                   alt={groupedStory.userId?.username}
                 />
                 {groupedStory.groupedCount > 1 && (
@@ -72,7 +90,7 @@ export const StoryBar = ({ stories, isStoriesLoading }) => {
             </motion.div>
           ))
         )}
-      </div>
+      </motion.div>
     </div>
   );
 };

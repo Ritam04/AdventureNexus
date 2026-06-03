@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
+import { CardContent } from '@/components/ui/card';
+import { ParallaxCard } from '@/components/ParallaxCard';
 import { Badge } from '@/components/ui/badge';
 import { MessageSquare, Heart, Bookmark, Share2, ArrowRight, Edit, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -20,7 +21,7 @@ export const PostCard = memo(({
   const isLiked = firebaseUid && discussion.likes?.includes(firebaseUid);
 
   return (
-    <Card className="bg-[#0f0f13]/80 border-white/5 backdrop-blur-xl shadow-2xl rounded-[2.5rem] overflow-hidden hover:border-primary/50 transition-all duration-500 hover:-translate-y-2 group">
+    <ParallaxCard className="bg-[#0f0f13]/80 border-white/5 backdrop-blur-xl shadow-2xl rounded-[2.5rem] overflow-hidden hover:border-primary/50 transition-all duration-500 hover:-translate-y-2 group">
       <CardContent className="p-4 sm:p-8">
         <div className="flex items-start gap-3 sm:gap-6">
           {/* Avatar Column */}
@@ -159,7 +160,7 @@ export const PostCard = memo(({
           </div>
         </div>
       </CardContent>
-    </Card>
+    </ParallaxCard>
   );
 });
 

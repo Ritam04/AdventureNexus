@@ -96,78 +96,128 @@ function NavBar() {
     return (
         <div>
             {/* Mobile Menu Overlay */}
-            {mobileMenuOpen && (
-                <div
-                    className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 md:hidden"
-                    onClick={toggleMobileMenu}
-                />
-            )}
+            <AnimatePresence>
+                {mobileMenuOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 md:hidden"
+                        onClick={toggleMobileMenu}
+                    />
+                )}
+            </AnimatePresence>
 
-            {/* Mobile Menu */}
-            {mobileMenuOpen && (
-                <div className="mobile-menu fixed top-0 right-0 h-full w-80 bg-background z-50 md:hidden border-l border-border transform transition-transform duration-300">
-                    <div className="flex justify-between items-center p-6 border-b border-border">
-                        <div className="flex items-center space-x-2">
-                            <AnimatedLogo size={40} />
-                            <span className="text-lg font-bold logo-shimmer font-outfit tracking-tight drop-shadow-lg">
-                                AdventureNexus
-                            </span>
+            {/* Mobile Menu — Animated slide drawer */}
+            <AnimatePresence>
+                {mobileMenuOpen && (
+                    <motion.div
+                        initial={{ x: '100%' }}
+                        animate={{ x: 0 }}
+                        exit={{ x: '100%' }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 250 }}
+                        className="mobile-menu fixed top-0 right-0 h-full w-[85vw] max-w-[320px] bg-background z-50 md:hidden border-l border-border flex flex-col"
+                    >
+                        <div className="flex justify-between items-center p-5 border-b border-border">
+                            <div className="flex items-center space-x-2">
+                                <AnimatedLogo size={36} />
+                                <span className="text-base font-bold logo-shimmer font-outfit tracking-tight drop-shadow-lg">
+                                    AdventureNexus
+                                </span>
+                            </div>
+                            <button
+                                onClick={toggleMobileMenu}
+                                className="text-muted-foreground hover:text-foreground transition-colors p-2 -mr-2 rounded-xl hover:bg-accent"
+                            >
+                                <X size={22} />
+                            </button>
                         </div>
-                        <button
-                            onClick={toggleMobileMenu}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                            <X size={24} />
-                        </button>
-                    </div>
 
-                    <div className="flex flex-col space-y-2 p-6">
-                        {navItems.map((item) => (
-                            <Link
-                                key={item.name}
-                                to={item.path}
-                                className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg px-4 py-3 transition-all duration-300"
-                                onClick={toggleMobileMenu}
+                        {/* Mobile search bar */}
+                        <div className="px-5 py-3 border-b border-border">
+                            <form
+                                onSubmit={(e) => {
+                                    e.preventDefault();
+                                    const query = e.target.search.value;
+                                    if (query) { navigate(`/social-search?q=${query}`); toggleMobileMenu(); }
+                                }}
+                                className="relative"
                             >
-                                {item.name}
-                            </Link>
-                        ))}
+                                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/20">
+                                    <Search size={16} />
+                                </div>
+                                <input
+                                    name="search"
+                                    type="text"
+                                    placeholder="Search travelers..."
+                                    className="w-full bg-white/5 border border-white/5 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder:text-white/20 focus:outline-none focus:bg-white/10 focus:border-white/20 transition-all"
+                                />
+                            </form>
+                        </div>
 
-                        <div className="py-2 px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Discover</div>
-                        {discoverItems.map((item) => (
-                            <Link
-                                key={item.name}
-                                to={item.path}
-                                className="flex items-center gap-4 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg px-4 py-3 transition-all duration-300"
-                                onClick={toggleMobileMenu}
-                            >
-                                <item.icon size={18} className={item.color} />
-                                {item.name}
-                            </Link>
-                        ))}
+                        <div className="flex flex-col flex-1 overflow-y-auto p-5 space-y-1">
+                            {navItems.map((item) => (
+                                <Link
+                                    key={item.name}
+                                    to={item.path}
+                                    className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl px-4 py-3 transition-all duration-300 text-sm font-medium"
+                                    onClick={toggleMobileMenu}
+                                >
+                                    {item.name}
+                                </Link>
+                            ))}
 
-                        <div className="border-t border-border pt-4 mt-4 space-y-3">
+                            <div className="py-2 px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Discover</div>
+                            {discoverItems.map((item) => (
+                                <Link
+                                    key={item.name}
+                                    to={item.path}
+                                    className="flex items-center gap-4 text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl px-4 py-3 transition-all duration-300 text-sm"
+                                    onClick={toggleMobileMenu}
+                                >
+                                    <item.icon size={18} className={item.color} />
+                                    {item.name}
+                                </Link>
+                            ))}
+                        </div>
+
+                        {/* Mobile bottom actions — chat, notifications, auth */}
+                        <div className="border-t border-border p-5 space-y-3">
+                            {isSignedIn && (
+                                <div className="flex gap-2 mb-3">
+                                    <Link to="/chat" onClick={toggleMobileMenu} className="flex-1">
+                                        <Button variant="outline" className="w-full rounded-xl h-11 text-xs gap-2 border-white/10 hover:bg-white/5">
+                                            <MessageSquare size={16} /> Chat
+                                        </Button>
+                                    </Link>
+                                    <Link to="/search" onClick={toggleMobileMenu} className="flex-1">
+                                        <Button className="w-full h-11 bg-white text-black hover:bg-white/90 rounded-xl text-xs font-bold">
+                                            Plan Trip
+                                        </Button>
+                                    </Link>
+                                </div>
+                            )}
                             {!isSignedIn ? (
                                 <Link to="/login" onClick={toggleMobileMenu}>
-                                    <Button variant="ghost" className="w-full justify-center text-foreground hover:bg-accent">
+                                    <Button variant="ghost" className="w-full justify-center text-foreground hover:bg-accent h-11 rounded-xl">
                                         Sign In
                                     </Button>
                                 </Link>
                             ) : (
                                 <div className="flex flex-col gap-2">
-                                    <div className="flex items-center justify-center gap-2 mb-2 text-sm">
+                                    <div className="flex items-center justify-center gap-2 text-sm text-white/60">
                                         <UserIcon size={16} />
-                                        <span>{user?.email}</span>
+                                        <span className="truncate max-w-[200px]">{user?.email}</span>
                                     </div>
-                                    <Button variant="destructive" onClick={() => { logout(); toggleMobileMenu(); }} className="w-full">
+                                    <Button variant="destructive" onClick={() => { logout(); toggleMobileMenu(); }} className="w-full h-11 rounded-xl">
                                         Sign Out
                                     </Button>
                                 </div>
                             )}
                         </div>
-                    </div>
-                </div>
-            )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Main Navigation */}
             <div className="fixed top-0 w-full z-50 flex justify-center pt-4 sm:pt-6 px-3 sm:px-4">
@@ -299,8 +349,8 @@ function NavBar() {
                 </nav>
             </div>
 
-            {/* Spacer to prevent content overlap */}
-            <div className="h-10" />
+            {/* Spacer to prevent content overlap — responsive */}
+            <div className="h-16 sm:h-20" />
         </div>
     );
 }

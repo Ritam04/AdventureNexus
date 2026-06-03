@@ -21,6 +21,7 @@ import { communityService } from '@/services/communityService';
 import { useE2EE } from '@/lib/e2ee/useE2EE';
 import toast from 'react-hot-toast';
 import NavBar from '@/components/NavBar';
+import { ChatSidebarSkeleton } from '@/components/skeleton';
 
 const ChatPage = () => {
     const { userId: firebaseUid, getToken } = useAuth();
@@ -313,17 +314,17 @@ const ChatPage = () => {
     return (
         <div className="h-screen bg-black flex flex-col overflow-hidden">
             <NavBar />
-            <div className="flex-1 flex bg-black overflow-hidden font-inter border-t border-white/5 pt-[80px]">
+            <div className="flex-1 flex bg-black overflow-hidden font-inter border-t border-white/5 pt-16 sm:pt-[80px]">
             {/* Sidebar List panel */}
-            <div className={`w-full md:w-[400px] border-r border-white/5 flex flex-col bg-[#07090e] transition-all duration-300 ${showMobileSidebar ? 'flex' : 'hidden md:flex'}`}>
+            <div className={`w-full md:w-[340px] lg:w-[400px] border-r border-white/5 flex flex-col bg-[#07090e] transition-all duration-300 ${showMobileSidebar ? 'flex' : 'hidden md:flex'}`}>
                 {/* Header */}
-                <div className="p-6 space-y-6">
+                <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-primary/20">
                                 W
                             </div>
-                            <h1 className="text-2xl font-black text-white tracking-tighter italic">NEXUS CHAT</h1>
+                            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tighter italic">NEXUS CHAT</h1>
                         </div>
                         <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse border-2 border-black" title="Encrypted Connection Live" />
                     </div>
@@ -342,9 +343,7 @@ const ChatPage = () => {
                 {/* Traveler Chat List */}
                 <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2 custom-scrollbar">
                     {loading ? (
-                        [...Array(4)].map((_, i) => (
-                            <div key={i} className="h-20 rounded-2xl bg-white/[0.02] border border-white/5 animate-pulse" />
-                        ))
+                        <ChatSidebarSkeleton />
                     ) : filteredConversations.length === 0 ? (
                         <div className="text-center py-12 space-y-3">
                             <div className="w-12 h-12 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-center mx-auto text-white/20">
@@ -411,7 +410,7 @@ const ChatPage = () => {
                             const isOnline = recipient && onlineUserIds.has(recipient.firebaseUid);
 
                             return (
-                                <div className="h-20 border-b border-white/5 flex items-center justify-between px-6 bg-[#07090e]/80 backdrop-blur-xl z-10">
+                                <div className="h-16 sm:h-20 border-b border-white/5 flex items-center justify-between px-4 sm:px-6 bg-[#07090e]/80 backdrop-blur-xl z-10">
                                     <div className="flex items-center gap-4">
                                         <Button 
                                             variant="ghost" 
@@ -525,7 +524,7 @@ const ChatPage = () => {
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
                                     >
-                                        <div className="max-w-[70%] space-y-1">
+                                        <div className="max-w-[85%] sm:max-w-[70%] space-y-1">
                                             <div className={`p-4 rounded-3xl text-sm leading-relaxed ${isMe ? 'bg-gradient-to-r from-emerald-600/30 to-teal-500/20 text-emerald-100 border border-emerald-500/20 rounded-tr-none shadow-[0_4px_20px_rgba(16,185,129,0.05)]' : 'bg-white/[0.02] text-white border border-white/5 rounded-tl-none'}`}>
                                                 <p>{displayContent}</p>
                                             </div>
@@ -552,7 +551,7 @@ const ChatPage = () => {
                         </div>
 
                         {/* WhatsApp Message text input — E2EE encrypted */}
-                        <div className="p-4 bg-[#07090e] border-t border-white/5">
+                        <div className="p-3 sm:p-4 bg-[#07090e] border-t border-white/5">
                             <form onSubmit={handleSend} className="flex items-center gap-3 max-w-5xl mx-auto">
                                 <div className="flex-1 relative">
                                     <Lock size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500/40" />
@@ -560,7 +559,7 @@ const ChatPage = () => {
                                         value={newMessage}
                                         onChange={(e) => setNewMessage(e.target.value)}
                                         placeholder={e2eeReady ? "End-to-end encrypted message..." : "Initializing encryption..."}
-                                        className="bg-white/[0.01] border-white/5 rounded-2xl h-14 pl-10 pr-12 focus-visible:ring-emerald-500/40 focus-visible:ring-2 text-white placeholder-white/20 text-sm font-medium"
+                                        className="bg-white/[0.01] border-white/5 rounded-2xl h-12 sm:h-14 pl-10 pr-12 focus-visible:ring-emerald-500/40 focus-visible:ring-2 text-white placeholder-white/20 text-sm font-medium"
                                         disabled={isSending}
                                     />
                                     <Button type="button" variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full text-white/20 hover:text-white/60 hover:bg-transparent">
@@ -569,7 +568,7 @@ const ChatPage = () => {
                                 </div>
                                 <Button 
                                     type="submit" 
-                                    className="h-14 w-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-400 hover:to-teal-500 shadow-lg shadow-emerald-500/10 flex items-center justify-center"
+                                    className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-400 hover:to-teal-500 shadow-lg shadow-emerald-500/10 flex items-center justify-center shrink-0"
                                     disabled={isSending || !newMessage.trim()}
                                 >
                                     {isSending ? <Loader2 className="animate-spin" size={20} /> : <Send size={20} />}
@@ -578,7 +577,7 @@ const ChatPage = () => {
                             {e2eeReady && (
                                 <div className="flex items-center justify-center gap-1.5 mt-2">
                                     <ShieldCheck size={10} className="text-emerald-500/50" />
-                                    <span className="text-[8px] text-emerald-500/40 font-black uppercase tracking-[0.2em]">E2EE Active — NaCl Box (X25519 + XSalsa20-Poly1305)</span>
+                                    <span className="text-[7px] sm:text-[8px] text-emerald-500/40 font-black uppercase tracking-[0.2em]">E2EE Active — NaCl Box (X25519 + XSalsa20-Poly1305)</span>
                                 </div>
                             )}
                         </div>
@@ -589,7 +588,7 @@ const ChatPage = () => {
                             <ShieldCheck size={36} className="text-emerald-400 animate-pulse" />
                         </div>
                         <div className="space-y-3">
-                            <h2 className="text-3xl font-black text-white tracking-tighter italic">NEXUS SECURE TERMINAL</h2>
+                            <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tighter italic">NEXUS SECURE TERMINAL</h2>
                             <p className="text-white/30 text-xs font-bold uppercase tracking-wider max-w-xs mx-auto">Select a traveler connection to initiate end-to-end encrypted messaging.</p>
                             <div className="flex items-center justify-center gap-2 mt-4">
                                 <Lock size={12} className="text-emerald-500/60" />

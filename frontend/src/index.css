@@ -629,3 +629,99 @@
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ─── GLOBAL SKELETON SHIMMER SYSTEM ─── */
+@keyframes skeleton-sweep {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.02) 0%,
+    rgba(255, 255, 255, 0.06) 20%,
+    rgba(255, 255, 255, 0.02) 40%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.8s ease-in-out infinite;
+  will-change: background-position;
+}
+
+/* Skeleton content fade-in transition */
+.skeleton-fade-in {
+  animation: skeleton-content-appear 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes skeleton-content-appear {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── GLOBAL RESPONSIVE UTILITIES ─── */
+
+/* Hide scrollbar for horizontal scroll tabs on mobile */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Safe area insets for notched devices (iPhone X+, etc.) */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+/* Prevent text size adjustment on orientation change */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Prevent pull-to-refresh and horizontal overscroll on mobile */
+body {
+  overscroll-behavior: none;
+}
+
+/* Ensure all images are responsive by default */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Mobile-friendly custom scrollbar — thinner on touch devices */
+@media (max-width: 768px) {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 3px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+  }
+}
+
+/* Prevent overflow on the root level */
+#root {
+  overflow-x: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
+}

@@ -601,8 +601,8 @@ export const GroupPage = () => {
         ) : (
           <>
             {/* Banner Cover and Profile Header */}
-            <div className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl relative">
-              <div className="h-64 relative bg-gradient-to-r from-indigo-900 to-purple-900 overflow-hidden">
+            <div className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden shadow-2xl relative">
+              <div className="h-40 sm:h-64 relative bg-gradient-to-r from-indigo-900 to-purple-900 overflow-hidden">
                 {group.coverImage ? (
                   <img src={group.coverImage} alt="Cover" className="w-full h-full object-cover opacity-80" />
                 ) : (
@@ -636,7 +636,7 @@ export const GroupPage = () => {
                   </div>
                 </div>
 
-                <div className="shrink-0 flex flex-col items-end gap-2 w-full md:w-auto">
+                <div className="shrink-0 flex flex-col items-stretch md:items-end gap-2 w-full md:w-auto">
                   {((group.privacy === 'PRIVATE' || group.isPrivate) && !isUserMember) ? (
                     <Button 
                       disabled
@@ -673,11 +673,11 @@ export const GroupPage = () => {
             </div>
 
             {/* Group Content Block */}
-            <div className="grid md:grid-cols-12 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
               
               {/* Left Details Panel */}
-              <div className="md:col-span-4 order-2 md:order-1 space-y-6">
-                <div className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-[2rem] p-6 shadow-xl space-y-6">
+              <div className="lg:col-span-4 order-2 lg:order-1 space-y-6">
+                <div className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-[2rem] p-5 sm:p-6 shadow-xl space-y-6">
                   <div>
                     <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-3">Group Creator</h3>
                     <div className="flex items-center gap-3">
@@ -829,7 +829,7 @@ export const GroupPage = () => {
               </div>
 
               {/* Right Feed Panel */}
-              <div className="md:col-span-8 order-1 md:order-2 space-y-6">
+              <div className="lg:col-span-8 order-1 lg:order-2 space-y-6">
                 {/* Check privacy block */}
                 {((group.privacy === 'PRIVATE' || group.isPrivate) && !isUserMember) ? (
                   <div className="text-center py-20 bg-card/30 backdrop-blur-md rounded-[2.5rem] border border-white/5 p-8">
@@ -869,7 +869,7 @@ export const GroupPage = () => {
 
                     {activeSubTab === 'chat' && isUserMember ? (
                       /* WhatsApp-style Group Chat widget */
-                      <div className="bg-card/40 backdrop-blur-xl p-6 rounded-[2rem] border border-white/5 shadow-2xl flex flex-col h-[520px] justify-between relative overflow-hidden">
+                      <div className="bg-card/40 backdrop-blur-xl p-4 sm:p-6 rounded-[2rem] border border-white/5 shadow-2xl flex flex-col h-[500px] sm:h-[520px] justify-between relative overflow-hidden">
                         {/* Chat Messages */}
                         <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4 scrollbar-thin scrollbar-thumb-white/10 scroll-smooth">
                           {isMessagesLoading ? (
@@ -1027,7 +1027,7 @@ export const GroupPage = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-card border border-white/10 w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto"
+              className="bg-card border border-white/10 w-full max-w-lg rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto"
             >
               <button 
                 onClick={() => setIsCreatePostOpen(false)}
@@ -1123,7 +1123,7 @@ export const GroupPage = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-[#0f0f13] border border-white/10 w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto"
+              className="bg-[#0f0f13] border border-white/10 w-full max-w-lg rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto"
             >
               <button 
                 onClick={() => setEditingPost(null)}
@@ -1211,7 +1211,7 @@ export const GroupPage = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-[#0f0f13] border border-white/10 w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto"
+              className="bg-[#0f0f13] border border-white/10 w-full max-w-lg rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto"
             >
               <button 
                 onClick={() => setIsSettingsOpen(false)}
@@ -1298,7 +1298,7 @@ export const GroupPage = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="bg-card border-l border-white/10 w-full max-w-2xl h-full shadow-2xl relative z-10 flex flex-col"
+              className="bg-card border-l border-white/10 w-full sm:max-w-2xl h-full shadow-2xl relative z-10 flex flex-col"
             >
               {/* Header */}
               <div className="p-6 border-b border-white/5 flex items-center justify-between shrink-0">
