@@ -3,6 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import { processUserMessage, getHistoryMessages, clearChatHistory } from './chatService';
 import Plan from '../../shared/database/models/planModel';
 import User from '../../shared/database/models/userModel';
+import Hotel from '../../shared/database/models/hotelModel';
 import logger from '../../shared/utils/logger';
 
 /**
@@ -123,6 +124,81 @@ export const convertChatToPlan = async (req: any, res: Response, next: NextFunct
             }))
         }));
 
+        // Robust parsing of hotels data from AI chat response
+        let hotelList: any[] = [];
+        if (hotels) {
+            if (typeof hotels === 'string') {
+                try {
+                    const formattedString = hotels.trim();
+                    try {
+                        hotelList = JSON.parse(formattedString);
+                    } catch (e) {
+                        hotelList = new Function(`return ${formattedString}`)();
+                    }
+                } catch (err) {
+                    logger.error(`[AIChat] Failed to parse hotels string:`, err);
+                }
+            } else if (Array.isArray(hotels)) {
+                if (hotels.length === 1 && typeof hotels[0] === 'string' && (hotels[0].trim().startsWith('[') || hotels[0].trim().startsWith('{'))) {
+                    try {
+                        const formattedString = hotels[0].trim();
+                        try {
+                            hotelList = JSON.parse(formattedString);
+                        } catch (e) {
+                            hotelList = new Function(`return ${formattedString}`)();
+                        }
+                    } catch (err) {
+                        logger.error(`[AIChat] Failed to parse single string element inside hotels array:`, err);
+                        hotelList = hotels;
+                    }
+                } else {
+                    hotelList = hotels;
+                }
+            }
+        }
+
+        if (hotelList && !Array.isArray(hotelList) && typeof hotelList === 'object') {
+            hotelList = [hotelList];
+        }
+
+        // Lookup existing hotels or create new ones, then save their ObjectIds
+        const hotelIds: any[] = [];
+        if (Array.isArray(hotelList)) {
+            for (let item of hotelList) {
+                if (!item) continue;
+                if (typeof item === 'string') {
+                    try {
+                        item = JSON.parse(item);
+                    } catch (e) {
+                        try {
+                            item = new Function(`return ${item}`)();
+                        } catch (err) {
+                            item = { name: item };
+                        }
+                    }
+                }
+                if (typeof item === 'object') {
+                    const hotelName = item.name || item.hotel_name || 'Recommended Hotel';
+                    const description = item.description || `Recommended hotel: ${hotelName}`;
+                    const cost = item.cost || 'Contact for pricing';
+                    const category = item.category || 'AI Recommendation';
+
+                    let existingHotel = await Hotel.findOne({ hotel_name: hotelName });
+                    if (!existingHotel) {
+                        existingHotel = await Hotel.create({
+                            hotel_name: hotelName,
+                            description: description,
+                            category: category,
+                            starRating: 4,
+                            amenities: [cost],
+                            images: []
+                        });
+                    }
+                    hotelIds.push(existingHotel._id);
+                }
+            }
+        }
+
         // Construct Plan
         const newPlan = new Plan({
             userId,
@@ -145,7 +221,7 @@ export const convertChatToPlan = async (req: any, res: Response, next: NextFunct
             destination_overview: `AI generated plan matching your profile preferences for ${to}.`,
             travel_style: 'AI Custom',
             budget_range: 'Medium',
-            hotels: hotels || []
+            hotels: hotelIds
         });
 
         await newPlan.save();
