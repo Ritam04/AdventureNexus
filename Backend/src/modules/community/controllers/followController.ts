@@ -111,6 +111,19 @@ export const toggleFollow = async (req: Request, res: Response) => {
             );
 
             logger.info(`User ${followerFirebaseUid} followed ${targetFirebaseUid}`);
+
+            // Log FOLLOW event for AI Digital Twin
+            try {
+                const { logUserBehavior } = require('../../../shared/services/digitalTwinEngine');
+                logUserBehavior(followerFirebaseUid, 'CLICK', {
+                    action: 'FOLLOW',
+                    targetFirebaseUid,
+                    targetUsername: targetUser.username || ''
+                });
+            } catch (err) {
+                logger.error('Failed to log follow behavior:', err);
+            }
+
             return res.status(StatusCodes.OK).json({
                 success: true,
                 message: 'Followed successfully',

@@ -3,6 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import CommunityPost from '../../../shared/database/models/communityPostModel';
 import CommunityComment from '../../../shared/database/models/communityCommentModel';
 import logger from '../../../shared/utils/logger';
+import { logUserBehavior } from '../../../shared/services/digitalTwinEngine';
 
 /**
  * Controller to toggle like on a post or comment.
@@ -45,6 +46,13 @@ export const toggleLike = async (req: Request, res: Response) => {
         } else {
             // Like
             target.likes.push(firebaseUid);
+
+            // Log LIKE event for AI Digital Twin
+            logUserBehavior(firebaseUid, 'LIKE', {
+                targetType,
+                targetId,
+                title: target.title || target.text || ''
+            });
 
             // Send notification
             const { createAndSendNotification } = await import('../../../shared/utils/notificationHelper');

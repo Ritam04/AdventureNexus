@@ -17,6 +17,7 @@ import Hotel from "../../../shared/database/models/hotelModel";
 import Room from "../../../shared/database/models/roomModel";
 import Flight from "../../../shared/database/models/flightModel";
 import { cacheService, CACHE_CONFIG } from "../../../shared/utils/cacheService";
+import { logUserBehavior } from "../../../shared/services/digitalTwinEngine";
 
 const searchNewDestination = async (req: Request, res: Response) => {
   const fullUrl = getFullURL(req);
@@ -52,6 +53,19 @@ const searchNewDestination = async (req: Request, res: Response) => {
         message: "Unauthorized: Firebase user not found",
       });
     }
+
+    // Log the SEARCH behavior for AI Digital Twin
+    logUserBehavior(firebaseUid, 'SEARCH', {
+      to,
+      from,
+      date,
+      travelers,
+      budget,
+      budget_range,
+      activities,
+      travel_style,
+      duration
+    });
 
     // 🕒 2.5 Check Cache
     const prefix = CACHE_CONFIG.PREFIX.SEARCH;

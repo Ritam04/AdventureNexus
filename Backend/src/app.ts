@@ -194,6 +194,10 @@ app.use('/api/v1/messaging', messagingRoute);
 app.use('/api/v1/experiences', experiencesRoute);
 app.use('/api/v1/safety', safetyRoute);
 
+// AI Digital Twin Routes
+import aiRoutes from './modules/ai/routes/ai.routes';
+app.use('/api/v1/ai', aiRoutes);
+
 
 
 // --- Error Handling ---

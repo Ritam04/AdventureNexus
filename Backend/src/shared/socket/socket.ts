@@ -80,6 +80,27 @@ export const initSocket = (server: HttpServer): Server => {
             console.log(`[DEBUG] Socket ${socket.id} left room group:${groupId}`);
         });
 
+        // Real-time Context-Aware AI Travel Chat Integration
+        socket.on('chat:send', async (data: { message: string }) => {
+            try {
+                const firebaseUid = (socket as any).userId;
+                if (!firebaseUid) {
+                    socket.emit('chat:error', { message: 'User identity not established.' });
+                    return;
+                }
+
+                // Dynamically import processUserMessage to avoid circular dependencies
+                const { processUserMessage } = await import('../../modules/aiChat/chatService');
+                const response = await processUserMessage(firebaseUid, data.message);
+
+                // Push AI response back to the client
+                socket.emit('chat:receive', response);
+            } catch (err: any) {
+                console.error('[Socket.io AI Chat Error]:', err);
+                socket.emit('chat:error', { message: err.message || 'An error occurred during chat processing.' });
+            }
+        });
+
         socket.on('disconnect', () => {
             const userId = (socket as any).userId;
             if (userId && onlineUsers.has(userId)) {

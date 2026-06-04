@@ -16,6 +16,8 @@ import {
 import { useProfile } from '../../../hooks/useProfile';
 import { ProfilePageSkeleton, ProfilePostSkeleton } from '@/components/skeleton';
 import toast from 'react-hot-toast';
+import DigitalTwinCard from '@/components/ai/DigitalTwinCard';
+import SmartSuggestions from '@/components/ai/SmartSuggestions';
 
 const ProfilePage = () => {
     const { user: firebaseUser } = useUser();
@@ -136,7 +138,8 @@ const ProfilePage = () => {
         { id: 'experiences', label: 'Experiences', icon: Compass },
         { id: 'comments', label: 'Comments', icon: Users },
         { id: 'likes', label: 'Liked Posts', icon: Heart },
-        { id: 'groups', label: 'My Groups', icon: Globe }
+        { id: 'groups', label: 'My Groups', icon: Globe },
+        { id: 'digital-twin', label: 'AI Twin', icon: Sparkles }
     ];
 
     if (loadingProfile) {
@@ -431,6 +434,14 @@ const ProfilePage = () => {
                                                             </Card>
                                                         ))
                                                     )}
+                                                </div>
+                                            )}
+
+                                            {/* ── 6. AI DIGITAL TWIN TAB CONTENT ── */}
+                                            {activeTab === 'digital-twin' && (
+                                                <div className="space-y-6">
+                                                    <DigitalTwinCard />
+                                                    <SmartSuggestions />
                                                 </div>
                                             )}
 

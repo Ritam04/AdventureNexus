@@ -69,6 +69,19 @@ export const addComment = async (req: Request, res: Response) => {
 
         logger.info(`New comment added to post ${postId} by ${firebaseUid}`);
 
+        // Log COMMENT action as a CLICK intent in the AI Digital Twin behavior log
+        try {
+            const { logUserBehavior } = require('../../../shared/services/digitalTwinEngine');
+            logUserBehavior(firebaseUid, 'CLICK', {
+                action: 'COMMENT',
+                postId,
+                commentContent: content,
+                postTitle: post.title || ''
+            });
+        } catch (err) {
+            logger.error('Failed to log comment behavior for digital twin:', err);
+        }
+
         // Fetch populated comment for real-time broadcast
         const populatedComment = await CommunityComment.findById(newComment._id)
             .populate('userId', 'username profilepicture fullname firebaseUid');
