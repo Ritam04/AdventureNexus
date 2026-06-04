@@ -38,6 +38,8 @@ import ChatAssistant from './components/ChatAssistant'; // Floating chat assista
 import { ChatProvider } from './context/ChatContext'; // Chat context provider
 import ContactPage from './features/marketing/pages/ContactPage';
 import SEO from './components/SEO';
+import ARPreviewPage from './modules/arPreview/ARPreviewPage';
+
 
 // --- Admin Imports ---
 import { AuthProvider as AdminAuthProvider } from './admin/context/AdminAuthContext';
@@ -137,6 +139,8 @@ const AppContent = () => {
             <MyBookingsPage />
           </ProtectedRoute>
         } />
+        <Route path='/ar-preview' element={<ARPreviewPage />} />
+
 
         {/* --- Protected Routes (Accessible only when logged in) --- */}
         <Route path='/search' element={

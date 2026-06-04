@@ -5,6 +5,7 @@ import { ParallaxCard } from '@/components/ParallaxCard';
 import { Badge } from '@/components/ui/badge';
 import { MessageSquare, Heart, Bookmark, Share2, ArrowRight, Edit, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import TrustBadge from '@/components/trust/TrustBadge';
 
 export const PostCard = memo(({ 
   discussion, 
@@ -47,6 +48,9 @@ export const PostCard = memo(({
               >
                 {discussion.userId?.username || 'Traveler'}
               </span>
+              {discussion.userId?.firebaseUid && (
+                <TrustBadge userId={discussion.userId.firebaseUid} size="sm" />
+              )}
               <span className="text-xs font-bold text-muted-foreground">•</span>
               <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-widest">
                 {new Date(discussion.createdAt).toLocaleDateString()}

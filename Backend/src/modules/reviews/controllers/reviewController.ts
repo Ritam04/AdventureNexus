@@ -4,6 +4,9 @@ import { StatusCodes } from 'http-status-codes';
 import logger from '../../../shared/utils/logger';
 import { cacheService, CACHE_CONFIG } from '../../../shared/utils/cacheService';
 import User from '../../../shared/database/models/userModel';
+import UserTrustProfile from '../../../shared/database/models/userTrustProfileModel';
+import { triggerContentModeration } from '../../../shared/services/trustEngine';
+
 
 // Get all reviews with optional filtering and sorting
 export const getAllReviews = async (req: Request, res: Response) => {
@@ -91,6 +94,15 @@ export const createReview = async (req: Request, res: Response) => {
             return res.status(StatusCodes.UNAUTHORIZED).json({ success: false, message: 'Unauthorized' });
         }
 
+        // 🛡️ Automated Actions: Limit users with trustScore < 30
+        const trustProfile = await UserTrustProfile.findOne({ userId: firebaseUid });
+        if (trustProfile && trustProfile.trustScore < 30) {
+            return res.status(StatusCodes.FORBIDDEN).json({
+                success: false,
+                message: 'Your account features have been restricted due to low trust score. Please contact support.'
+            });
+        }
+
         const reviewData: any = {
             userId: firebaseUid,
             firebaseUid: firebaseUid,
@@ -110,6 +122,9 @@ export const createReview = async (req: Request, res: Response) => {
         }
 
         const review = await Review.create(reviewData);
+
+        // 🛡️ Run Real-time AI Trust Moderation asynchronously
+        triggerContentModeration(review._id.toString(), 'REVIEW', firebaseUid, comment);
 
         // 🕒 Invalidate all review related cache
         await cacheService.invalidatePattern(CACHE_CONFIG.PREFIX.REVIEWS + ':*');

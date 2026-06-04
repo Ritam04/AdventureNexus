@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth, useUser } from '@/context/AuthContext';
+import UserTrustCard from '@/components/trust/UserTrustCard';
 import {
     Users,
     MapPin,
@@ -32,6 +33,14 @@ const PublicProfilePage = () => {
     const { firebaseUid } = useParams();
     const navigate = useNavigate();
     const { userId: currentUserId, getToken } = useAuth();
+    const [token, setToken] = useState(null);
+
+    useEffect(() => {
+        if (currentUserId) {
+            getToken().then(t => setToken(t));
+        }
+    }, [currentUserId]);
+
     const [profileData, setProfileData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isFollowing, setIsFollowing] = useState(false);
@@ -409,6 +418,7 @@ const PublicProfilePage = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-16 animate-in fade-in slide-in-from-bottom-8 duration-1000">
                     {/* Left Sidebar */}
                     <div className="lg:col-span-4 space-y-8">
+                        <UserTrustCard userId={firebaseUid} token={token} />
                         <Card className="bg-white/[0.02] border-white/5 backdrop-blur-xl rounded-[2.5rem] p-8 shadow-2xl">
                             <CardContent className="p-0 space-y-8">
                                 <div className="space-y-4">

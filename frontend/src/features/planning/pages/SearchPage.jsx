@@ -1,5 +1,6 @@
 import Footer from "@/components/mvpblocks/footer-newsletter";
 import NavBar from "@/components/NavBar";
+import ItineraryOptimizer from "@/components/emotion/ItineraryOptimizer";
 import ShareModal from "@/components/ShareModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,7 @@ import {
   Share,
   Sparkles,
   Star,
+  Sliders,
   TrendingUp,
   Users,
   Utensils,
@@ -999,6 +1001,13 @@ const SearchPage = () => {
                     <Heart size={16} className="mr-2" />
                     Liked Plans ({likedPlansData?.length || 0})
                   </TabsTrigger>
+                  <TabsTrigger
+                    value="optimizer"
+                    className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white cursor-pointer rounded-lg transition-all duration-300 data-[state=active]:shadow-lg font-medium px-6"
+                  >
+                    <Sliders size={16} className="mr-2" />
+                    Emotion Optimizer
+                  </TabsTrigger>
                 </TabsList>
               </div>
 
@@ -1409,6 +1418,10 @@ const SearchPage = () => {
                   ))}
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="optimizer" className="mt-0">
+              <ItineraryOptimizer />
             </TabsContent>
           </Tabs>
         </div>

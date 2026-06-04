@@ -7,6 +7,10 @@ import {
     clearUserChatHistory,
     convertChatToPlan
 } from '../../aiChat/chatController';
+import {
+    detectUserEmotionController,
+    optimizeItineraryController
+} from '../controllers/emotion.controller';
 
 const route = express.Router();
 
@@ -45,5 +49,17 @@ route.delete('/chat/history', protect, clearUserChatHistory);
  * @desc Convert a structured AI chat response into a saved travel plan.
  */
 route.post('/convert-plan', protect, convertChatToPlan);
+
+/**
+ * @route POST /api/v1/ai/emotion-detect
+ * @desc Detect user emotion from text/chat.
+ */
+route.post('/emotion-detect', protect, detectUserEmotionController);
+
+/**
+ * @route POST /api/v1/ai/optimize-itinerary
+ * @desc Optimize travel itinerary based on destination, budget, days, and mood.
+ */
+route.post('/optimize-itinerary', protect, optimizeItineraryController);
 
 export default route;

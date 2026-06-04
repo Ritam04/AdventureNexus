@@ -42,6 +42,55 @@ export const initSocket = (server: HttpServer): Server => {
         }
     }, 5000);
 
+    // Periodic Travel Intelligence updates (every 5 minutes / 300,000 ms)
+    setInterval(async () => {
+        try {
+            if (io) {
+                const rooms = Array.from(io.sockets.adapter.rooms.keys());
+                const activeLocations = rooms
+                    .filter(r => r.startsWith('travel:intel:'))
+                    .map(r => r.replace('travel:intel:', ''));
+
+                if (activeLocations.length > 0) {
+                    const { getTravelIntelligence } = await import('../../modules/travelIntel/travelIntelService');
+                    for (const loc of activeLocations) {
+                        try {
+                            const updatedData = await getTravelIntelligence(loc);
+                            io.to(`travel:intel:${loc}`).emit('travel:intel:update', {
+                                weather: {
+                                    temp: updatedData.weather.temp,
+                                    rain: updatedData.weather.rain,
+                                    wind: updatedData.weather.wind,
+                                    uv: updatedData.weather.uv,
+                                    humidity: updatedData.weather.humidity,
+                                    description: updatedData.weather.description
+                                },
+                                crowdLevel: updatedData.crowd.level,
+                                bestTimeToday: updatedData.bestTime.timeWindow,
+                                riskLevel: updatedData.risk.level,
+                                recommendations: updatedData.recommendations,
+                                coordinates: updatedData.coordinates,
+                                crowdDetails: updatedData.crowd,
+                                riskDetails: {
+                                    level: updatedData.risk.level,
+                                    reasons: updatedData.risk.reasons,
+                                    alerts: updatedData.risk.alerts
+                                },
+                                bestTimeDetails: updatedData.bestTime,
+                                delayed: updatedData.delayed,
+                                cached: updatedData.cached
+                            });
+                        } catch (err) {
+                            logger.error(`[Socket Travel Intel Update] Failed for location: ${loc}`, err);
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            // Fail-safe
+        }
+    }, 300000);
+
     io.on('connection', (socket) => {
         console.log(`[DEBUG] New client connected: ${socket.id}`);
 
@@ -101,6 +150,50 @@ export const initSocket = (server: HttpServer): Server => {
             }
         });
 
+        // Real-time Travel Intelligence Subscriptions
+        socket.on('travel:intel:subscribe', async (location: string) => {
+            if (!location || typeof location !== 'string' || location.trim() === '') return;
+            const roomName = `travel:intel:${location.trim().toLowerCase()}`;
+            socket.join(roomName);
+
+            try {
+                const { getTravelIntelligence } = await import('../../modules/travelIntel/travelIntelService');
+                const initialData = await getTravelIntelligence(location);
+                socket.emit('travel:intel:update', {
+                    weather: {
+                        temp: initialData.weather.temp,
+                        rain: initialData.weather.rain,
+                        wind: initialData.weather.wind,
+                        uv: initialData.weather.uv,
+                        humidity: initialData.weather.humidity,
+                        description: initialData.weather.description
+                    },
+                    crowdLevel: initialData.crowd.level,
+                    bestTimeToday: initialData.bestTime.timeWindow,
+                    riskLevel: initialData.risk.level,
+                    recommendations: initialData.recommendations,
+                    coordinates: initialData.coordinates,
+                    crowdDetails: initialData.crowd,
+                    riskDetails: {
+                        level: initialData.risk.level,
+                        reasons: initialData.risk.reasons,
+                        alerts: initialData.risk.alerts
+                    },
+                    bestTimeDetails: initialData.bestTime,
+                    delayed: initialData.delayed,
+                    cached: initialData.cached
+                });
+            } catch (err) {
+                socket.emit('travel:intel:error', { message: 'Failed to fetch travel intelligence.' });
+            }
+        });
+
+        socket.on('travel:intel:unsubscribe', (location: string) => {
+            if (!location) return;
+            const roomName = `travel:intel:${location.trim().toLowerCase()}`;
+            socket.leave(roomName);
+        });
+
         socket.on('disconnect', () => {
             const userId = (socket as any).userId;
             if (userId && onlineUsers.has(userId)) {
@@ -109,7 +202,7 @@ export const initSocket = (server: HttpServer): Server => {
 
                 if (userSockets?.size === 0) {
                     onlineUsers.delete(userId);
-                    // Last connection dropped -> Notify Admins they are offline
+                    // Last connection dropped -> Notify Admins they are online
                     io.emit('user:offline', userId);
                 }
             }

@@ -1,6 +1,7 @@
 import UserBehaviorLog from '../database/models/userBehaviorLogModel';
 import UserPreferenceProfile from '../database/models/userPreferenceProfileModel';
 import User from '../database/models/userModel';
+import UserTrustProfile from '../database/models/userTrustProfileModel';
 import Plan from '../database/models/planModel';
 import { groqGeneratedData } from './groq.service';
 import redis from '../redis/client';
@@ -274,8 +275,24 @@ export const getTwinSuggestions = async (userId: string) => {
         // Query active plans in DB
         const plans = await Plan.find({ status: 'active', isFlagged: false }).limit(20);
         
+        // Fetch trust scores for creators of these plans
+        const creatorUids = plans.map(p => p.firebaseUid).filter(Boolean);
+        const trustProfiles = await UserTrustProfile.find({ userId: { $in: creatorUids } }).lean();
+        const trustMap = new Map(trustProfiles.map(p => [p.userId, p.trustScore]));
+        
         const recommendations = plans.map(plan => {
-            const score = scorePlan(plan, profile);
+            let score = scorePlan(plan, profile);
+            const creatorTrust = trustMap.get(plan.firebaseUid) ?? 100;
+            
+            // 🛡️ AI + Digital Twin Visibility: Boost or Penalize based on Creator's Trust Score
+            if (creatorTrust >= 80) {
+                score *= 1.2; // High trust boost
+            } else if (creatorTrust < 30) {
+                score = 0; // Extremely low trust: hidden
+            } else if (creatorTrust < 50) {
+                score *= 0.5; // Moderate risk penalty
+            }
+            
             return {
                 planId: plan._id,
                 name: plan.name || plan.to,
@@ -283,15 +300,17 @@ export const getTwinSuggestions = async (userId: string) => {
                 cost: plan.budget ?? plan.cost ?? 0,
                 travelStyle: plan.travel_style || 'Relaxed',
                 image: plan.image_url || '',
-                score
+                score: parseFloat(score.toFixed(3))
             };
         });
 
-        // Sort by twin score descending
-        recommendations.sort((a, b) => b.score - a.score);
+        // Filter out zero scores and sort by twin score descending
+        const filteredRecs = recommendations
+            .filter(r => r.score > 0)
+            .sort((a, b) => b.score - a.score);
 
         return {
-            recommendations: recommendations.slice(0, 4),
+            recommendations: filteredRecs.slice(0, 4),
             reason: profile.aiPredictionText || 'AdventureNexus is analyzing your travel footprint.'
         };
     } catch (error) {

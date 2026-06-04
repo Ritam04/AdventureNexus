@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth, useUser } from '@/context/AuthContext';
 import { useAppContext, useSocket } from '@/context/appContext';
-import { ArrowLeft, Users, Shield, Lock, Globe, Plus, MessageSquare, Heart, X, Sparkles, Send, MessageCircle, Settings, Trash2 } from 'lucide-react';
+import { ArrowLeft, Users, Shield, Lock, Globe, Plus, MessageSquare, Heart, X, Sparkles, Send, MessageCircle, Settings, Trash2, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { communityService } from '@/services/communityService';
@@ -11,6 +11,7 @@ import { PostCard } from '../components/PostCard';
 import { CommentTree } from '../components/CommentTree';
 import toast from 'react-hot-toast';
 import NavBar from '@/components/NavBar';
+import ExpenseDashboard from '@/components/expenses/ExpenseDashboard';
 
 export const GroupPage = () => {
   const { groupId } = useParams();
@@ -843,7 +844,7 @@ export const GroupPage = () => {
                   <>
                     {/* Sub-tab segmented control */}
                     {isUserMember && (
-                      <div className="flex bg-card/25 backdrop-blur-xl border border-white/5 rounded-2xl p-1 max-w-[280px] mb-6">
+                      <div className="flex bg-card/25 backdrop-blur-xl border border-white/5 rounded-2xl p-1 w-full max-w-[400px] mb-6">
                         <button 
                           onClick={() => setActiveSubTab('chat')}
                           className={`flex-1 py-2.5 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-1.5 ${
@@ -853,6 +854,16 @@ export const GroupPage = () => {
                           }`}
                         >
                           <MessageCircle size={12} /> Group Chat
+                        </button>
+                        <button 
+                          onClick={() => setActiveSubTab('expenses')}
+                          className={`flex-1 py-2.5 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-1.5 ${
+                            activeSubTab === 'expenses' 
+                              ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/20' 
+                              : 'text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          <DollarSign size={12} /> Expenses
                         </button>
                         <button 
                           onClick={() => setActiveSubTab('feed')}
@@ -946,6 +957,8 @@ export const GroupPage = () => {
                           </Button>
                         </form>
                       </div>
+                    ) : activeSubTab === 'expenses' && isUserMember ? (
+                      <ExpenseDashboard groupId={groupId} members={group.members} />
                     ) : (
                       <>
                         {/* Compose input inside group */}

@@ -45,6 +45,7 @@ import NavBar from '@/components/NavBar';
 import Footer from '@/components/mvpblocks/footer-newsletter';
 import toast from 'react-hot-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import TrustBadge from '@/components/trust/TrustBadge';
 
 // Register GSAP Plugins
 gsap.registerPlugin(ScrollTrigger);
@@ -649,6 +650,9 @@ const AdventureNexusReviews = () => {
                                                     >
                                                         {review.userName}
                                                     </h3>
+                                                    <div className="mt-1.5 flex justify-center md:justify-start">
+                                                        <TrustBadge userId={review.firebaseUid || review.userId} size="sm" />
+                                                    </div>
                                                     <div className="flex items-center justify-center md:justify-start text-xs text-zinc-400 mt-1 font-medium">
                                                         <span>{new Date(review.createdAt).toLocaleDateString()}</span>
                                                     </div>

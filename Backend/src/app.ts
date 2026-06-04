@@ -198,6 +198,22 @@ app.use('/api/v1/safety', safetyRoute);
 import aiRoutes from './modules/ai/routes/ai.routes';
 app.use('/api/v1/ai', aiRoutes);
 
+// Live Travel Intelligence Routes
+import travelIntelRoute from './modules/travelIntel/travelIntel.routes';
+app.use('/api/v1/travel', travelIntelRoute);
+
+// Social Trust Score + AI Fraud Detection Routes
+import trustRoutes from './modules/trust/routes/trust.routes';
+app.use('/api/v1/trust', trustRoutes);
+
+// Smart Expense Split System Routes
+import expenseRoutes from './modules/expenses/routes/expense.routes';
+app.use('/api/v1/expenses', expenseRoutes);
+
+// AR Travel Preview System Routes
+import arRoutes from './modules/ar/ar.routes';
+app.use('/api/v1/ar', arRoutes);
+
 
 
 // --- Error Handling ---
@@ -214,9 +230,10 @@ app.use(errorHandler);
 export default app;
 
 // --- Server Start ---
-server.listen(config.port, () => {
+logger.info(`Attempting to start server on port: ${config.port || '8080'}`);
+server.listen(config.port || 8080, () => {
     figlet(
-        `S e r v e r  c o n n e c t e d \n P O R T :  ${config.port}`,
+        `S e r v e r  c o n n e c t e d \n P O R T :  ${config.port || 8080}`,
         (err: Error | null, data: string | undefined): void => {
             err ? logger.error('Figlet error...') : logger.info(data);
         }

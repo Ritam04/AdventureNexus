@@ -5,6 +5,9 @@ import User from '../../../shared/database/models/userModel';
 import logger from '../../../shared/utils/logger';
 import cloudinary from '../../../shared/services/cloudinaryService';
 import fs from 'fs';
+import { triggerContentModeration } from '../../../shared/services/trustEngine';
+import UserTrustProfile from '../../../shared/database/models/userTrustProfileModel';
+
 
 // ── AUTO-INSIGHT ENGINE ──
 // Generates estimated cost, difficulty, and crowd type from tags/location
@@ -49,6 +52,15 @@ export const createExperiencePost = async (req: Request, res: Response, next: Ne
     try {
         const user = req.user as any;
         if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
+
+        // 🛡️ Automated Actions: Limit users with trustScore < 30
+        const trustProfile = await UserTrustProfile.findOne({ userId: user.firebaseUid });
+        if (trustProfile && trustProfile.trustScore < 30) {
+            return res.status(403).json({
+                success: false,
+                message: 'Your account features have been restricted due to low trust score. Please contact support.'
+            });
+        }
 
         const { title, description, location, tags, rating, estimatedCost, currency, difficultyLevel, crowdType } = req.body;
 
@@ -97,6 +109,9 @@ export const createExperiencePost = async (req: Request, res: Response, next: Ne
             difficultyLevel: difficultyLevel || 'Easy',
             crowdType: crowdType || 'Solo',
         });
+
+        // 🛡️ Run Real-time AI Trust Moderation asynchronously
+        triggerContentModeration(post._id.toString(), 'POST', user.firebaseUid, `${title} ${description}`);
 
         // Populate user info for response
         const populated = await ExperiencePost.findById(post._id)
@@ -280,6 +295,15 @@ export const addExperienceComment = async (req: Request, res: Response, next: Ne
         const user = req.user as any;
         if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
+        // 🛡️ Automated Actions: Limit users with trustScore < 30
+        const trustProfile = await UserTrustProfile.findOne({ userId: user.firebaseUid });
+        if (trustProfile && trustProfile.trustScore < 30) {
+            return res.status(403).json({
+                success: false,
+                message: 'Your account features have been restricted due to low trust score. Please contact support.'
+            });
+        }
+
         const { postId, content, parentId } = req.body;
 
         if (!postId || !content) {
@@ -296,6 +320,9 @@ export const addExperienceComment = async (req: Request, res: Response, next: Ne
             content,
             parentId: parentId || null,
         });
+
+        // 🛡️ Run Real-time AI Trust Moderation asynchronously
+        triggerContentModeration(comment._id.toString(), 'COMMENT', user.firebaseUid, content);
 
         // Increment comment count on the post
         post.commentsCount = (post.commentsCount || 0) + 1;

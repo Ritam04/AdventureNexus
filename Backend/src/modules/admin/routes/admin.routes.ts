@@ -36,6 +36,13 @@ import {
     getSubscribers,
     deleteSubscriber
 } from '../controllers/adminSettings.controller';
+import {
+    getFlaggedContent,
+    adminBanUser,
+    adminReduceTrustScore,
+    adminDeleteContent,
+    getRiskyUsers
+} from '../../trust/controllers/trustController';
 import { protectAdmin } from '../../../shared/middleware/adminAuthMiddleware';
 
 const router = express.Router();
@@ -92,5 +99,12 @@ router.post('/moderation/resolve', resolveModerationAlert);
 router.post('/moderation/ai/run', runAiModeration);
 router.get('/moderation/ai/reports', getModerationReports);
 router.post('/moderation/ai/resolve', resolveModerationReport);
+
+// Social Trust Score + Fraud Moderation Shield
+router.get('/flagged-content', getFlaggedContent);
+router.get('/risky-users', getRiskyUsers);
+router.post('/ban-user/:id', adminBanUser);
+router.post('/reduce-trust/:userId', adminReduceTrustScore);
+router.delete('/content/:logId', adminDeleteContent);
 
 export default router;

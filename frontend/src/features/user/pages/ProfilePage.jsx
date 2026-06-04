@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useUser } from '@/context/AuthContext';
+import { useUser, useAuth } from '@/context/AuthContext';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/mvpblocks/footer-newsletter';
 import { Button } from '@/components/ui/button';
@@ -18,9 +18,18 @@ import { ProfilePageSkeleton, ProfilePostSkeleton } from '@/components/skeleton'
 import toast from 'react-hot-toast';
 import DigitalTwinCard from '@/components/ai/DigitalTwinCard';
 import SmartSuggestions from '@/components/ai/SmartSuggestions';
+import UserTrustCard from '@/components/trust/UserTrustCard';
 
 const ProfilePage = () => {
     const { user: firebaseUser } = useUser();
+    const { getToken, userId } = useAuth();
+    const [token, setToken] = useState(null);
+
+    useEffect(() => {
+        if (userId) {
+            getToken().then(t => setToken(t));
+        }
+    }, [userId]);
     const {
         profile,
         stats,
@@ -161,7 +170,8 @@ const ProfilePage = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 lg:gap-8 items-start">
                     
                     {/* LEFT PANEL - Glassmorphic Sticky Sidebar */}
-                    <div className="lg:sticky lg:top-24 z-10 bg-white/[0.02] backdrop-blur-2xl border border-white/5 rounded-3xl p-6 flex flex-col items-center">
+                    <div className="lg:sticky lg:top-24 z-10 space-y-6">
+                        <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/5 rounded-3xl p-6 flex flex-col items-center">
                         
                         {/* Profile Avatar / Photo Container */}
                         <div className="relative group w-32 h-32 rounded-full overflow-hidden border-2 border-indigo-500/30 p-1 mb-5">
@@ -238,8 +248,12 @@ const ProfilePage = () => {
                         >
                             <Edit3 size={14} className="mr-2" /> Edit Social Identity
                         </Button>
-
                     </div>
+
+                    {profile?.firebaseUid && (
+                        <UserTrustCard userId={profile.firebaseUid} token={token} />
+                    )}
+                </div>
 
                     {/* RIGHT PANEL - Tabbed System Content Panel */}
                     <div className="flex flex-col gap-6">
