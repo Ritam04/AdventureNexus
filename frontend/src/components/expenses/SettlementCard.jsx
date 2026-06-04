@@ -61,42 +61,55 @@ export default function SettlementCard({ settlements, onAddExpense, currentUser 
                         <div
                             key={index}
                             className={`p-4 border rounded-[2rem] bg-card/30 backdrop-blur-xl transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-                                isDebtor ? 'border-primary/30 bg-primary/5' : 'border-white/5'
+                                isDebtor ? 'border-indigo-500/30 bg-indigo-500/5' : 'border-white/5'
                             }`}
                         >
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-between sm:justify-start gap-4 w-full sm:w-auto">
                                 {/* Debtor */}
-                                <div className="flex items-center gap-1.5">
+                                <div className="flex items-center gap-2">
                                     <div className="w-8 h-8 rounded-full overflow-hidden border border-white/10 shrink-0">
                                         <img src={fromPic} alt={fromName} className="w-full h-full object-cover" />
                                     </div>
-                                    <span className="text-xs font-bold truncate max-w-[80px]">{fromName}</span>
+                                    <span className="text-xs font-bold truncate max-w-[90px]">{fromName}</span>
                                 </div>
 
                                 {/* Flow Indicator */}
-                                <div className="flex flex-col items-center shrink-0 px-1 text-primary">
-                                    <span className="text-[10px] font-black tracking-widest text-primary/80 block uppercase">pays</span>
-                                    <Send size={10} className="transform rotate-45" />
+                                <div className="flex flex-col items-center shrink-0 px-2 min-w-[50px]">
+                                    <span className="text-[8px] font-black tracking-widest text-muted-foreground block uppercase mb-1">pays</span>
+                                    <div className="relative w-10 h-1 bg-white/5 rounded-full overflow-hidden">
+                                        <div
+                                            className="absolute top-0 left-[-50%] h-full w-1/2 bg-gradient-to-r from-transparent via-indigo-500 to-transparent"
+                                            style={{
+                                                animation: 'flow-left-right 1.5s infinite linear'
+                                            }}
+                                        />
+                                        <style>{`
+                                            @keyframes flow-left-right {
+                                                0% { left: -50%; }
+                                                100% { left: 150%; }
+                                            }
+                                        `}</style>
+                                    </div>
                                 </div>
 
                                 {/* Creditor */}
-                                <div className="flex items-center gap-1.5">
+                                <div className="flex items-center gap-2">
                                     <div className="w-8 h-8 rounded-full overflow-hidden border border-white/10 shrink-0">
                                         <img src={toPic} alt={toName} className="w-full h-full object-cover" />
                                     </div>
-                                    <span className="text-xs font-bold truncate max-w-[80px]">{toName}</span>
+                                    <span className="text-xs font-bold truncate max-w-[90px]">{toName}</span>
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between sm:justify-end gap-4">
+                            <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto pt-3 sm:pt-0 border-t border-white/5 sm:border-t-0">
                                 <span className="text-sm font-black text-foreground">${settlement.amount.toFixed(2)}</span>
                                 <button
                                     disabled={settlingId !== null}
                                     onClick={() => handleSettle(settlement, index)}
                                     className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 ${
                                         isDebtor
-                                            ? 'bg-primary hover:bg-primary-hover text-white shadow-lg shadow-primary/20 hover:scale-[1.03]'
-                                            : 'bg-white/5 hover:bg-white/10 text-foreground/80 hover:text-foreground'
+                                            ? 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg shadow-indigo-500/20 hover:scale-[1.03]'
+                                            : 'bg-white/5 hover:bg-white/10 text-foreground/80 hover:text-foreground hover:scale-[1.02]'
                                     }`}
                                 >
                                     {settlingId === index ? 'Clearing...' : 'Clear Debt'}

@@ -232,31 +232,31 @@ export default function ExpenseDashboard({ groupId, members }) {
     return (
         <div className="space-y-6">
             {/* Top Dashboard Actions */}
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h2 className="text-xl font-black flex items-center gap-1.5">
                         Budget Dashboard
                     </h2>
                     <p className="text-xs text-muted-foreground">Track lodging, dinner, activities splits and settlements in real time.</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2 self-start sm:self-auto w-full sm:w-auto overflow-x-auto scrollbar-hide py-1">
                     <Button
                         onClick={handleManualRefresh}
-                        className="h-10 w-10 p-0 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white flex items-center justify-center"
+                        className="h-10 w-10 shrink-0 p-0 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white flex items-center justify-center"
                     >
                         <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
                     </Button>
                     <Button
                         onClick={handleSendEmailReport}
                         disabled={isSendingEmail || expenses.length === 0}
-                        className="h-10 px-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white hover:text-white text-xs font-black uppercase tracking-widest flex items-center gap-1.5 hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:hover:scale-100"
+                        className="h-10 px-4 shrink-0 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white hover:text-white text-xs font-black uppercase tracking-widest flex items-center gap-1.5 hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:hover:scale-100"
                     >
                         <Mail size={14} className={isSendingEmail ? 'animate-pulse' : ''} />
                         {isSendingEmail ? 'Sending...' : 'Email Report'}
                     </Button>
                     <Button
                         onClick={() => setIsModalOpen(true)}
-                        className="h-10 px-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white border-0 text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-lg shadow-indigo-500/20 hover:scale-[1.02] transition-transform"
+                        className="h-10 px-4 shrink-0 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white border-0 text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-lg shadow-indigo-500/20 hover:scale-[1.02] transition-transform"
                     >
                         <Plus size={14} /> Add Expense
                     </Button>
@@ -298,16 +298,11 @@ export default function ExpenseDashboard({ groupId, members }) {
 
             {/* Two Column Grid layout */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                {/* Left panel: Log List */}
-                <div className="lg:col-span-7 space-y-6">
-                    <ExpenseList expenses={expenses} />
-                </div>
-
-                {/* Right panel: Visualizations + Settlements */}
-                <div className="lg:col-span-5 space-y-6">
+                {/* Left panel: Visualizations & Log List */}
+                <div className="lg:col-span-8 space-y-6 min-w-0">
                     {/* Recharts Visualizations */}
                     {expenses.length > 0 && (
-                        <div className="bg-card/40 backdrop-blur-xl border border-white/5 p-5 rounded-[2rem] shadow-xl space-y-6">
+                        <div className="bg-card/40 backdrop-blur-xl border border-white/5 p-6 rounded-[2rem] shadow-xl space-y-6">
                             <div>
                                 <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-1 flex items-center gap-1.5">
                                     <TrendingUp size={12} /> Spend Insights
@@ -315,70 +310,77 @@ export default function ExpenseDashboard({ groupId, members }) {
                                 <p className="text-[10px] text-muted-foreground">Who paid what and current net standings.</p>
                             </div>
 
-                            {/* Pie Chart: Distribution of payments */}
-                            {pieData.length > 0 && (
-                                <div className="space-y-2">
-                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center">Payment Distribution</h4>
-                                    <div className="h-48">
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <PieChart>
-                                                <Pie
-                                                    data={pieData}
-                                                    cx="50%"
-                                                    cy="50%"
-                                                    innerRadius={40}
-                                                    outerRadius={65}
-                                                    paddingAngle={3}
-                                                    dataKey="value"
-                                                >
-                                                    {pieData.map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                                    ))}
-                                                </Pie>
-                                                <Tooltip
-                                                    contentStyle={{
-                                                        backgroundColor: '#121214',
-                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                        borderRadius: '12px'
-                                                    }}
-                                                />
-                                                <Legend wrapperStyle={{ fontSize: '10px' }} />
-                                            </PieChart>
-                                        </ResponsiveContainer>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Pie Chart: Distribution of payments */}
+                                {pieData.length > 0 && (
+                                    <div className="space-y-2 bg-white/[0.01] border border-white/5 rounded-2xl p-4 flex flex-col justify-between">
+                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center">Payment Distribution</h4>
+                                        <div className="h-48">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <PieChart>
+                                                    <Pie
+                                                        data={pieData}
+                                                        cx="50%"
+                                                        cy="50%"
+                                                        innerRadius={40}
+                                                        outerRadius={65}
+                                                        paddingAngle={3}
+                                                        dataKey="value"
+                                                    >
+                                                        {pieData.map((entry, index) => (
+                                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                                        ))}
+                                                    </Pie>
+                                                    <Tooltip
+                                                        contentStyle={{
+                                                            backgroundColor: '#121214',
+                                                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                            borderRadius: '12px'
+                                                        }}
+                                                    />
+                                                    <Legend wrapperStyle={{ fontSize: '9px' }} />
+                                                </PieChart>
+                                            </ResponsiveContainer>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
 
-                            {/* Bar Chart: Net Balances */}
-                            {barData.length > 0 && (
-                                <div className="space-y-2 pt-4 border-t border-white/5">
-                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center">Net Balance Standings</h4>
-                                    <div className="h-48">
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart data={barData} margin={{ top: 10, right: 10, left: -25, bottom: 5 }}>
-                                                <XAxis dataKey="name" stroke="#888888" fontSize={10} tickLine={false} axisLine={false} />
-                                                <YAxis stroke="#888888" fontSize={10} tickLine={false} axisLine={false} />
-                                                <Tooltip
-                                                    contentStyle={{
-                                                        backgroundColor: '#121214',
-                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                        borderRadius: '12px'
-                                                    }}
-                                                />
-                                                <Bar dataKey="balance" radius={[4, 4, 0, 0]}>
-                                                    {barData.map((entry, index) => {
-                                                        const color = entry.balance >= 0 ? '#10b981' : '#ec4899';
-                                                        return <Cell key={`cell-${index}`} fill={color} />;
-                                                    })}
-                                                </Bar>
-                                            </BarChart>
-                                        </ResponsiveContainer>
+                                {/* Bar Chart: Net Balances */}
+                                {barData.length > 0 && (
+                                    <div className="space-y-2 bg-white/[0.01] border border-white/5 rounded-2xl p-4 flex flex-col justify-between">
+                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center">Net Balance Standings</h4>
+                                        <div className="h-48">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <BarChart data={barData} margin={{ top: 10, right: 10, left: -25, bottom: 5 }}>
+                                                    <XAxis dataKey="name" stroke="#888888" fontSize={9} tickLine={false} axisLine={false} />
+                                                    <YAxis stroke="#888888" fontSize={9} tickLine={false} axisLine={false} />
+                                                    <Tooltip
+                                                        contentStyle={{
+                                                            backgroundColor: '#121214',
+                                                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                            borderRadius: '12px'
+                                                        }}
+                                                    />
+                                                    <Bar dataKey="balance" radius={[4, 4, 0, 0]}>
+                                                        {barData.map((entry, index) => {
+                                                            const color = entry.balance >= 0 ? '#10b981' : '#ec4899';
+                                                            return <Cell key={`cell-${index}`} fill={color} />;
+                                                        })}
+                                                    </Bar>
+                                                </BarChart>
+                                            </ResponsiveContainer>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
                     )}
 
+                    <ExpenseList expenses={expenses} />
+                </div>
+
+                {/* Right panel: AI Insights & Standings */}
+                <div className="lg:col-span-4 space-y-6">
                     {/* AI Insights Card */}
                     {summary.aiInsights && summary.aiInsights.length > 0 && (
                         <div className="bg-card/40 backdrop-blur-xl border border-white/5 p-5 rounded-[2rem] shadow-xl relative overflow-hidden">
