@@ -18,12 +18,17 @@ interface MailData {
     to: string;
     subject: string;
     html: string;
+    attachments?: Array<{
+        content: Buffer | string;
+        filename: string;
+        contentType?: string;
+    }>;
 }
 
 /**
  * Modern promise-based email sender using Resend.
  */
-export const sendEmail = async ({ to, subject, html }: MailData) => {
+export const sendEmail = async ({ to, subject, html, attachments }: MailData) => {
     try {
         const client = getResendClient();
         const response = await client.emails.send({
@@ -31,6 +36,7 @@ export const sendEmail = async ({ to, subject, html }: MailData) => {
             to,
             subject,
             html,
+            attachments
         });
         return response;
     } catch (error) {

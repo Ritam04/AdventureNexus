@@ -25,5 +25,13 @@ export const expenseService = {
             headers: { Authorization: `Bearer ${token}` }
         });
         return res.data;
+    },
+
+    // Trigger email notification with split PDF to all members
+    sendExpenseReportEmail: async (groupId, token) => {
+        const res = await axios.post(`${API_URL}/api/v1/expenses/summary/${groupId}/send-email`, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return res.data;
     }
 };

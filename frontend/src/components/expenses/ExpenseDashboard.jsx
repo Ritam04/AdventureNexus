@@ -8,7 +8,8 @@ import {
     Brain,
     HelpCircle,
     TrendingUp,
-    RefreshCw
+    RefreshCw,
+    Mail
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/context/AuthContext';
@@ -48,6 +49,31 @@ export default function ExpenseDashboard({ groupId, members }) {
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isSendingEmail, setIsSendingEmail] = useState(false);
+
+    const handleSendEmailReport = async () => {
+        if (expenses.length === 0) {
+            toast.error("No expenses logged yet. Add some expenses first!");
+            return;
+        }
+
+        try {
+            setIsSendingEmail(true);
+            const token = await getToken();
+            const res = await expenseService.sendExpenseReportEmail(groupId, token);
+
+            if (res.status === 'Success') {
+                toast.success('Expense report successfully emailed to all group members!');
+            } else {
+                toast.error(res.message || 'Failed to send expense report email.');
+            }
+        } catch (error) {
+            console.error('Error sending expense email:', error);
+            toast.error(error.response?.data?.message || 'Failed to send email. Check your configurations.');
+        } finally {
+            setIsSendingEmail(false);
+        }
+    };
 
     // Fetch initial expenses and summary details
     const fetchData = async () => {
@@ -219,6 +245,14 @@ export default function ExpenseDashboard({ groupId, members }) {
                         className="h-10 w-10 p-0 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white flex items-center justify-center"
                     >
                         <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
+                    </Button>
+                    <Button
+                        onClick={handleSendEmailReport}
+                        disabled={isSendingEmail || expenses.length === 0}
+                        className="h-10 px-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white hover:text-white text-xs font-black uppercase tracking-widest flex items-center gap-1.5 hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:hover:scale-100"
+                    >
+                        <Mail size={14} className={isSendingEmail ? 'animate-pulse' : ''} />
+                        {isSendingEmail ? 'Sending...' : 'Email Report'}
                     </Button>
                     <Button
                         onClick={() => setIsModalOpen(true)}

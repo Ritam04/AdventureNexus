@@ -2,7 +2,8 @@ import express from 'express';
 import {
     addExpense,
     getGroupExpenses,
-    getExpenseSummary
+    getExpenseSummary,
+    sendExpenseReportEmail
 } from '../controllers/expenseController';
 import protect from '../../../shared/middleware/firebaseAuthMiddleware';
 
@@ -19,5 +20,8 @@ router.get('/:groupId', getGroupExpenses);
 
 // GET /api/v1/expenses/summary/:groupId
 router.get('/summary/:groupId', getExpenseSummary);
+
+// POST /api/v1/expenses/summary/:groupId/send-email
+router.post('/summary/:groupId/send-email', sendExpenseReportEmail);
 
 export default router;
