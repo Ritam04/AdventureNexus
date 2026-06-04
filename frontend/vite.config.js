@@ -1,41 +1,85 @@
-import { defineConfig } from 'vite' // Main function to define Vite configuration
-import react from '@vitejs/plugin-react' // Plugin to enable React support
-import tailwindcss from '@tailwindcss/vite' // Plugin to integrate Tailwind CSS
-import path from 'path' // Node.js module to work with file paths
-import { fileURLToPath } from 'url' // Utility to convert file URLs to paths
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
-// Derive the current filename and directory name since these are not available in ES modules
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 // https://vite.dev/config/
 export default defineConfig({
-  // Array of plugins used by Vite
   plugins: [
-    tailwindcss(), // Initialize Tailwind CSS
+    tailwindcss(),
     react({
-      // Add this for better fast refresh support (hot reloading)
       fastRefresh: true,
-      // Include JSX and TSX files for transpilation
       include: "**/*.{jsx,tsx}",
     })
   ],
   resolve: {
-    // Define path aliases for cleaner imports
     alias: {
-      '@': path.resolve(__dirname, './src'), // map '@' to the './src' directory
+      '@': path.resolve(__dirname, './src'),
     },
-
-    // List of file extensions to try when resolving imports
     extensions: ['.js', '.jsx', '.ts', '.tsx']
   },
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
       },
     },
-  }
+  },
+  build: {
+    // ── Production Optimizations ──
+    target: 'es2020',
+    minify: 'esbuild',
+    sourcemap: false,
+
+    rollupOptions: {
+      output: {
+        // ── Manual Chunk Splitting for optimal caching ──
+        manualChunks: {
+          // React core — changes rarely, cache long
+          'react-vendor': ['react', 'react-dom'],
+          // Router
+          'router': ['react-router-dom'],
+          // Animation libs — large, cache separately
+          'animation': ['framer-motion', 'gsap'],
+          // UI primitives
+          'radix-ui': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-tooltip',
+            '@radix-ui/react-select',
+            '@radix-ui/react-popover',
+          ],
+          // Charting
+          'charts': ['recharts'],
+          // 3D
+          'three-vendor': ['three'],
+          // Firebase
+          'firebase': ['firebase/app', 'firebase/auth'],
+        },
+      },
+    },
+
+    // Increase chunk size warning (3D libs are inherently large)
+    chunkSizeWarningLimit: 600,
+  },
+
+  // ── Dependency Pre-bundling ──
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      'framer-motion',
+      'lucide-react',
+      'axios',
+      'zustand',
+    ],
+  },
 })

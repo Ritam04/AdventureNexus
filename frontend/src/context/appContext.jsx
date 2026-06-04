@@ -69,15 +69,58 @@ function AppProvider({ children }) {
 
     useEffect(() => {
         if (isLoaded && isSignedIn && user) {
-            // Initialize Socket
+            // ── Socket Initialization with Production Reconnection Logic ──
             if (!socketRef.current) {
-                const newSocket = io(import.meta.env.VITE_BACKEND_URL || (import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com'));
+                const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com';
+                const newSocket = io(backendUrl, {
+                    // Reconnection config
+                    reconnection: true,
+                    reconnectionAttempts: 10,
+                    reconnectionDelay: 1000,
+                    reconnectionDelayMax: 15000,
+                    randomizationFactor: 0.5,
+                    // Transport
+                    transports: ['websocket', 'polling'],
+                    upgrade: true,
+                    // Timeouts
+                    timeout: 20000,
+                    // Ping
+                    pingInterval: 25000,
+                    pingTimeout: 10000,
+                });
+
                 socketRef.current = newSocket;
                 setSocket(newSocket);
 
                 newSocket.on('connect', () => {
                     console.log('✅ Socket connected:', newSocket.id);
                     newSocket.emit('identity', user.id);
+                });
+
+                newSocket.on('disconnect', (reason) => {
+                    console.warn('⚠️ Socket disconnected:', reason);
+                    if (reason === 'io server disconnect') {
+                        // Server initiated disconnect — manually reconnect
+                        newSocket.connect();
+                    }
+                    // Otherwise socket.io will auto-reconnect
+                });
+
+                newSocket.on('reconnect', (attempt) => {
+                    console.log(`🔄 Socket reconnected after ${attempt} attempt(s)`);
+                    newSocket.emit('identity', user.id);
+                });
+
+                newSocket.on('reconnect_failed', () => {
+                    console.error('❌ Socket reconnection failed after max attempts');
+                    toast.error('Connection lost. Please refresh the page.', { icon: '🔌' });
+                });
+
+                newSocket.on('connect_error', (err) => {
+                    // Silence in prod, log in dev
+                    if (import.meta.env.DEV) {
+                        console.warn('Socket connect error:', err.message);
+                    }
                 });
 
                 newSocket.on('notification:new', (data) => {
@@ -102,7 +145,7 @@ function AppProvider({ children }) {
         }
 
         return () => {
-            // Optional: don't disconnect on every render, only on unmount or signout
+            // Cleanup only on unmount — not re-renders
         };
     }, [isLoaded, isSignedIn, user, fetchUser]);
 
