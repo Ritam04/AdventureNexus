@@ -7,7 +7,7 @@ import { deleteFromCloudinary } from '../../../shared/services/cloudinaryService
 
 export const createGroup = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { name, description, coverImage, privacy } = req.body;
+        const { name, description, coverImage, privacy, destination, startDate, endDate, status } = req.body;
         const userId = (req as any).user._id;
 
         const isPrivate = privacy === 'PRIVATE';
@@ -21,7 +21,11 @@ export const createGroup = async (req: Request, res: Response): Promise<void> =>
             isPrivate,
             memberCount: 1,
             members: [userId],
-            admins: [userId]
+            admins: [userId],
+            destination,
+            startDate,
+            endDate,
+            status: status || 'active'
         });
 
         await GroupMembership.create({

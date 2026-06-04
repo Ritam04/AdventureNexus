@@ -12,6 +12,10 @@ const groupSchema = new Schema<IGroup>({
     members: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     admins: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     pendingRequests: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    destination: { type: String },
+    startDate: { type: Date },
+    endDate: { type: Date },
+    status: { type: String, enum: ['active', 'completed'], default: 'active' },
 }, { timestamps: true });
 
 const Group = model<IGroup>('Group', groupSchema);

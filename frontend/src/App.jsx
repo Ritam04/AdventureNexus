@@ -13,7 +13,6 @@ import AboutPage from './features/marketing/pages/AboutPage';
 import SocialSearchPage from './features/social/pages/SocialSearchPage';
 import ProfilePage from './features/user/pages/ProfilePage';
 import ChatPage from './features/social/pages/ChatPage';
-import TripInspirationPage from './features/planning/pages/TripInspirationPage';
 import SharedPlanPage from './features/planning/pages/SharedPlanPage';
 import AccommodationsPage from './features/planning/pages/HotelPage';
 import MyTripsPage from './features/user/pages/MyTripPage';
@@ -106,7 +105,6 @@ const AppContent = () => {
             <ProfilePage />
           </ProtectedRoute>
         } />
-        <Route path="/inspiration" element={<TripInspirationPage />} />
         <Route path='/hotels' element={<AccommodationsPage />} />
         <Route path='/flights' element={<FlightsPage />} />
         <Route path='/trains' element={<TrainsPage />} />

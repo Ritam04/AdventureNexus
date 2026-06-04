@@ -72,6 +72,7 @@ import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import { useAuth } from '@/context/AuthContext';
 import { format, addDays } from "date-fns";
+import { useNavigate } from "react-router-dom";
 import { openHotelSearch, HOTEL_PROVIDERS, extractLocation } from "@/lib/hotelRedirect";
 
 // Fix for default Leaflet marker icon not showing
@@ -171,6 +172,7 @@ const ExploreStaysButton = ({ result, fromDate, toDate, travelers, variant = "ca
 
 // SearchPage component allows users to search for trips using AI-powered criteria
 const SearchPage = () => {
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sortBy, setSortBy] = useState("recommended");
   const [selectedDestination, setSelectedDestination] = useState(null);
@@ -196,6 +198,60 @@ const SearchPage = () => {
 
   const VITE_BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
+  const [travelerMatches, setTravelerMatches] = useState([]);
+  const [loadingMatches, setLoadingMatches] = useState(false);
+
+  const fetchTravelerMatches = async (planId) => {
+    try {
+      setLoadingMatches(true);
+      const token = await getToken();
+      if (!token) return;
+
+      const response = await axios.get(
+        `${VITE_BACKEND_URL}/api/v1/plans/travel/match/${planId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      if (response.data.success) {
+        setTravelerMatches(response.data.matches);
+      }
+    } catch (err) {
+      console.error("Failed to fetch traveler matches:", err);
+      toast.error("Failed to load traveler matches");
+    } finally {
+      setLoadingMatches(false);
+    }
+  };
+
+  const handleStartChat = async (matchedUser) => {
+    try {
+      const token = await getToken();
+      if (!token) {
+        toast.error("Please sign in to start a chat");
+        return;
+      }
+      const chatToastId = toast.loading("Opening chat room...");
+      const response = await axios.post(
+        `${VITE_BACKEND_URL}/api/v1/messaging/conversation`,
+        { recipientFirebaseUid: matchedUser.firebaseUid },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      toast.dismiss(chatToastId);
+      if (response.data.success) {
+        navigate('/chat', { state: { activeConversationId: response.data.data._id } });
+      } else {
+        toast.error("Could not initiate chat conversation");
+      }
+    } catch (error) {
+      toast.dismiss();
+      console.error("Chat creation failed:", error);
+      toast.error("Error connecting to chat service");
+    }
+  };
 
   const handleViewDetails = (result) => {
     setSelectedDestination(result);
@@ -1480,29 +1536,34 @@ const SearchPage = () => {
                   <Tabs defaultValue="highlights" className="w-full" onValueChange={(value) => {
                     if (value === "gallery" && galleryImages.length === 0) {
                       fetchGalleryImages(selectedDestination.name);
+                    } else if (value === "matches") {
+                      fetchTravelerMatches(selectedDestination._id);
                     }
                   }}>
-                    <TabsList className="grid w-full grid-cols-5 bg-muted/50 backdrop-blur-sm mb-8 p-1 rounded-xl shadow-lg">
-                      <TabsTrigger value="highlights" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground cursor-pointer rounded-lg transition-all duration-300 data-[state=active]:shadow-lg font-medium text-xs sm:text-sm">
+                    <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 bg-muted/50 backdrop-blur-sm mb-8 p-1 rounded-xl shadow-lg h-auto gap-1">
+                      <TabsTrigger value="highlights" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground cursor-pointer rounded-lg transition-all duration-300 data-[state=active]:shadow-lg font-medium text-xs sm:text-sm py-2">
                         <Lightbulb className="mr-1 sm:mr-2" size={14} />
                         Highlights
                       </TabsTrigger>
-                      <TabsTrigger value="itinerary" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground cursor-pointer rounded-lg transition-all duration-300 data-[state=active]:shadow-lg font-medium text-xs sm:text-sm">
+                      <TabsTrigger value="itinerary" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground cursor-pointer rounded-lg transition-all duration-300 data-[state=active]:shadow-lg font-medium text-xs sm:text-sm py-2">
                         <CalendarDays className="mr-1 sm:mr-2" size={14} />
                         Itinerary
                       </TabsTrigger>
-
-                      <TabsTrigger value="budget" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground cursor-pointer rounded-lg transition-all duration-300 data-[state=active]:shadow-lg font-medium text-xs sm:text-sm">
+                      <TabsTrigger value="budget" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground cursor-pointer rounded-lg transition-all duration-300 data-[state=active]:shadow-lg font-medium text-xs sm:text-sm py-2">
                         <IndianRupee className="mr-1 sm:mr-2" size={14} />
                         Budget
                       </TabsTrigger>
-                      <TabsTrigger value="tips" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground cursor-pointer rounded-lg transition-all duration-300 data-[state=active]:shadow-lg font-medium text-xs sm:text-sm">
+                      <TabsTrigger value="tips" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground cursor-pointer rounded-lg transition-all duration-300 data-[state=active]:shadow-lg font-medium text-xs sm:text-sm py-2">
                         <Lightbulb className="mr-1 sm:mr-2" size={14} />
                         Tips
                       </TabsTrigger>
-                      <TabsTrigger value="gallery" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground cursor-pointer rounded-lg transition-all duration-300 data-[state=active]:shadow-lg font-medium text-xs sm:text-sm">
+                      <TabsTrigger value="gallery" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground cursor-pointer rounded-lg transition-all duration-300 data-[state=active]:shadow-lg font-medium text-xs sm:text-sm py-2">
                         <ImageIcon className="mr-1 sm:mr-2" size={14} />
                         Gallery
+                      </TabsTrigger>
+                      <TabsTrigger value="matches" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground cursor-pointer rounded-lg transition-all duration-300 data-[state=active]:shadow-lg font-medium text-xs sm:text-sm py-2">
+                        <Users className="mr-1 sm:mr-2" size={14} />
+                        Matches
                       </TabsTrigger>
                     </TabsList>
 
@@ -1720,6 +1781,74 @@ const SearchPage = () => {
                         <div className="text-center py-10 text-muted-foreground">
                           <ImageIcon size={48} className="mx-auto mb-3 opacity-30" />
                           <p>No images found in gallery</p>
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    {/* Matches Tab */}
+                    <TabsContent value="matches" className="space-y-4">
+                      {loadingMatches ? (
+                        <div className="flex flex-col items-center justify-center py-20">
+                          <Spinner className="size-10 text-primary animate-spin mb-4" />
+                          <p className="text-muted-foreground text-sm">Finding compatible matches...</p>
+                        </div>
+                      ) : travelerMatches && travelerMatches.length > 0 ? (
+                        <div className="grid sm:grid-cols-2 gap-4">
+                          {travelerMatches.map((match) => (
+                            <Card key={match.user._id} className="bg-card border-border hover:border-primary/40 hover:shadow-xl transition-all duration-300">
+                              <CardContent className="p-5 space-y-4">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-sm font-bold text-white border border-slate-700">
+                                      {match.user.avatar ? (
+                                        <img src={match.user.avatar} alt={match.user.name} className="w-full h-full rounded-full object-cover" />
+                                      ) : (
+                                        match.user.name.charAt(0).toUpperCase()
+                                      )}
+                                    </div>
+                                    <div>
+                                      <div className="font-semibold text-sm text-foreground">{match.user.name}</div>
+                                      <div className="text-xs text-muted-foreground">@{match.user.username}</div>
+                                    </div>
+                                  </div>
+                                  <Badge className={`${
+                                    match.matchScore >= 80 
+                                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                                      : 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                                  } border font-bold text-xs`}>
+                                    {match.matchScore}% Vibe Match
+                                  </Badge>
+                                </div>
+
+                                <div className="space-y-2">
+                                  <div className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">Matched Categories</div>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {match.reasons.map((reason, idx) => (
+                                      <Badge key={idx} variant="outline" className="text-[10px] border-border text-foreground bg-muted/30">
+                                        ✓ {reason}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                <Button 
+                                  onClick={() => handleStartChat(match.user)}
+                                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs py-2 rounded-xl flex items-center justify-center gap-2"
+                                >
+                                  <Users size={14} />
+                                  Initiate Connection
+                                </Button>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-16 text-muted-foreground border border-dashed border-border rounded-2xl bg-muted/10">
+                          <Users size={48} className="mx-auto mb-3 opacity-30" />
+                          <h4 className="font-semibold text-sm mb-1">No Matches Found Yet</h4>
+                          <p className="text-xs max-w-xs mx-auto leading-relaxed">
+                            No other travelers currently match this destination, date range, or budget criteria. Be the first to start the adventure!
+                          </p>
                         </div>
                       )}
                     </TabsContent>

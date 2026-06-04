@@ -10,6 +10,7 @@ import { unsavePlanFromUser } from '../controllers/unsavePlanFromUserController'
 import { createPlan } from '../controllers/newPlanController';
 import { getMyPlans } from '../controllers/getMyPlansController';
 import { updatePlan } from '../controllers/updatePlanController';
+import { matchTravelers } from '../controllers/matchTravelers.controller';
 import protect from '../../../shared/middleware/firebaseAuthMiddleware';
 import { cacheMiddleware } from '../../../shared/middleware/cacheMiddleware';
 import { CACHE_CONFIG } from '../../../shared/config/cache.config';
@@ -77,5 +78,11 @@ route.put("/:id", protect, updatePlan);
  * @desc Delete a manually created or generated plan.
  */
 route.delete("/:id", protect, deletePlanById);
+
+/**
+ * @route GET /api/v1/plans/travel/match/:planId
+ * @desc Match travelers for a specific travel plan
+ */
+route.get("/travel/match/:planId", protect, matchTravelers);
 
 export default route;

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import User from '../../../shared/database/models/userModel';
 import { StatusCodes } from 'http-status-codes';
 import logger from '../../../shared/utils/logger';
+import { sendEmail } from '../../../shared/services/mailService';
 
 export const registerUser = async (req: Request, res: Response) => {
     try {
@@ -18,6 +19,7 @@ export const registerUser = async (req: Request, res: Response) => {
 
         // Check if user already exists
         let user = await User.findOne({ firebaseUid });
+        let isNewUser = false;
         
         if (user) {
             // Update existing user with latest Firebase data
@@ -35,6 +37,24 @@ export const registerUser = async (req: Request, res: Response) => {
                 role: 'user'
             });
             await user.save();
+            isNewUser = true;
+        }
+
+        if (isNewUser) {
+            // Send Welcome Email asynchronously
+            sendEmail({
+                to: email,
+                subject: 'Welcome to AdventureNexus 🌍',
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; rounded: 8px;">
+                        <h2 style="color: #2F80ED;">Welcome ${user.username || 'Traveler'}! 🌍</h2>
+                        <p style="font-size: 16px; line-height: 1.6; color: #333;">Your adventure starts now. Explore premium itineraries, customize your plans using AI, and connect with fellow travelers safely.</p>
+                        <a href="http://localhost:5173" style="display: inline-block; padding: 12px 24px; background-color: #2F80ED; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px;">Start Exploring 🚀</a>
+                    </div>
+                `
+            }).catch(err => {
+                logger.error('Failed to send welcome email:', err);
+            });
         }
 
         return res.status(StatusCodes.OK).json({

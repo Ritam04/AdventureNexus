@@ -1,5 +1,18 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { config } from '../config/config';
+
+let resend: Resend | null = null;
+
+const getResendClient = () => {
+    if (!resend) {
+        const apiKey = config.RESEND_API_KEY || process.env.RESEND_API_KEY;
+        if (!apiKey) {
+            throw new Error("Missing Resend API Key. Please configure RESEND_API_KEY in your env file.");
+        }
+        resend = new Resend(apiKey);
+    }
+    return resend;
+};
 
 interface MailData {
     to: string;
@@ -7,32 +20,38 @@ interface MailData {
     html: string;
 }
 
+/**
+ * Modern promise-based email sender using Resend.
+ */
+export const sendEmail = async ({ to, subject, html }: MailData) => {
+    try {
+        const client = getResendClient();
+        const response = await client.emails.send({
+            from: `AdventureNexus <${config.EMAIL_FROM || process.env.EMAIL_FROM || 'noreply@samiransamanta.in'}>`,
+            to,
+            subject,
+            html,
+        });
+        return response;
+    } catch (error) {
+        console.error('Email Error:', error);
+        throw error;
+    }
+};
+
+/**
+ * Backward-compatible callback-based email sender.
+ */
 const sendMail = async (
     data: MailData,
-    callback: (error: Error | null, response: string | null) => void
+    callback: (error: Error | null, response: any | null) => void
 ) => {
-    const transporter = nodemailer.createTransport({
-        service: 'Gmail',
-        auth: {
-            user: config.MAIL_ADDRESS,
-            pass: config.MAIL_PASSWORD,
-        },
-    });
-
-    const mailOptions = {
-        from: config.MAIL_ADDRESS,
-        to: data.to,
-        subject: data.subject,
-        html: data.html,
-    };
-
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            callback(error, null);
-        } else {
-            callback(null, info.response);
-        }
-    });
+    try {
+        const response = await sendEmail(data);
+        callback(null, response);
+    } catch (error) {
+        callback(error instanceof Error ? error : new Error(String(error)), null);
+    }
 };
 
 export default sendMail;

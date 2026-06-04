@@ -18,6 +18,13 @@ export interface IPlan extends Document {
     budget_range?: string;
     activities?: string[];
     travel_style?: string;
+    location?: string;
+    coordinates?: {
+        lat: number;
+        lng: number;
+    };
+    startDate?: Date;
+    endDate?: Date;
 
     // AI generated Content Fields
     // AI generated Content Fields

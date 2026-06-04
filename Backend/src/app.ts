@@ -42,6 +42,7 @@ import trainRoute from './modules/trains/routes/train.routes';
 import socialRoute from './modules/social/routes/socialRoutes';
 import messagingRoute from './modules/messaging/routes/messagingRoutes';
 import experiencesRoute from './modules/experiences/routes/experiencesRoutes';
+import safetyRoute from './modules/safety/routes/safety.routes';
 
 // Swagger
 import swaggerJSDoc from 'swagger-jsdoc';
@@ -174,8 +175,10 @@ app.use('/api/v1/liked-plans', likedPlansRoute);
 
 // Newsletter Subscription Route
 import triggerDailyTips from './modules/newsletter/controllers/triggerDailyTips.controller';
+import testEmailController from './modules/newsletter/controllers/testEmail.controller';
 app.post('/api/v1/mail/subscribe', subscribeDailyMailController);
 app.post('/api/v1/mail/trigger-daily-tips', triggerDailyTips);
+app.get('/api/v1/mail/test-email', testEmailController);
 
 // Admin Routes
 import adminRoutes from './modules/admin/routes/admin.routes';
@@ -189,6 +192,7 @@ app.use('/api/v1/community', communityRoutes);
 app.use('/api/v1/social', socialRoute);
 app.use('/api/v1/messaging', messagingRoute);
 app.use('/api/v1/experiences', experiencesRoute);
+app.use('/api/v1/safety', safetyRoute);
 
 
 

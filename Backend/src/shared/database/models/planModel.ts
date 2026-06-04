@@ -28,6 +28,13 @@ const planSchema = new Schema<IPlan>({
     budget_range: String, // e.g. "Low", "Medium", "High"
     activities: [String], // User preferences for activities
     travel_style: String, // e.g. "Relaxed", "Adventure"
+    location: String,
+    coordinates: {
+        lat: Number,
+        lng: Number
+    },
+    startDate: Date,
+    endDate: Date,
 
     // AI-Generated Rich Content
     ai_score: { type: Number, index: true }, // Changed from String to Number for sorting

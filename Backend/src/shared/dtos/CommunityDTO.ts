@@ -55,6 +55,10 @@ export interface IGroup extends Document {
     members: Schema.Types.ObjectId[];
     admins: Schema.Types.ObjectId[];
     pendingRequests: Schema.Types.ObjectId[];
+    destination?: string;
+    startDate?: Date;
+    endDate?: Date;
+    status?: 'active' | 'completed';
     createdAt: Date;
     updatedAt: Date;
 }

@@ -1,7 +1,7 @@
 import { useAuth } from '@/context/AuthContext'; // Custom Firebase Auth context
 import { 
     Menu, X, Sun, Moon, Search, Compass, ChevronDown, 
-    Sparkles, MapPin, Globe, Award, TrendingUp,
+    Sparkles, MapPin, Globe, Award,
     MessageSquare, Bell, User as UserIcon, UserPlus
 } from 'lucide-react'; // Icons
 import { useEffect, useState } from 'react'; // React hooks
@@ -54,13 +54,6 @@ function NavBar() {
             icon: Sparkles, 
             desc: 'Curated local activities and hidden gems.',
             color: 'text-pink-500'
-        },
-        { 
-            name: 'Inspiration', 
-            path: '/inspiration', 
-            icon: TrendingUp, 
-            desc: 'Get inspired for your next adventure.',
-            color: 'text-indigo-500'
         }
     ];
 

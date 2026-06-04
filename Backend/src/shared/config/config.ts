@@ -21,6 +21,8 @@ const _config = {
     // Email Service Credentials
     MAIL_ADDRESS: process.env.MAIL_ADDRESS,
     MAIL_PASSWORD: process.env.MAIL_PASSWORD,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    EMAIL_FROM: process.env.EMAIL_FROM,
 
     // MongoDB Connection URI
     DATABASE_URI: process.env.DB_URI,
