@@ -312,11 +312,11 @@ const ChatPage = () => {
     });
 
     return (
-        <div className="h-screen bg-black flex flex-col overflow-hidden">
+        <div className="h-screen bg-background flex flex-col overflow-hidden">
             <NavBar />
-            <div className="flex-1 flex bg-black overflow-hidden font-inter border-t border-white/5 pt-16 sm:pt-[80px]">
+            <div className="flex-1 flex bg-background overflow-hidden font-inter border-t border-white/5 pt-16 sm:pt-[80px]">
             {/* Sidebar List panel */}
-            <div className={`w-full md:w-[340px] lg:w-[400px] border-r border-white/5 flex flex-col bg-[#07090e] transition-all duration-300 ${showMobileSidebar ? 'flex' : 'hidden md:flex'}`}>
+            <div className={`w-full md:w-[340px] lg:w-[400px] border-r border-white/5 flex flex-col bg-card transition-all duration-300 ${showMobileSidebar ? 'flex' : 'hidden md:flex'}`}>
                 {/* Header */}
                 <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                     <div className="flex items-center justify-between">
@@ -401,7 +401,7 @@ const ChatPage = () => {
             </div>
 
             {/* Chat Frame */}
-            <div className={`flex-1 flex flex-col bg-[#05060a] relative ${!showMobileSidebar ? 'flex' : 'hidden md:flex'}`}>
+            <div className={`flex-1 flex flex-col bg-background relative ${!showMobileSidebar ? 'flex' : 'hidden md:flex'}`}>
                 {activeConversation ? (
                     <>
                         {/* Chat Bar Header */}
@@ -410,12 +410,13 @@ const ChatPage = () => {
                             const isOnline = recipient && onlineUserIds.has(recipient.firebaseUid);
 
                             return (
-                                <div className="h-16 sm:h-20 border-b border-white/5 flex items-center justify-between px-4 sm:px-6 bg-[#07090e]/80 backdrop-blur-xl z-10">
+                                <div className="h-16 sm:h-20 border-b border-white/5 flex items-center justify-between px-4 sm:px-6 bg-card/80 backdrop-blur-xl z-10">
                                     <div className="flex items-center gap-4">
                                         <Button 
                                             variant="ghost" 
                                             size="icon" 
                                             className="md:hidden rounded-full hover:bg-white/5 text-white/60"
+                                            aria-label="Back to chat list"
                                             onClick={() => setShowMobileSidebar(true)}
                                         >
                                             <ArrowLeft size={20} />
@@ -457,6 +458,7 @@ const ChatPage = () => {
                                             variant="ghost" 
                                             size="icon" 
                                             className="rounded-full hover:bg-white/5 text-white/40 hover:text-white"
+                                            aria-label="View traveler profile"
                                             onClick={() => navigate(`/user/profile/${recipient?.firebaseUid}`)}
                                         >
                                             <User size={18} />
@@ -464,11 +466,11 @@ const ChatPage = () => {
                                         
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/5 text-white/40 hover:text-white">
+                                                <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/5 text-white/40 hover:text-white" aria-label="More chat options">
                                                     <MoreVertical size={18} />
                                                 </Button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="bg-[#0b0e14] border-white/10 text-white min-w-[200px] p-2 rounded-2xl">
+                                            <DropdownMenuContent align="end" className="bg-card border-white/10 text-white min-w-[200px] p-2 rounded-2xl">
                                                 <DropdownMenuItem 
                                                     className="flex items-center gap-2 hover:bg-white/5 cursor-pointer text-xs py-2.5 px-3 rounded-xl focus:bg-white/5 focus:text-white"
                                                     onClick={() => navigate(`/user/profile/${recipient?.firebaseUid}`)}
@@ -551,7 +553,7 @@ const ChatPage = () => {
                         </div>
 
                         {/* WhatsApp Message text input — E2EE encrypted */}
-                        <div className="p-3 sm:p-4 bg-[#07090e] border-t border-white/5">
+                        <div className="p-3 sm:p-4 bg-card border-t border-white/5">
                             <form onSubmit={handleSend} className="flex items-center gap-3 max-w-5xl mx-auto">
                                 <div className="flex-1 relative">
                                     <Lock size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500/40" />
@@ -562,7 +564,7 @@ const ChatPage = () => {
                                         className="bg-white/[0.01] border-white/5 rounded-2xl h-12 sm:h-14 pl-10 pr-12 focus-visible:ring-emerald-500/40 focus-visible:ring-2 text-white placeholder-white/20 text-sm font-medium"
                                         disabled={isSending}
                                     />
-                                    <Button type="button" variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full text-white/20 hover:text-white/60 hover:bg-transparent">
+                                    <Button type="button" variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full text-white/20 hover:text-white/60 hover:bg-transparent" aria-label="Open emoji picker">
                                         <Smile size={20} />
                                     </Button>
                                 </div>
@@ -583,7 +585,7 @@ const ChatPage = () => {
                         </div>
                     </>
                 ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center space-y-6 text-center px-8 bg-[#040508]">
+                    <div className="flex-1 flex flex-col items-center justify-center space-y-6 text-center px-8 bg-background">
                         <div className="w-20 h-20 rounded-[2rem] bg-gradient-to-br from-emerald-500/20 to-teal-600/20 border border-emerald-500/20 flex items-center justify-center shadow-xl shadow-emerald-500/5">
                             <ShieldCheck size={36} className="text-emerald-400 animate-pulse" />
                         </div>

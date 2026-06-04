@@ -85,7 +85,7 @@ const ReviewsPage: React.FC = () => {
             </div>
 
             {/* Filter control */}
-            <div className="bg-[#0c0c0c]/80 backdrop-blur-md border border-white/10 rounded-2xl p-2.5 flex items-center gap-3 shadow-sm">
+            <div className="bg-card/80 backdrop-blur-md border border-white/10 rounded-2xl p-2.5 flex items-center gap-3 shadow-sm">
                 <Search className="w-4 h-4 text-gray-500 ml-2" />
                 <input
                     type="text"
@@ -97,7 +97,7 @@ const ReviewsPage: React.FC = () => {
             </div>
 
             {/* Main grid */}
-            <div className="bg-[#0c0c0c]/80 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden relative shadow-2xl">
+            <div className="bg-card/80 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden relative shadow-2xl">
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-amber-500 to-yellow-600"></div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left font-mono">

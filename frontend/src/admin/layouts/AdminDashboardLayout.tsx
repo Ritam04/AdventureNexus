@@ -40,7 +40,7 @@ const DashboardLayout: React.FC = () => {
     ];
 
     return (
-        <div className="flex h-screen bg-[#050505] text-white selection:bg-indigo-500/30 selection:text-indigo-200">
+        <div className="flex h-screen bg-background text-white selection:bg-indigo-500/30 selection:text-indigo-200">
             {/* Mobile overlay backdrop */}
             {sidebarOpen && (
                 <div

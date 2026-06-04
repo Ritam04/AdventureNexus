@@ -122,7 +122,7 @@ const Settings: React.FC = () => {
 
                     <div className="space-y-4">
                         {/* Maintenance switch */}
-                        <div className={`bg-[#0c0c0c]/80 backdrop-blur-md p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden ${
+                        <div className={`bg-card/80 backdrop-blur-md p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden ${
                             isMaintenanceMode ? 'border-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.15)]' : 'border-white/10'
                         }`}>
                             {isMaintenanceMode && (
@@ -155,7 +155,7 @@ const Settings: React.FC = () => {
                         </div>
 
                         {/* Artificial Intelligence Module Switch */}
-                        <div className={`bg-[#0c0c0c]/80 backdrop-blur-md p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden ${
+                        <div className={`bg-card/80 backdrop-blur-md p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden ${
                             isAiPremiumEnabled ? 'border-indigo-500/30 shadow-[0_0_20px_rgba(99,102,241,0.15)]' : 'border-white/10'
                         }`}>
                             {isAiPremiumEnabled && (
@@ -196,7 +196,7 @@ const Settings: React.FC = () => {
                         <h2 className="text-xs font-black text-white uppercase tracking-widest font-mono">Newsletter Subscribers Base</h2>
                     </div>
 
-                    <div className="bg-[#0c0c0c]/80 backdrop-blur-md border border-white/10 rounded-3xl h-[410px] overflow-hidden flex flex-col relative shadow-2xl">
+                    <div className="bg-card/80 backdrop-blur-md border border-white/10 rounded-3xl h-[410px] overflow-hidden flex flex-col relative shadow-2xl">
                         <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-emerald-500 to-cyan-500"></div>
 
                         <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
@@ -249,7 +249,7 @@ const Settings: React.FC = () => {
             </div>
 
             {/* Bottom Alert/Warning panel */}
-            <div className="bg-[#0c0c0c]/80 backdrop-blur-md border border-white/10 rounded-3xl p-6 relative overflow-hidden flex items-center gap-5 shadow-2xl">
+            <div className="bg-card/80 backdrop-blur-md border border-white/10 rounded-3xl p-6 relative overflow-hidden flex items-center gap-5 shadow-2xl">
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-indigo-500 to-emerald-500"></div>
 
                 <div className="p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">

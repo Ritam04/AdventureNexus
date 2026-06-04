@@ -584,7 +584,7 @@ export const SocialHubPage = () => {
                 className="bg-card/60 backdrop-blur-2xl p-4 rounded-[2rem] border border-white/5 shadow-2xl flex items-center gap-4 cursor-pointer group hover:border-primary/30 transition-all duration-300"
               >
                 <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border border-white/10">
-                  <img src={user?.imageUrl || 'https://via.placeholder.com/150'} alt="Me" className="w-full h-full object-cover" />
+                  <img src={user?.imageUrl} alt="Me" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 h-12 bg-muted/40 rounded-full flex items-center px-6 text-muted-foreground font-medium group-hover:bg-muted/60 transition-colors border border-transparent group-hover:border-primary/20">
                   Share your latest adventure...
@@ -845,7 +845,7 @@ export const SocialHubPage = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-[#0f0f13] border border-white/10 w-full max-w-lg rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto"
+              className="bg-card border border-white/10 w-full max-w-lg rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto"
             >
               <button 
                 onClick={() => setEditingPost(null)}
@@ -860,7 +860,7 @@ export const SocialHubPage = () => {
                   <select 
                     value={editingPost.category || 'General'}
                     onChange={(e) => setEditingPost(prev => ({ ...prev, category: e.target.value }))}
-                    className="w-full bg-[#16161a] border border-white/10 rounded-2xl p-4 text-sm font-bold text-white focus:outline-none focus:border-primary"
+                    className="w-full bg-muted/50 border border-white/5 rounded-2xl p-4 text-sm font-bold focus:outline-none focus:border-primary"
                   >
                     <option value="General">General</option>
                     <option value="Solo Backpackers">Solo Backpackers</option>
@@ -875,7 +875,7 @@ export const SocialHubPage = () => {
                     placeholder="Give your post a title..." 
                     value={editingPost.title || ''}
                     onChange={(e) => setEditingPost(prev => ({ ...prev, title: e.target.value }))}
-                    className="bg-[#16161a] border-white/10 rounded-2xl h-12 text-sm font-medium text-white focus-visible:ring-primary"
+                    className="bg-muted/50 border-white/5 rounded-2xl h-12 text-sm font-medium focus-visible:ring-primary"
                   />
                 </div>
                 <div>
@@ -886,7 +886,7 @@ export const SocialHubPage = () => {
                     placeholder="Update your adventure description..." 
                     value={editingPost.content || ''}
                     onChange={(e) => setEditingPost(prev => ({ ...prev, content: e.target.value }))}
-                    className="w-full bg-[#16161a] border border-white/10 rounded-2xl p-4 text-sm font-medium text-white focus:outline-none focus:border-primary resize-none"
+                    className="w-full bg-muted/50 border border-white/5 rounded-2xl p-4 text-sm font-medium focus:outline-none focus:border-primary resize-none"
                   />
                 </div>
                 <div>
@@ -895,7 +895,7 @@ export const SocialHubPage = () => {
                     placeholder="kyoto, autumn, japan" 
                     value={Array.isArray(editingPost.destinationTags) ? editingPost.destinationTags.join(', ') : editingPost.destinationTags || ''}
                     onChange={(e) => setEditingPost(prev => ({ ...prev, destinationTags: e.target.value }))}
-                    className="bg-[#16161a] border-white/10 rounded-2xl h-12 text-sm font-medium text-white focus-visible:ring-primary"
+                    className="bg-muted/50 border-white/5 rounded-2xl h-12 text-sm font-medium focus-visible:ring-primary"
                   />
                 </div>
                 <div className="flex gap-4 mt-6">

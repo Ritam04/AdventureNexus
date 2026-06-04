@@ -101,7 +101,7 @@ const AuditLogs: React.FC = () => {
             {/* Filter control center */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Search */}
-                <div className="md:col-span-2 bg-[#0c0c0c]/80 backdrop-blur-md border border-white/10 rounded-2xl p-2.5 flex items-center gap-3">
+                <div className="md:col-span-2 bg-card/80 backdrop-blur-md border border-white/10 rounded-2xl p-2.5 flex items-center gap-3">
                     <Search className="w-4 h-4 text-gray-500 ml-2" />
                     <input
                         type="text"
@@ -113,24 +113,24 @@ const AuditLogs: React.FC = () => {
                 </div>
 
                 {/* Module Dropdown */}
-                <div className="bg-[#0c0c0c]/80 backdrop-blur-md border border-white/10 rounded-2xl p-2.5 flex items-center gap-3">
+                <div className="bg-card/80 backdrop-blur-md border border-white/10 rounded-2xl p-2.5 flex items-center gap-3">
                     <Filter className="w-4 h-4 text-gray-500 ml-2" />
                     <select
                         value={moduleFilter}
                         onChange={(e) => setModuleFilter(e.target.value)}
                         className="bg-transparent text-sm text-gray-200 focus:outline-none w-full font-mono uppercase cursor-pointer"
                     >
-                        <option value="all" className="bg-[#0c0c0c]">All Modules</option>
-                        <option value="COMMUNITY" className="bg-[#0c0c0c]">Community</option>
-                        <option value="EXPEDITIONS" className="bg-[#0c0c0c]">Expeditions</option>
-                        <option value="TESTIMONIALS" className="bg-[#0c0c0c]">Testimonials</option>
-                        <option value="SYSTEM" className="bg-[#0c0c0c]">System Settings</option>
+                        <option value="all" className="bg-card">All Modules</option>
+                        <option value="COMMUNITY" className="bg-card">Community</option>
+                        <option value="EXPEDITIONS" className="bg-card">Expeditions</option>
+                        <option value="TESTIMONIALS" className="bg-card">Testimonials</option>
+                        <option value="SYSTEM" className="bg-card">System Settings</option>
                     </select>
                 </div>
             </div>
 
             {/* Main Log Table */}
-            <div className="bg-[#0c0c0c]/80 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden relative shadow-2xl">
+            <div className="bg-card/80 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden relative shadow-2xl">
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left font-mono">

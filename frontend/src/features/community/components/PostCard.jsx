@@ -22,7 +22,7 @@ export const PostCard = memo(({
   const isLiked = firebaseUid && discussion.likes?.includes(firebaseUid);
 
   return (
-    <ParallaxCard className="bg-[#0f0f13]/80 border-white/5 backdrop-blur-xl shadow-2xl rounded-[2.5rem] overflow-hidden hover:border-primary/50 transition-all duration-500 hover:-translate-y-2 group">
+    <ParallaxCard className="bg-card/80 border-white/5 backdrop-blur-xl shadow-2xl rounded-[2.5rem] overflow-hidden hover:border-primary/50 transition-all duration-500 hover:-translate-y-2 group">
       <CardContent className="p-4 sm:p-8">
         <div className="flex items-start gap-3 sm:gap-6">
           {/* Avatar Column */}
@@ -43,7 +43,7 @@ export const PostCard = memo(({
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-3 mb-2">
               <span 
-                className="font-black text-xs sm:text-sm uppercase tracking-widest text-foreground/90 hover:text-primary cursor-pointer transition-colors truncate max-w-[80px] sm:max-w-none"
+                className="font-black text-xs sm:text-sm uppercase tracking-widest text-foreground/90 hover:text-primary cursor-pointer transition-colors truncate max-w-[120px] sm:max-w-none"
                 onClick={(e) => { e.stopPropagation(); navigate(`/user/profile/${discussion.userId?.firebaseUid}`); }}
               >
                 {discussion.userId?.username || 'Traveler'}
@@ -134,29 +134,31 @@ export const PostCard = memo(({
             {/* Interactions */}
             <div className="flex items-center gap-4 sm:gap-8 text-[11px] sm:text-sm font-black uppercase tracking-widest">
               <span
-                className="flex items-center gap-1.5 cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-1.5 cursor-pointer text-muted-foreground hover:text-foreground active:scale-95 transition-all"
                 onClick={() => onOpenDetail(discussion)}
               >
                 <MessageSquare size={16} className="text-indigo-400" /> {discussion.repliesCount} <span className="hidden sm:inline">Replies</span>
               </span>
               
               <span
-                className={`flex items-center gap-1.5 cursor-pointer transition-all ${isLiked ? 'text-pink-500 scale-105' : 'text-muted-foreground hover:text-pink-500'}`}
+                className={`flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 ${isLiked ? 'text-pink-500 scale-105' : 'text-muted-foreground hover:text-pink-500'}`}
                 onClick={() => onLike(discussion._id)}
               >
                 <Heart size={16} fill={isLiked ? 'currentColor' : 'none'} /> {discussion.likes?.length || 0} <span className="hidden sm:inline">Likes</span>
               </span>
               
               <span
-                className="flex items-center gap-2 cursor-pointer text-muted-foreground hover:text-primary transition-colors ml-auto"
+                className="flex items-center gap-2 cursor-pointer text-muted-foreground hover:text-primary active:scale-95 transition-all ml-auto"
                 onClick={(e) => { e.stopPropagation(); onSave(discussion._id); }}
+                aria-label="Save post"
               >
                 <Bookmark size={16} />
               </span>
               
               <span
-                className="flex items-center gap-2 cursor-pointer text-muted-foreground hover:text-indigo-400 transition-colors"
+                className="flex items-center gap-2 cursor-pointer text-muted-foreground hover:text-indigo-400 active:scale-95 transition-all"
                 onClick={(e) => { e.stopPropagation(); onShare(discussion._id, discussion.title, discussion.content); }}
+                aria-label="Share post"
               >
                 <Share2 size={16} />
               </span>

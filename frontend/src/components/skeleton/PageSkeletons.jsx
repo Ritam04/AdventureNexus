@@ -121,7 +121,7 @@ export const ProfilePostSkeleton = React.memo(() => (
 ));
 
 export const ProfilePageSkeleton = React.memo(() => (
-    <div className="min-h-screen bg-[#07080C] pt-24 px-4 md:px-8" aria-hidden="true">
+    <div className="min-h-screen bg-background pt-24 px-4 md:px-8" aria-hidden="true">
         <div className="container mx-auto max-w-7xl">
             <div className="grid lg:grid-cols-[380px_1fr] gap-8 items-start">
                 <ProfileHeaderSkeleton />
@@ -144,7 +144,7 @@ export const ProfilePageSkeleton = React.memo(() => (
  * Mirrors: Dashboard (header + metrics grid + chart panels + activity feed)
  * ───────────────────────────────────────────── */
 export const StatCardSkeleton = React.memo(() => (
-    <div className="bg-[#0c0c0c]/80 border border-white/10 rounded-2xl p-5 space-y-3" aria-hidden="true">
+    <div className="bg-card/80 border border-white/10 rounded-2xl p-5 space-y-3" aria-hidden="true">
         <div className="flex items-center justify-between">
             <SkeletonBase className="h-4 w-24" rounded="rounded-full" />
             <SkeletonBase className="h-8 w-8" rounded="rounded-lg" />
@@ -155,7 +155,7 @@ export const StatCardSkeleton = React.memo(() => (
 ));
 
 export const ChartSkeleton = React.memo(() => (
-    <div className="bg-[#0c0c0c]/80 border border-white/10 rounded-3xl p-6 space-y-4" aria-hidden="true">
+    <div className="bg-card/80 border border-white/10 rounded-3xl p-6 space-y-4" aria-hidden="true">
         <div className="flex items-center justify-between">
             <div className="space-y-1">
                 <SkeletonBase className="h-4 w-40" rounded="rounded-full" />
@@ -219,7 +219,7 @@ export const TableRowSkeleton = React.memo(({ cols = 6 }) => (
 ));
 
 export const TableSkeleton = React.memo(({ rows = 8, cols = 6 }) => (
-    <div className="bg-[#0c0c0c]/80 border border-white/10 rounded-3xl overflow-hidden" aria-hidden="true">
+    <div className="bg-card/80 border border-white/10 rounded-3xl overflow-hidden" aria-hidden="true">
         <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-indigo-500/30 via-purple-500/30 to-pink-500/30" />
         <div className="overflow-x-auto">
             <table className="w-full text-left">

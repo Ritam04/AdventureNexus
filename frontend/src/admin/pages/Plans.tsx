@@ -455,7 +455,7 @@ const PlansPage: React.FC = () => {
             {/* Live Global Expedition Heatmap Panel */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Flat Worldmap Deck (Left 2/3) */}
-                <div className="lg:col-span-2 bg-[#0c0c0c]/85 border border-white/10 rounded-[32px] p-6 shadow-2xl relative flex flex-col gap-6 overflow-hidden">
+                <div className="lg:col-span-2 bg-card/85 border border-white/10 rounded-[32px] p-6 shadow-2xl relative flex flex-col gap-6 overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-[1.5px] bg-gradient-to-r from-transparent via-rose-500/30 to-transparent"></div>
                     
                     {/* Visual background pattern */}
@@ -522,7 +522,7 @@ const PlansPage: React.FC = () => {
                 </div>
 
                 {/* Heatmap Node targets list (Right 1/3) */}
-                <div className="bg-[#0c0c0c]/85 border border-white/10 rounded-[32px] p-6 shadow-2xl relative flex flex-col justify-between overflow-hidden">
+                <div className="bg-card/85 border border-white/10 rounded-[32px] p-6 shadow-2xl relative flex flex-col justify-between overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-[1.5px] bg-gradient-to-r from-transparent via-[#00f2fe]/30 to-transparent"></div>
                     
                     <div className="space-y-4">
@@ -580,7 +580,7 @@ const PlansPage: React.FC = () => {
             </div>
 
             {/* Smart Search + Advanced HUD Filters Console */}
-            <div className="bg-[#0c0c0c]/85 backdrop-blur-md border border-white/10 rounded-[28px] p-5 space-y-4 shadow-2xl relative">
+            <div className="bg-card/85 backdrop-blur-md border border-white/10 rounded-[28px] p-5 space-y-4 shadow-2xl relative">
                 <div className="absolute top-0 left-0 w-full h-[1.5px] bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent"></div>
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     {/* Search Field */}
@@ -621,11 +621,11 @@ const PlansPage: React.FC = () => {
                                 onChange={(e) => { setSortBy(e.target.value); setPage(1); }}
                                 className="bg-transparent focus:outline-none text-gray-300 font-black uppercase text-[9px] tracking-widest cursor-pointer"
                             >
-                                <option value="createdAt" className="bg-[#0c0c0c] text-gray-300">CREATED DATE</option>
-                                <option value="engagementScore" className="bg-[#0c0c0c] text-gray-300">ENGAGEMENT WEIGHT</option>
-                                <option value="views" className="bg-[#0c0c0c] text-gray-300">VIEWS VOLUME</option>
-                                <option value="travelers" className="bg-[#0c0c0c] text-gray-300">TRAVELERS pax</option>
-                                <option value="budget" className="bg-[#0c0c0c] text-gray-300">BUDGET WEIGHT</option>
+                                <option value="createdAt" className="bg-card text-gray-300">CREATED DATE</option>
+                                <option value="engagementScore" className="bg-card text-gray-300">ENGAGEMENT WEIGHT</option>
+                                <option value="views" className="bg-card text-gray-300">VIEWS VOLUME</option>
+                                <option value="travelers" className="bg-card text-gray-300">TRAVELERS pax</option>
+                                <option value="budget" className="bg-card text-gray-300">BUDGET WEIGHT</option>
                             </select>
                             <button
                                 onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
@@ -639,7 +639,7 @@ const PlansPage: React.FC = () => {
             </div>
 
             {/* Smart Table + Expandable Row */}
-            <div className="bg-[#0c0c0c]/85 border border-white/10 rounded-[32px] overflow-hidden shadow-2xl relative">
+            <div className="bg-card/85 border border-white/10 rounded-[32px] overflow-hidden shadow-2xl relative">
                 <div className="absolute top-0 left-0 w-full h-[2.5px] bg-gradient-to-r from-purple-500 via-indigo-500 to-[#00f2fe]"></div>
                 
                 {loading ? (
@@ -1022,7 +1022,7 @@ const PlansPage: React.FC = () => {
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-[#0c0c0c] border border-rose-500/30 rounded-[32px] max-w-md w-full p-8 space-y-6 relative overflow-hidden shadow-[0_0_50px_rgba(244,63,94,0.15)]"
+                            className="bg-card border border-rose-500/30 rounded-[32px] max-w-md w-full p-8 space-y-6 relative overflow-hidden shadow-[0_0_50px_rgba(244,63,94,0.15)]"
                         >
                             <div className="absolute top-0 left-0 w-full h-[3px] bg-rose-500 animate-pulse"></div>
                             

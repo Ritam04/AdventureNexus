@@ -37,7 +37,7 @@ const NotificationDropdown = ({ notifications, onRead, onReadAll, onClose }) => 
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-3 w-80 sm:w-96 bg-[#0c0c0c]/95 backdrop-blur-md border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden z-50 font-mono"
+            className="absolute right-0 mt-3 w-80 sm:w-96 bg-card/95 backdrop-blur-md border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden z-50 font-mono"
         >
             {/* Header controls */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 bg-white/[0.01]">

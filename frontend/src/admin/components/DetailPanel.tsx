@@ -30,7 +30,7 @@ const DetailPanel: React.FC<DetailPanelProps> = ({ isOpen, onClose, title, descr
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className="fixed right-0 top-0 h-full w-full md:w-[600px] lg:w-[700px] bg-[#0A0A0A] border-l border-white/5 z-50 shadow-2xl flex flex-col"
+                        className="fixed right-0 top-0 h-full w-full md:w-[600px] lg:w-[700px] bg-card border-l border-white/5 z-50 shadow-2xl flex flex-col"
                     >
                         {/* Visual Accent */}
                         <div className="absolute top-0 left-0 w-[1px] h-full bg-gradient-to-b from-transparent via-indigo-500/20 to-transparent"></div>

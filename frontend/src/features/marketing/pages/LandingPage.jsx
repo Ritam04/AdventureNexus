@@ -465,27 +465,33 @@ const AdventureNexusLanding = () => {
                                 title: "Share Your Vibe", 
                                 desc: "Tell our AI what kind of adventure you're looking for - from chill beaches to intense treks.",
                                 icon: MessageCircle,
-                                color: "blue"
+                                iconBg: "bg-blue-500/10",
+                                iconBorder: "border-blue-500/20",
+                                iconColor: "text-blue-400"
                             },
                             { 
                                 step: "02", 
                                 title: "AI Generation", 
                                 desc: "Our neural engine crafts a hyper-personalized itinerary in seconds, checking live data.",
                                 icon: Bot,
-                                color: "purple"
+                                iconBg: "bg-purple-500/10",
+                                iconBorder: "border-purple-500/20",
+                                iconColor: "text-purple-400"
                             },
                             { 
                                 step: "03", 
                                 title: "Hit the Road", 
                                 desc: "Follow your interactive smart guide and explore the world with zero friction.",
                                 icon: Navigation,
-                                color: "emerald"
+                                iconBg: "bg-emerald-500/10",
+                                iconBorder: "border-emerald-500/20",
+                                iconColor: "text-emerald-400"
                             }
                         ].map((item, i) => (
                             <div key={i} className="step-item group p-12 rounded-[3.5rem] bg-white/[0.02] border border-white/5 space-y-6 relative overflow-hidden hover:bg-white/[0.04] transition-all duration-500">
                                 <div className="absolute top-[-10%] right-[-10%] text-9xl font-black text-white/[0.03] group-hover:text-white/[0.06] transition-colors duration-500">{item.step}</div>
-                                <div className={`w-16 h-16 rounded-[1.5rem] bg-${item.color}-500/10 flex items-center justify-center border border-${item.color}-500/20 group-hover:scale-110 transition-transform duration-500`}>
-                                    <item.icon size={32} className={`text-${item.color}-400`} />
+                                <div className={`w-16 h-16 rounded-[1.5rem] ${item.iconBg} flex items-center justify-center border ${item.iconBorder} group-hover:scale-110 transition-transform duration-500`}>
+                                    <item.icon size={32} className={item.iconColor} />
                                 </div>
                                 <div className="space-y-4">
                                     <h3 className="text-3xl font-bold text-white font-inter tracking-tight">{item.title}</h3>

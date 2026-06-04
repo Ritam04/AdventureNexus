@@ -227,7 +227,7 @@ export default function ARPreviewPage() {
     };
 
     return (
-        <div className="relative w-screen h-screen bg-[#09090b] text-white overflow-hidden select-none font-sans">
+        <div className="relative w-screen h-screen bg-background text-white overflow-hidden select-none font-sans">
             
             {/* Top Back Nav Button & Title overlay */}
             <div className="absolute top-6 left-6 z-20 flex items-center gap-3">

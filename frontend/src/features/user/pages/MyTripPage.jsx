@@ -764,7 +764,7 @@ const MyTripsPage = () => {
                   >
                     <div className="absolute inset-0">
                       <img src={trip.image} alt={trip.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#09090b]/95 via-[#09090b]/60 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/60 to-transparent" />
                       <div className="absolute inset-0 bg-primary/10 mix-blend-overlay opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     </div>
                     
@@ -1172,7 +1172,7 @@ const MyTripsPage = () => {
 
       {/* Share to Community Modal */}
       <Dialog open={isShareModalOpen} onOpenChange={setIsShareModalOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-[#09090b] border-white/10 text-white">
+        <DialogContent className="sm:max-w-[425px] bg-card border-white/10 text-white">
           <DialogHeader>
             <DialogTitle>Share to Community</DialogTitle>
             <DialogDescription className="text-muted-foreground">
@@ -1200,7 +1200,7 @@ const MyTripsPage = () => {
 
       {/* Trip Settings Modal */}
       <Dialog open={isSettingsModalOpen} onOpenChange={setIsSettingsModalOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-[#09090b] border-white/10 text-white">
+        <DialogContent className="sm:max-w-[425px] bg-card border-white/10 text-white">
           <DialogHeader>
             <DialogTitle>Trip Settings</DialogTitle>
             <DialogDescription className="text-muted-foreground">

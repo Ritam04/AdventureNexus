@@ -28,7 +28,7 @@ const SystemHealthPanel: React.FC<SystemHealthPanelProps> = ({ health }) => {
     const memColor = memPercent > 85 ? 'bg-red-500 shadow-[0_0_10px_#ef4444]' : memPercent > 60 ? 'bg-amber-500 shadow-[0_0_10px_#f59e0b]' : 'bg-emerald-500 shadow-[0_0_10px_#10b981]';
 
     return (
-        <div className="bg-[#0c0c0c]/80 backdrop-blur-md border border-white/10 rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between h-full">
+        <div className="bg-card/80 backdrop-blur-md border border-white/10 rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between h-full">
             {/* Top Indicator bar */}
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-indigo-500"></div>
 

@@ -99,7 +99,7 @@ const ApiAnalytics: React.FC = () => {
                     { label: 'SERVICE FAILURE RATIO', value: `${errorRate}%`, icon: AlertCircle, color: parseFloat(errorRate) > 5 ? 'text-red-400' : 'text-emerald-400', border: parseFloat(errorRate) > 5 ? 'border-red-500/20' : 'border-emerald-500/20' },
                     { label: 'NODE OPERATIONAL UPTIME', value: `${uptimePercentage}%`, icon: ShieldCheck, color: 'text-cyan-400', border: 'border-cyan-500/20' }
                 ].map((stat, idx) => (
-                    <div key={idx} className={`bg-[#0c0c0c]/80 backdrop-blur-md p-5 rounded-2xl border ${stat.border} flex items-center gap-5 shadow-sm`}>
+                    <div key={idx} className={`bg-card/80 backdrop-blur-md p-5 rounded-2xl border ${stat.border} flex items-center gap-5 shadow-sm`}>
                         <div className={`p-3.5 rounded-xl bg-white/[0.02] border border-white/5 ${stat.color}`}>
                             <stat.icon className="w-5 h-5" />
                         </div>
@@ -114,7 +114,7 @@ const ApiAnalytics: React.FC = () => {
             {/* Recharts visualizations */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Latency Area Chart (Left 2 columns) */}
-                <div className="lg:col-span-2 bg-[#0c0c0c]/80 backdrop-blur-md p-6 rounded-3xl border border-white/10 relative h-[360px] flex flex-col justify-between">
+                <div className="lg:col-span-2 bg-card/80 backdrop-blur-md p-6 rounded-3xl border border-white/10 relative h-[360px] flex flex-col justify-between">
                     <div className="flex items-center gap-3 mb-4">
                         <Activity className="w-4 h-4 text-amber-400" />
                         <h4 className="text-xs font-black text-white uppercase tracking-widest font-mono">Core System Latency Ingestions</h4>
@@ -149,7 +149,7 @@ const ApiAnalytics: React.FC = () => {
                 </div>
 
                 {/* HTTP Status Distribution Pie Chart (Right column) */}
-                <div className="lg:col-span-1 bg-[#0c0c0c]/80 backdrop-blur-md p-6 rounded-3xl border border-white/10 relative h-[360px] flex flex-col justify-between items-center">
+                <div className="lg:col-span-1 bg-card/80 backdrop-blur-md p-6 rounded-3xl border border-white/10 relative h-[360px] flex flex-col justify-between items-center">
                     <div className="flex items-center gap-3 mb-2 self-start">
                         <PieChartIcon className="w-4 h-4 text-purple-400" />
                         <h4 className="text-xs font-black text-white uppercase tracking-widest font-mono">Response Code Allocation</h4>
@@ -208,7 +208,7 @@ const ApiAnalytics: React.FC = () => {
             </div>
 
             {/* Error hotspots table */}
-            <div className="bg-[#0c0c0c]/80 backdrop-blur-md border border-white/10 rounded-3xl p-6 relative overflow-hidden shadow-2xl">
+            <div className="bg-card/80 backdrop-blur-md border border-white/10 rounded-3xl p-6 relative overflow-hidden shadow-2xl">
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-red-500 to-rose-600"></div>
 
                 <div className="flex items-center gap-3 mb-6">

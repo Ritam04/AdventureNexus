@@ -239,7 +239,7 @@ function NavBar() {
                                 const query = e.target.search.value;
                                 if (query) navigate(`/social-search?q=${query}`);
                             }}
-                            className="hidden lg:block relative group w-48 xl:w-64"
+                            className="hidden lg:block relative group w-56 xl:w-72"
                         >
                             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-blue-500 transition-colors">
                                 <Search size={14} />
@@ -269,7 +269,7 @@ function NavBar() {
                                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        className="absolute top-full left-0 mt-4 w-80 bg-[#0A0A0A]/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-4 grid grid-cols-1 gap-2 shadow-2xl z-50"
+                                        className="absolute top-full left-0 mt-4 w-80 bg-card/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-4 grid grid-cols-1 gap-2 shadow-2xl z-50"
                                     >
                                         {discoverItems.map((item) => (
                                             <Link
@@ -319,7 +319,7 @@ function NavBar() {
                                             {user?.username || 'User'}
                                         </span>
                                     </button>
-                                    <div className="absolute top-full right-0 mt-2 w-48 bg-[#0A0A0A]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-2 shadow-2xl opacity-0 invisible group-hover/user:opacity-100 group-hover/user:visible transition-all">
+                                    <div className="absolute top-full right-0 mt-2 w-48 bg-card/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-2 shadow-2xl opacity-0 invisible group-hover/user:opacity-100 group-hover/user:visible transition-all">
                                         <Link to="/profile" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors">
                                             <UserIcon size={14} /> Profile
                                         </Link>
@@ -342,7 +342,7 @@ function NavBar() {
                         </Link>
 
                         {/* Mobile Menu Trigger */}
-                        <button className="md:hidden text-white/60 hover:text-white transition-colors" onClick={toggleMobileMenu}>
+                        <button className="md:hidden text-white/60 hover:text-white transition-colors" onClick={toggleMobileMenu} aria-label="Toggle navigation menu">
                             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                         </button>
                     </div>

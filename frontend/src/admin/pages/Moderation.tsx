@@ -267,7 +267,7 @@ const Moderation: React.FC = () => {
 
             {/* PROGRESS STREAM INDICATOR PANEL */}
             {(scanning || progress.percentage > 0) && (
-                <div className="bg-[#0c0c0c]/90 border border-white/10 rounded-3xl p-6 relative overflow-hidden shadow-[0_0_25px_rgba(0,0,0,0.5)]">
+                <div className="bg-card/90 border border-white/10 rounded-3xl p-6 relative overflow-hidden shadow-[0_0_25px_rgba(0,0,0,0.5)]">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 animate-pulse">
@@ -348,7 +348,7 @@ const Moderation: React.FC = () => {
                                 <RefreshCw className="w-6 h-6 animate-spin text-red-500" />
                             </div>
                         ) : riskyUsers.length === 0 ? (
-                            <div className="p-8 rounded-3xl bg-[#0c0c0c]/40 border border-white/5 text-center text-xs text-gray-500 font-bold uppercase">
+                            <div className="p-8 rounded-3xl bg-card/40 border border-white/5 text-center text-xs text-gray-500 font-bold uppercase">
                                 No risky users detected! All travelers are verified and trusted.
                             </div>
                         ) : (
@@ -356,7 +356,7 @@ const Moderation: React.FC = () => {
                                 {riskyUsers.map((user) => (
                                     <div
                                         key={user._id}
-                                        className="bg-[#0c0c0c]/80 border border-white/10 rounded-3xl p-5 hover:border-red-500/20 transition-all flex flex-col justify-between"
+                                        className="bg-card/80 border border-white/10 rounded-3xl p-5 hover:border-red-500/20 transition-all flex flex-col justify-between"
                                     >
                                         <div>
                                             <div className="flex items-center gap-3 mb-4">
@@ -451,7 +451,7 @@ const Moderation: React.FC = () => {
                                 <RefreshCw className="w-6 h-6 animate-spin text-red-500" />
                             </div>
                         ) : flaggedContent.length === 0 ? (
-                            <div className="p-8 rounded-3xl bg-[#0c0c0c]/40 border border-white/5 text-center text-xs text-gray-500 font-bold uppercase">
+                            <div className="p-8 rounded-3xl bg-card/40 border border-white/5 text-center text-xs text-gray-500 font-bold uppercase">
                                 No flagged nodes.
                             </div>
                         ) : (
@@ -459,7 +459,7 @@ const Moderation: React.FC = () => {
                                 {flaggedContent.map((log) => (
                                     <div
                                         key={log._id}
-                                        className="bg-[#0c0c0c]/60 border border-white/5 rounded-3xl p-5 hover:border-red-500/10 transition-all space-y-3"
+                                        className="bg-card/60 border border-white/5 rounded-3xl p-5 hover:border-red-500/10 transition-all space-y-3"
                                     >
                                         <div className="flex items-center justify-between">
                                             <span className="text-[8px] font-black uppercase px-2 py-0.5 bg-red-500/10 border border-red-500/20 text-red-400 rounded-full">
@@ -500,7 +500,7 @@ const Moderation: React.FC = () => {
                     <span className="text-[10px] font-bold uppercase tracking-widest">Retrieving audit data...</span>
                 </div>
             ) : filteredReports.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-[#0c0c0c]/40 border border-white/5 rounded-3xl p-8 text-center max-w-xl mx-auto gap-4">
+                <div className="flex flex-col items-center justify-center py-20 bg-card/40 border border-white/5 rounded-3xl p-8 text-center max-w-xl mx-auto gap-4">
                     <div className="p-4 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
                         <Check className="w-8 h-8" />
                     </div>
@@ -522,7 +522,7 @@ const Moderation: React.FC = () => {
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
                                 transition={{ duration: 0.3 }}
-                                className="bg-[#0c0c0c]/80 backdrop-blur-md border border-white/10 rounded-3xl p-6 flex flex-col justify-between hover:border-red-500/30 transition-all shadow-[0_0_20px_transparent] hover:shadow-[0_0_20px_rgba(239,68,68,0.05)]"
+                                className="bg-card/80 backdrop-blur-md border border-white/10 rounded-3xl p-6 flex flex-col justify-between hover:border-red-500/30 transition-all shadow-[0_0_20px_transparent] hover:shadow-[0_0_20px_rgba(239,68,68,0.05)]"
                             >
                                 <div className="space-y-4">
                                     {/* Badge Headers */}
@@ -585,7 +585,7 @@ const Moderation: React.FC = () => {
             {/* Manual Trust Score Penalty Modal */}
             {penaltyModalUser && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                    <div className="bg-[#0c0c0c] border border-white/10 rounded-3xl p-6 max-w-md w-full space-y-6">
+                    <div className="bg-card border border-white/10 rounded-3xl p-6 max-w-md w-full space-y-6">
                         <div className="flex flex-col gap-1.5">
                             <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
                                 <AlertTriangle className="w-4 h-4 text-amber-500" />

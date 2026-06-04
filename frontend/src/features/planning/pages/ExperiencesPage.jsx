@@ -203,7 +203,7 @@ const ExperiencesPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#030406] text-white flex flex-col font-outfit relative">
+    <div className="min-h-screen bg-background text-white flex flex-col font-outfit relative">
       <div className="absolute top-0 left-0 w-full h-[500px] bg-[radial-gradient(circle_at_50%_0%,rgba(99,102,241,0.06),transparent_50%)] pointer-events-none z-0" />
       <NavBar />
 
@@ -262,7 +262,7 @@ const ExperiencesPage = () => {
               const isLiked = post.likes?.includes(firebaseUid);
               const isSaved = post.saves?.includes(firebaseUid);
               return (
-                <ParallaxCard key={post._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-[#090A0F]/80 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden hover:border-indigo-500/10 transition-all cursor-pointer" onClick={() => openDetail(post)}>
+                <ParallaxCard key={post._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card/80 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden hover:border-indigo-500/10 transition-all cursor-pointer" onClick={() => openDetail(post)}>
                   {/* User Header */}
                   <div className="flex items-center gap-3 p-5 pb-3">
                     <div className="w-10 h-10 rounded-full bg-indigo-600/20 border border-white/10 flex items-center justify-center text-sm font-bold text-indigo-400 overflow-hidden shrink-0">
@@ -280,7 +280,7 @@ const ExperiencesPage = () => {
                     <div className="relative h-72 md:h-96 overflow-hidden">
                       <img src={post.images[0]} alt={post.title} className="w-full h-full object-cover" loading="lazy" />
                       {post.images.length > 1 && <span className="absolute top-3 right-3 bg-black/60 text-white text-[10px] px-2 py-1 rounded-lg backdrop-blur-sm">+{post.images.length - 1} more</span>}
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#090A0F] via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
                     </div>
                   )}
 
@@ -336,7 +336,7 @@ const ExperiencesPage = () => {
       <AnimatePresence>
         {showCreate && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }} className="w-full max-w-2xl bg-[#090A0F] border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }} className="w-full max-w-2xl bg-card border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
               {/* Header */}
               <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/[0.01]">
                 <div>
@@ -406,10 +406,10 @@ const ExperiencesPage = () => {
                           <label className="text-[9px] font-black uppercase tracking-widest text-white/30">Budget Range</label>
                           <div className="flex gap-2">
                             <select value={createForm.currency} onChange={e => setCreateForm(p => ({ ...p, currency: e.target.value }))} className="bg-white/[0.03] border border-white/5 rounded-xl px-3 py-3.5 text-sm text-white outline-none w-20 appearance-none cursor-pointer text-center">
-                              <option value="₹" className="bg-[#0A0B10]">₹ (INR)</option>
-                              <option value="$" className="bg-[#0A0B10]">$ (USD)</option>
-                              <option value="€" className="bg-[#0A0B10]">€ (EUR)</option>
-                              <option value="£" className="bg-[#0A0B10]">£ (GBP)</option>
+                              <option value="₹" className="bg-muted">₹ (INR)</option>
+                              <option value="$" className="bg-muted">$ (USD)</option>
+                              <option value="€" className="bg-muted">€ (EUR)</option>
+                              <option value="£" className="bg-muted">£ (GBP)</option>
                             </select>
                             <div className="flex-1 flex items-center bg-white/[0.03] border border-white/5 rounded-xl px-4 py-3.5">
                               <DollarSign size={14} className="text-emerald-500 mr-2" />
@@ -477,7 +477,7 @@ const ExperiencesPage = () => {
                   /* LIVE PREVIEW OF CARD */
                   <div className="py-4 space-y-4">
                     <p className="text-[10px] font-black uppercase tracking-widest text-white/30 text-center mb-2">Post Preview Card</p>
-                    <div className="bg-[#0D0E15] border border-white/10 rounded-3xl overflow-hidden shadow-2xl max-w-md mx-auto">
+                    <div className="bg-card border border-white/10 rounded-3xl overflow-hidden shadow-2xl max-w-md mx-auto">
                       {/* Author */}
                       <div className="flex items-center gap-3 p-4">
                         <div className="w-9 h-9 rounded-full bg-indigo-600/20 border border-white/10 flex items-center justify-center text-xs font-bold text-indigo-400">
@@ -544,9 +544,9 @@ const ExperiencesPage = () => {
       <AnimatePresence>
         {selectedPost && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 overflow-y-auto">
-            <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 120 }} className="min-h-screen bg-[#07080C] max-w-4xl mx-auto border-x border-white/5">
+            <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 120 }} className="min-h-screen bg-background max-w-4xl mx-auto border-x border-white/5">
               {/* Header */}
-              <div className="sticky top-0 z-10 bg-[#07080C]/90 backdrop-blur-xl border-b border-white/5 px-6 py-4 flex items-center gap-3">
+              <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl border-b border-white/5 px-6 py-4 flex items-center gap-3">
                 <button onClick={() => setSelectedPost(null)} className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white"><ChevronLeft size={18} /></button>
                 <span className="text-xs font-black uppercase tracking-widest text-white/60">Experience Detail</span>
                 {selectedPost.firebaseUid === firebaseUid && (

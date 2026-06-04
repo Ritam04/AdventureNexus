@@ -722,7 +722,7 @@ export const GroupPage = () => {
                             
                             {/* Autocomplete suggestions dropdown */}
                             {searchResults.length > 0 && (
-                              <div className="absolute left-0 right-0 mt-2 bg-[#121214]/95 backdrop-blur-2xl border border-white/10 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] z-[100] overflow-hidden max-h-[180px] overflow-y-auto divide-y divide-white/5">
+                              <div className="absolute left-0 right-0 mt-2 bg-card/95 backdrop-blur-2xl border border-white/10 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] z-[100] overflow-hidden max-h-[180px] overflow-y-auto divide-y divide-white/5">
                                 {searchResults.map((user) => (
                                   <button
                                     key={user._id}
@@ -1136,7 +1136,7 @@ export const GroupPage = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-[#0f0f13] border border-white/10 w-full max-w-lg rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto"
+              className="bg-card border border-white/10 w-full max-w-lg rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto"
             >
               <button 
                 onClick={() => setEditingPost(null)}
@@ -1151,7 +1151,7 @@ export const GroupPage = () => {
                   <select 
                     value={editingPost.category || 'General'}
                     onChange={(e) => setEditingPost(prev => ({ ...prev, category: e.target.value }))}
-                    className="w-full bg-[#16161a] border border-white/10 rounded-2xl p-4 text-sm font-bold text-white focus:outline-none focus:border-primary"
+                    className="w-full bg-muted/50 border border-white/5 rounded-2xl p-4 text-sm font-bold focus:outline-none focus:border-primary"
                   >
                     <option value="General">General</option>
                     <option value="Solo Backpackers">Solo Backpackers</option>
@@ -1166,7 +1166,7 @@ export const GroupPage = () => {
                     placeholder="Give your post a title..." 
                     value={editingPost.title || ''}
                     onChange={(e) => setEditingPost(prev => ({ ...prev, title: e.target.value }))}
-                    className="bg-[#16161a] border-white/10 rounded-2xl h-12 text-sm font-medium text-white focus-visible:ring-primary"
+                    className="bg-muted/50 border-white/5 rounded-2xl h-12 text-sm font-medium focus-visible:ring-primary"
                   />
                 </div>
                 <div>
@@ -1177,7 +1177,7 @@ export const GroupPage = () => {
                     placeholder="Update your adventure description..." 
                     value={editingPost.content || ''}
                     onChange={(e) => setEditingPost(prev => ({ ...prev, content: e.target.value }))}
-                    className="w-full bg-[#16161a] border border-white/10 rounded-2xl p-4 text-sm font-medium text-white focus:outline-none focus:border-primary resize-none"
+                    className="w-full bg-muted/50 border border-white/5 rounded-2xl p-4 text-sm font-medium focus:outline-none focus:border-primary resize-none"
                   />
                 </div>
                 <div>
@@ -1186,7 +1186,7 @@ export const GroupPage = () => {
                     placeholder="kyoto, autumn, japan" 
                     value={Array.isArray(editingPost.destinationTags) ? editingPost.destinationTags.join(', ') : editingPost.destinationTags || ''}
                     onChange={(e) => setEditingPost(prev => ({ ...prev, destinationTags: e.target.value }))}
-                    className="bg-[#16161a] border-white/10 rounded-2xl h-12 text-sm font-medium text-white focus-visible:ring-primary"
+                    className="bg-muted/50 border-white/5 rounded-2xl h-12 text-sm font-medium focus-visible:ring-primary"
                   />
                 </div>
                 <div className="flex gap-4 mt-6">
@@ -1224,7 +1224,7 @@ export const GroupPage = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-[#0f0f13] border border-white/10 w-full max-w-lg rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto"
+              className="bg-card border border-white/10 w-full max-w-lg rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto"
             >
               <button 
                 onClick={() => setIsSettingsOpen(false)}
@@ -1239,7 +1239,7 @@ export const GroupPage = () => {
                   <select 
                     value={settingsData.privacy}
                     onChange={(e) => setSettingsData(prev => ({ ...prev, privacy: e.target.value }))}
-                    className="w-full bg-[#16161a] border border-white/10 rounded-2xl p-4 text-sm font-bold text-white focus:outline-none focus:border-primary"
+                    className="w-full bg-muted/50 border border-white/5 rounded-2xl p-4 text-sm font-bold focus:outline-none focus:border-primary"
                   >
                     <option value="PUBLIC">🌍 Public (Anyone can discover & join)</option>
                     <option value="PRIVATE">🔒 Private (Only admins can add members)</option>
@@ -1252,7 +1252,7 @@ export const GroupPage = () => {
                     placeholder="Wanderlust Group Name..." 
                     value={settingsData.name}
                     onChange={(e) => setSettingsData(prev => ({ ...prev, name: e.target.value }))}
-                    className="bg-[#16161a] border-white/10 rounded-2xl h-12 text-sm font-medium text-white focus-visible:ring-primary"
+                    className="bg-muted/50 border-white/5 rounded-2xl h-12 text-sm font-medium focus-visible:ring-primary"
                   />
                 </div>
                 <div>
@@ -1263,7 +1263,7 @@ export const GroupPage = () => {
                     placeholder="Tell members about this group's focus, tips, or itinerary planning..." 
                     value={settingsData.description}
                     onChange={(e) => setSettingsData(prev => ({ ...prev, description: e.target.value }))}
-                    className="w-full bg-[#16161a] border border-white/10 rounded-2xl p-4 text-sm font-medium text-white focus:outline-none focus:border-primary resize-none"
+                    className="w-full bg-muted/50 border border-white/5 rounded-2xl p-4 text-sm font-medium focus:outline-none focus:border-primary resize-none"
                   />
                 </div>
                 <div>
@@ -1272,7 +1272,7 @@ export const GroupPage = () => {
                     placeholder="https://images.unsplash.com/photo-..." 
                     value={settingsData.coverImage}
                     onChange={(e) => setSettingsData(prev => ({ ...prev, coverImage: e.target.value }))}
-                    className="bg-[#16161a] border-white/10 rounded-2xl h-12 text-sm font-medium text-white focus-visible:ring-primary"
+                    className="bg-muted/50 border-white/5 rounded-2xl h-12 text-sm font-medium focus-visible:ring-primary"
                   />
                 </div>
                 <div className="flex gap-4 mt-6">

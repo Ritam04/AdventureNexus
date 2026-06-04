@@ -32,7 +32,7 @@ const Login: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#050505] text-white overflow-hidden relative selection:bg-indigo-500/30">
+        <div className="min-h-screen flex items-center justify-center bg-background text-white overflow-hidden relative selection:bg-indigo-500/30">
             {/* Background Accents */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 blur-[120px] rounded-full"></div>

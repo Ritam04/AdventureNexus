@@ -64,7 +64,7 @@ const SystemLogsPanel: React.FC = () => {
     };
 
     return (
-        <div className="bg-[#0c0c0c]/80 backdrop-blur-md border border-white/10 rounded-3xl p-6 relative overflow-hidden flex flex-col h-[400px]">
+        <div className="bg-card/80 backdrop-blur-md border border-white/10 rounded-3xl p-6 relative overflow-hidden flex flex-col h-[400px]">
             {/* Top Indicator bar */}
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-amber-500 to-cyan-500"></div>
 

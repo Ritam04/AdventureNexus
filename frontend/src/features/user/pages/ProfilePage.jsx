@@ -158,7 +158,7 @@ const ProfilePage = () => {
     const initials = `${profile?.firstName?.charAt(0) || ''}${profile?.lastName?.charAt(0) || ''}`.toUpperCase();
 
     return (
-        <div className="min-h-screen bg-[#07080C] text-white relative overflow-hidden font-sans selection:bg-indigo-500 selection:text-white">
+        <div className="min-h-screen bg-background text-foreground relative overflow-hidden font-sans selection:bg-indigo-500 selection:text-white">
             {/* Background Glows */}
             <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-indigo-900/10 blur-[150px] pointer-events-none"></div>
             <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-purple-900/10 blur-[130px] pointer-events-none"></div>
@@ -510,18 +510,18 @@ const ProfilePage = () => {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setIsEditModalOpen(false)}
-                            className="absolute inset-0 bg-[#07080C]/80 backdrop-blur-md"
+                            className="absolute inset-0 bg-background/80 backdrop-blur-md"
                         ></motion.div>
 
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                            className="bg-[#0D0F16] border border-white/10 rounded-3xl w-full max-w-lg overflow-hidden z-10 relative flex flex-col max-h-[85vh]"
+                            className="bg-card border border-white/10 rounded-3xl w-full max-w-lg overflow-hidden z-10 relative flex flex-col max-h-[85vh]"
                         >
                             
                             {/* Modal Header */}
-                            <div className="sticky top-0 bg-[#0D0F16]/90 backdrop-blur-md px-6 py-5 border-b border-white/5 flex justify-between items-center z-10">
+                            <div className="sticky top-0 bg-card/90 backdrop-blur-md px-6 py-5 border-b border-white/5 flex justify-between items-center z-10">
                                 <h3 className="text-md font-black uppercase tracking-wider text-white flex items-center gap-2"><Sparkles className="text-indigo-400" size={16} /> Edit Social Profile</h3>
                                 <button onClick={() => setIsEditModalOpen(false)} className="text-white/40 hover:text-white transition-all"><X className="w-5 h-5" /></button>
                             </div>
@@ -627,7 +627,7 @@ const ProfilePage = () => {
                                 </div>
 
                                 {/* Form Action Buttons */}
-                                <div className="sticky bottom-0 bg-[#0D0F16] pt-4 border-t border-white/5 flex gap-3">
+                                <div className="sticky bottom-0 bg-card pt-4 border-t border-white/5 flex gap-3">
                                     <Button 
                                         type="button"
                                         onClick={() => setIsEditModalOpen(false)}

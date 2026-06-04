@@ -185,7 +185,7 @@ const UsersPage: React.FC = () => {
 
             {/* Premium Dynamic Overview Widgets */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                <div className="bg-[#0c0c0c]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+                <div className="bg-card/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
                     <div className="space-y-1">
                         <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest block">Total Profiles</span>
                         <span className="text-2xl font-black text-white">{totalTravelers}</span>
@@ -195,7 +195,7 @@ const UsersPage: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="bg-[#0c0c0c]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+                <div className="bg-card/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
                     <div className="space-y-1">
                         <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest block">Online Operators</span>
                         <span className="text-2xl font-black text-emerald-400 flex items-center gap-2">
@@ -208,7 +208,7 @@ const UsersPage: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="bg-[#0c0c0c]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+                <div className="bg-card/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
                     <div className="space-y-1">
                         <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest block">Travel Plans</span>
                         <span className="text-2xl font-black text-white">{totalPlans}</span>
@@ -218,7 +218,7 @@ const UsersPage: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="bg-[#0c0c0c]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+                <div className="bg-card/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
                     <div className="space-y-1">
                         <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest block">Contributions</span>
                         <span className="text-2xl font-black text-white">{totalContributions}</span>
@@ -228,7 +228,7 @@ const UsersPage: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="bg-[#0c0c0c]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+                <div className="bg-card/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
                     <div className="space-y-1">
                         <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest block">Restricted Nodes</span>
                         <span className="text-2xl font-black text-rose-500">{bannedCount}</span>
@@ -247,7 +247,7 @@ const UsersPage: React.FC = () => {
             />
 
             {/* Filter controls row */}
-            <div className="flex flex-col md:flex-row gap-4 bg-[#0c0c0c]/80 backdrop-blur-md border border-white/10 rounded-2xl p-3 shadow-lg">
+            <div className="flex flex-col md:flex-row gap-4 bg-card/80 backdrop-blur-md border border-white/10 rounded-2xl p-3 shadow-lg">
                 <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-xl px-3 py-2 flex-grow">
                     <Search className="w-4 h-4 text-gray-500 flex-shrink-0" />
                     <input
@@ -264,7 +264,7 @@ const UsersPage: React.FC = () => {
                     <select
                         value={roleFilter}
                         onChange={(e) => setRoleFilter(e.target.value)}
-                        className="bg-[#0c0c0c] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-gray-400 hover:text-white focus:outline-none cursor-pointer"
+                        className="bg-card border border-white/10 rounded-xl px-4 py-2.5 text-xs text-gray-400 hover:text-white focus:outline-none cursor-pointer"
                     >
                         <option value="all">ALL ROLES</option>
                         <option value="admin">ADMINISTRATORS</option>
@@ -275,7 +275,7 @@ const UsersPage: React.FC = () => {
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="bg-[#0c0c0c] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-gray-400 hover:text-white focus:outline-none cursor-pointer"
+                        className="bg-card border border-white/10 rounded-xl px-4 py-2.5 text-xs text-gray-400 hover:text-white focus:outline-none cursor-pointer"
                     >
                         <option value="all">ALL STATUSES</option>
                         <option value="online">ONLINE NOW</option>
@@ -286,7 +286,7 @@ const UsersPage: React.FC = () => {
             </div>
 
             {/* Users grid list */}
-            <div className="bg-[#0c0c0c]/80 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden relative shadow-2xl">
+            <div className="bg-card/80 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden relative shadow-2xl">
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-emerald-500 to-indigo-600"></div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
@@ -318,7 +318,7 @@ const UsersPage: React.FC = () => {
                                                         className="w-10 h-10 rounded-xl object-cover border border-white/10 group-hover:border-emerald-500/50 transition-all duration-300"
                                                     />
                                                     {isOnline && (
-                                                        <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-4 border-[#0c0c0c] rounded-full animate-pulse shadow-lg shadow-emerald-500/30"></span>
+                                                        <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-4 border-card rounded-full animate-pulse shadow-lg shadow-emerald-500/30"></span>
                                                     )}
                                                 </div>
                                                 <div>
@@ -465,7 +465,7 @@ const UsersPage: React.FC = () => {
                                     className="w-16 h-16 rounded-xl object-cover border border-white/10"
                                 />
                                 {onlineUserIds.has(selectedUser.firebaseUid) && (
-                                    <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-4 border-[#0c0c0c] rounded-full animate-pulse"></span>
+                                    <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-4 border-card rounded-full animate-pulse"></span>
                                 )}
                             </div>
                             <div>

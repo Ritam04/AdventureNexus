@@ -133,6 +133,7 @@ const NotificationCenter = () => {
                 size="icon" 
                 className="relative rounded-full hover:bg-white/5"
                 onClick={() => setIsOpen(!isOpen)}
+                aria-label="Open notifications menu"
             >
                 <Bell size={20} className="text-white/60" />
                 {unreadCount > 0 && (
@@ -150,7 +151,7 @@ const NotificationCenter = () => {
                             initial={{ opacity: 0, y: 10, scale: 0.95 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                            className="absolute right-0 mt-4 w-96 bg-[#0A0A0A] border border-white/10 rounded-[2rem] shadow-2xl z-50 overflow-hidden backdrop-blur-2xl"
+                            className="absolute right-0 mt-4 w-96 bg-card/95 border border-white/10 rounded-[2rem] shadow-2xl z-50 overflow-hidden backdrop-blur-2xl"
                         >
                             <div className="p-6 border-b border-white/5 flex items-center justify-between">
                                 <h3 className="font-black text-white tracking-tight">NOTIFICATIONS</h3>

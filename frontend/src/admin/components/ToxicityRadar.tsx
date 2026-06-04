@@ -58,7 +58,7 @@ const ToxicityRadar: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="bg-[#0c0c0c]/80 backdrop-blur-md border border-white/10 rounded-[2rem] p-6 h-[400px] flex flex-col items-center justify-center gap-3">
+            <div className="bg-card/80 backdrop-blur-md border border-white/10 rounded-[2rem] p-6 h-[400px] flex flex-col items-center justify-center gap-3">
                 <span className="w-6 h-6 border-2 border-t-rose-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></span>
                 <span className="text-[9px] font-black uppercase tracking-widest text-rose-400">Calibrating Toxicity Radar...</span>
             </div>
@@ -66,7 +66,7 @@ const ToxicityRadar: React.FC = () => {
     }
 
     return (
-        <div className="bg-[#0c0c0c]/80 backdrop-blur-md border border-white/10 rounded-[2.5rem] p-6 relative overflow-hidden flex flex-col h-[400px] shadow-2xl">
+        <div className="bg-card/80 backdrop-blur-md border border-white/10 rounded-[2.5rem] p-6 relative overflow-hidden flex flex-col h-[400px] shadow-2xl">
             <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-rose-500 via-pink-500 to-amber-500 animate-pulse"></div>
 
             <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-4">

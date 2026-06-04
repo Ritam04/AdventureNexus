@@ -28,7 +28,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
     gradientId = 'chartGrad'
 }) => {
     return (
-        <div className="bg-[#0c0c0c]/80 backdrop-blur-md border border-white/10 rounded-3xl p-6 relative overflow-hidden h-[330px] flex flex-col justify-between transition-all duration-300 hover:border-white/20 shadow-[0_0_15px_transparent] hover:shadow-[0_0_20px_rgba(255,255,255,0.02)]">
+        <div className="bg-card/80 backdrop-blur-md border border-white/10 rounded-3xl p-6 relative overflow-hidden h-[330px] flex flex-col justify-between transition-all duration-300 hover:border-white/20 shadow-[0_0_15px_transparent] hover:shadow-[0_0_20px_rgba(255,255,255,0.02)]">
             <div className="flex flex-col mb-2 z-10">
                 <span className="text-[10px] font-black tracking-widest text-gray-500 uppercase">{subtitle}</span>
                 <h4 className="text-xs font-black text-white tracking-wider uppercase mt-1">{title}</h4>

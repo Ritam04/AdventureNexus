@@ -65,7 +65,7 @@ const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({ events, loading }) 
     };
 
     return (
-        <div className="bg-[#0c0c0c]/80 backdrop-blur-md border border-white/10 rounded-3xl p-6 flex flex-col h-[520px] relative overflow-hidden">
+        <div className="bg-card/80 backdrop-blur-md border border-white/10 rounded-3xl p-6 flex flex-col h-[520px] relative overflow-hidden">
             {/* Top Indicator bar */}
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500"></div>
 
