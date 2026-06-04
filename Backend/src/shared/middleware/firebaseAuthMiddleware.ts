@@ -36,6 +36,14 @@ export const protect = async (req: Request, res: Response, next: NextFunction): 
         const token = authHeader.split(" ")[1];
 
         // 4. Verify Firebase Token
+        if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
+            logger.warn(`❌ Token verification failed: received empty, null, or undefined token string.`);
+            return res.status(StatusCodes.UNAUTHORIZED).json({
+                status: "Failed",
+                message: "Authentication failed. Token is missing or invalid.",
+            });
+        }
+
         let firebaseUid: string;
         let decodedToken: admin.auth.DecodedIdToken;
 
@@ -129,6 +137,13 @@ export const verifyFirebaseToken = async (req: Request, res: Response, next: Nex
 
         const token = req.headers.authorization.split(" ")[1];
         
+        if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
+            return res.status(StatusCodes.UNAUTHORIZED).json({
+                status: "Failed",
+                message: "Authentication failed. Token is missing or invalid.",
+            });
+        }
+
         try {
             const decodedToken = await admin.auth().verifyIdToken(token);
             if (!decodedToken || !decodedToken.uid) {
@@ -175,6 +190,9 @@ export const optionalProtect = async (req: Request, res: Response, next: NextFun
         }
 
         const token = req.headers.authorization.split(" ")[1];
+        if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
+            return next();
+        }
         const decodedToken = await admin.auth().verifyIdToken(token);
 
         if (decodedToken && decodedToken.uid) {
