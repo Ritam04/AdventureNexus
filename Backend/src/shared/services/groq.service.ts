@@ -13,7 +13,8 @@ export async function groqGeneratedData(prompt: string) {
             }
         ],
         model: "openai/gpt-oss-120b",
-        response_format: { type: "json_object" }
+        response_format: { type: "json_object" },
+        max_tokens: 4096
     });
 
     return (await chatComplete).choices[0]?.message?.content || ""

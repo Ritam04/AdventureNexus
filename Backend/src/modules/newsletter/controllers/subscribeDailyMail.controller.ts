@@ -15,7 +15,9 @@ import getFullURL from "../../../shared/services/getFullURL.service";
 const subscribeDailyMailController = async (req, res) => {
     const fullUrl: string = getFullURL(req);
     try {
+        console.log('DEBUG: Subscribe Daily Mail Request Body:', req.body);
         const { userMail } = req.body;
+        console.log('DEBUG: userMail value:', userMail, 'type:', typeof userMail);
 
         // 1. Verify Request: Ensure email is provided
         if (!userMail) {
@@ -27,7 +29,7 @@ const subscribeDailyMailController = async (req, res) => {
         }
 
         // 2. Check for Existing Subscription
-        const existMail = await SubscribeMail.findOne({ mail: userMail });
+        const existMail = await SubscribeMail.findOne({ userMail: userMail });
 
         if (existMail) {
             logger.info(`URL: ${fullUrl} - Already subscribed`);
@@ -38,12 +40,12 @@ const subscribeDailyMailController = async (req, res) => {
         }
 
         // 3. Create New Subscription in Database
-        // Note: Field name mismatch? 'mail' vs 'userMail' in schema? Assuming 'mail' based on existing code, but schema has 'userMail'.
-        // FIXME: Check model schema match.
+        console.log('DEBUG: Creating new SubscribeMail model with:', { userMail });
         const newSubscribeMail = new SubscribeMail({
-            mail: userMail
+            userMail: userMail
         });
 
+        console.log('DEBUG: SubscribeMail instance before save:', newSubscribeMail);
         await newSubscribeMail.save();
 
         // 4. Send Welcome Email

@@ -18,6 +18,10 @@ const sanitizeInput = (
     const sanitize = (obj: Record<string, any>) => {
         for (const key in obj) {
             if (typeof obj[key] === 'string') {
+                // Skip escaping HTML for rich content fields
+                if (key === 'html' || key === 'content' || key === 'campaignHtml') {
+                    continue;
+                }
                 // Escape HTML characters in string values
                 obj[key] = escapeHtml(obj[key]);
             } else if (typeof obj[key] === 'object' && obj[key] !== null) {

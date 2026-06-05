@@ -15,7 +15,8 @@ import {
     Settings,
     History,
     Activity,
-    Shield
+    Shield,
+    Mail
 } from 'lucide-react';
 
 const DashboardLayout: React.FC = () => {
@@ -31,6 +32,7 @@ const DashboardLayout: React.FC = () => {
     const navItems = [
         { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Overview' },
         { to: '/admin/users', icon: Users, label: 'Community' },
+        { to: '/admin/mail', icon: Mail, label: 'Mail Center' },
         { to: '/admin/plans', icon: Map, label: 'Travel Plans' },
         { to: '/admin/reviews', icon: MessageSquare, label: 'Reviews' },
         { to: '/admin/moderation', icon: Shield, label: 'AI Moderation' },

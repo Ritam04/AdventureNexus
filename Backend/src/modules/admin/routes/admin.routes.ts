@@ -37,6 +37,17 @@ import {
     deleteSubscriber
 } from '../controllers/adminSettings.controller';
 import {
+    getEmailLogs,
+    sendAdminEmail,
+    toggleStarEmail,
+    toggleImportantEmail,
+    toggleTrashEmail,
+    deleteEmailLogPermanent,
+    getEmailStats,
+    generateAiMailContent,
+    sendBroadcastMail
+} from '../controllers/adminMail.controller';
+import {
     getFlaggedContent,
     adminBanUser,
     adminReduceTrustScore,
@@ -78,6 +89,17 @@ router.get('/growth', getGrowthStats);
 router.get('/analytics', getApiAnalytics);
 router.get('/audit-logs', getAuditLogs);
 router.post('/broadcast', broadcastMessage);
+
+// Admin Mail System Center
+router.get('/mail', getEmailLogs);
+router.get('/mail/stats', getEmailStats);
+router.post('/mail/send', sendAdminEmail);
+router.post('/mail/generate-ai', generateAiMailContent);
+router.post('/mail/broadcast', sendBroadcastMail);
+router.patch('/mail/:id/star', toggleStarEmail);
+router.patch('/mail/:id/important', toggleImportantEmail);
+router.patch('/mail/:id/trash', toggleTrashEmail);
+router.delete('/mail/:id', deleteEmailLogPermanent);
 
 // Tactical System Controls
 router.get('/settings', getSystemSettings);

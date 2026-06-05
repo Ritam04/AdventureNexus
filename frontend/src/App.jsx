@@ -94,6 +94,7 @@ const AdminModeration = lazy(() => import('./admin/pages/Moderation'));
 const AdminAuditLogs = lazy(() => import('./admin/pages/AuditLogs'));
 const AdminSettings = lazy(() => import('./admin/pages/Settings'));
 const AdminApiAnalytics = lazy(() => import('./admin/pages/ApiAnalytics'));
+const AdminMail = lazy(() => import('./admin/pages/Mail'));
 const AdminLogin = lazy(() => import('./admin/pages/Login'));
 const AdminProtectedRoute = lazy(() => import('./admin/components/AdminProtectedRoute'));
 
@@ -225,8 +226,9 @@ const AppContent = () => {
                           <Route path="reviews" element={<AdminReviews />} />
                           <Route path="moderation" element={<AdminModeration />} />
                           <Route path="audit" element={<AdminAuditLogs />} />
-                          <Route path="settings" element={<AdminSettings />} />
                           <Route path="analytics" element={<AdminApiAnalytics />} />
+                          <Route path="mail" element={<AdminMail />} />
+                          <Route path="settings" element={<AdminSettings />} />
                           <Route index element={<Navigate to="dashboard" replace />} />
                         </Route>
                       </Route>

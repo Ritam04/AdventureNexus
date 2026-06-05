@@ -40,18 +40,22 @@ export const deletePlanById = async (
         }
 
         // 3. Verify Ownership: Check if the plan belongs to the user
-        // Note: Can also check plan.userId === userId directly
-        if (!user.plans.some(planId => planId.toString() == id)) {
+        // Check via: user.plans array, plan.userId, or plan.firebaseUid
+        const isInUserPlans = user.plans.some(planId => planId.toString() == id);
+        const isPlanOwnerById = plan.userId && plan.userId.toString() === userId.toString();
+        const isPlanOwnerByFirebase = user.firebaseUid && plan.firebaseUid && plan.firebaseUid === user.firebaseUid;
+
+        if (!isInUserPlans && !isPlanOwnerById && !isPlanOwnerByFirebase) {
             return next(
                 createError(403, 'This plan does not belong to the user!')
             );
         }
 
-        // 4. Update User's Plan List (Remove reference)
-        user.plans = user.plans.filter(planId => planId.toString() !== id);
-
-        // 5. Save the updated user document
-        await user.save();
+        // 4. Update User's Plan List (Remove reference if it was there)
+        if (isInUserPlans) {
+            user.plans = user.plans.filter(planId => planId.toString() !== id);
+            await user.save();
+        }
 
         // 6. Delete the plan from the Plan collection
         await Plan.findByIdAndDelete(id);

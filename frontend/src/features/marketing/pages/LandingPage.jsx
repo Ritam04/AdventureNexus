@@ -142,24 +142,6 @@ const AdventureNexusLanding = () => {
                 }, "-=0.8");
             }
 
-            // Features section animation
-            if (featuresRef.current) {
-                gsap.from(".feature-card", {
-                    scrollTrigger: {
-                        trigger: featuresRef.current,
-                        start: "top 80%",
-                        end: "bottom 20%",
-                        toggleActions: "play none none reverse"
-                    },
-                    y: 60,
-                    opacity: 0,
-                    duration: 0.8,
-                    stagger: 0.2,
-                    ease: "power2.out",
-                    immediateRender: false
-                });
-            }
-
             // How it works animation
             if (howItWorksRef.current) {
                 gsap.from(".step-item", {
@@ -171,40 +153,6 @@ const AdventureNexusLanding = () => {
                     opacity: 0,
                     duration: 1,
                     stagger: 0.3,
-                    ease: "power2.out",
-                    immediateRender: false
-                });
-            }
-
-            // Testimonials animation
-            if (testimonialsRef.current) {
-                gsap.from(".testimonial-card", {
-                    scrollTrigger: {
-                        trigger: testimonialsRef.current,
-                        start: "top 80%",
-                    },
-                    y: 50,
-                    opacity: 0,
-                    rotation: 5,
-                    duration: 1,
-                    stagger: 0.2,
-                    ease: "back.out(1.7)",
-                    immediateRender: false
-                });
-            }
-
-            // Persona cards animation
-            if (personaRef.current) {
-                gsap.from(".persona-card", {
-                    scrollTrigger: {
-                        trigger: personaRef.current,
-                        start: "top 80%",
-                    },
-                    y: 80,
-                    opacity: 0,
-                    scale: 0.9,
-                    duration: 1,
-                    stagger: 0.15,
                     ease: "power2.out",
                     immediateRender: false
                 });
@@ -369,6 +317,7 @@ const AdventureNexusLanding = () => {
                             initial={{ opacity: 0, scale: 0.95 }}
                             whileInView={{ opacity: 1, scale: 1 }}
                             viewport={{ once: true }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
                             className="feature-card md:col-span-2 md:row-span-2 rounded-[3rem] overflow-hidden relative flex flex-col p-12 group border border-white/10 bg-[#050505]"
                         >
                             <div className="absolute inset-0 opacity-40 pointer-events-none group-hover:opacity-60 transition-opacity duration-700">
@@ -391,6 +340,7 @@ const AdventureNexusLanding = () => {
                             initial={{ opacity: 0, x: 20 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true }}
+                            transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
                             className="feature-card glass-card rounded-[2.5rem] p-10 flex flex-col justify-between group overflow-hidden relative border border-white/10 bg-white/[0.02]"
                         >
                             <div className="absolute top-[-20%] right-[-20%] w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full group-hover:bg-purple-500/20 transition-colors duration-700"></div>
@@ -408,7 +358,7 @@ const AdventureNexusLanding = () => {
                             initial={{ opacity: 0, x: 20 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true }}
-                            transition={{ delay: 0.1 }}
+                            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
                             className="feature-card glass-card rounded-[2.5rem] p-10 flex flex-col justify-between group overflow-hidden relative border border-white/10 bg-white/[0.02]"
                         >
                             <div className="absolute top-[-20%] right-[-20%] w-64 h-64 bg-emerald-500/10 blur-[80px] rounded-full group-hover:bg-emerald-500/20 transition-colors duration-700"></div>
@@ -426,6 +376,7 @@ const AdventureNexusLanding = () => {
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
+                            transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
                             className="feature-card md:col-span-3 rounded-[3rem] p-12 overflow-hidden relative border border-white/10 bg-[#080808]"
                         >
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(59,130,246,0.1),transparent)] pointer-events-none"></div>
@@ -627,7 +578,14 @@ const AdventureNexusLanding = () => {
                                 img: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=600&auto=format&fit=crop"
                             }
                         ].map((persona, index) => (
-                            <TiltWrapper key={index} className="persona-card group h-[500px] rounded-[3rem] overflow-hidden relative border border-white/10">
+                            <TiltWrapper 
+                                key={index} 
+                                initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.8, ease: "easeOut", delay: index * 0.15 }}
+                                className="persona-card group h-[500px] rounded-[3rem] overflow-hidden relative border border-white/10"
+                            >
                                 <img src={persona.img} alt={persona.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
                                 <div className="absolute inset-0 p-10 flex flex-col justify-end space-y-4">
