@@ -96,6 +96,32 @@ const planSchema = new Schema<IPlan>({
     hotels: [{ type: Schema.Types.ObjectId, ref: 'Hotel' }],
     flights: [{ type: Schema.Types.ObjectId, ref: 'Flight' }],
 
+    // Custom user items and files
+    itineraryItems: [{
+        id: { type: String, required: true },
+        day: { type: Number, required: true },
+        time: { type: String, required: true },
+        type: { type: String, enum: ['flight', 'hotel', 'activity', 'restaurant', 'transport'], required: true },
+        title: { type: String, required: true },
+        description: { type: String },
+        location: { type: String },
+        duration: { type: String },
+        cost: { type: Number },
+        status: { type: String, enum: ['confirmed', 'pending'], default: 'confirmed' }
+    }],
+    documents: [{
+        id: { type: String, required: true },
+        name: { type: String, required: true },
+        type: { type: String, required: true },
+        category: { type: String, required: true },
+        uploadDate: { type: String, required: true },
+        expiryDate: { type: String },
+        size: { type: String, required: true },
+        url: { type: String, required: true },
+        isPrivate: { type: Boolean, default: false },
+        notes: { type: String }
+    }],
+
     // Advanced Intelligence Analytics Fields
     views: { type: Number, default: 120 },
     saves: { type: Number, default: 24 },

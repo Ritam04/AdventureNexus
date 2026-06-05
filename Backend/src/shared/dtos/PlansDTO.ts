@@ -95,6 +95,32 @@ export interface IPlan extends Document {
     hotel_options?: any[];
     flight_options?: any[];
 
+    // Custom user items and files
+    itineraryItems?: {
+        id: string;
+        day: number;
+        time: string;
+        type: 'flight' | 'hotel' | 'activity' | 'restaurant' | 'transport';
+        title: string;
+        description: string;
+        location?: string;
+        duration?: string;
+        cost?: number;
+        status: 'confirmed' | 'pending';
+    }[];
+    documents?: {
+        id: string;
+        name: string;
+        type: string;
+        category: string;
+        uploadDate: string;
+        expiryDate?: string;
+        size: string;
+        url: string;
+        isPrivate?: boolean;
+        notes?: string;
+    }[];
+
     // Advanced Intelligence Analytics Fields
     views?: number;
     saves?: number;

@@ -173,7 +173,10 @@ const MyTripsPage = () => {
                   totalDays: plan.days || 1, status: new Date(plan.date || new Date()) > new Date() ? 'upcoming' : 'completed',
                   budget: plan.budget || 20000, spent: plan.cost || Math.floor((plan.budget || 20000) * 0.4), travelers: plan.travelers || 1,
                   image: plan.image_url || 'https://images.unsplash.com/photo-1488085061387-422e29b40080?w=400',
-                  aiGenerated: !!plan.ai_score, progress: 0, currentDay: 0
+                  aiGenerated: !!plan.ai_score, progress: 0, currentDay: 0,
+                  itineraryItems: plan.itineraryItems || [],
+                  documents: plan.documents || [],
+                  suggestedItinerary: plan.suggested_itinerary || []
                 };
               }).filter(Boolean);
               setTrips(transformedTrips);
@@ -194,7 +197,10 @@ const MyTripsPage = () => {
                   totalDays: plan.days || 1, status: new Date(plan.date || new Date()) > new Date() ? 'upcoming' : 'completed',
                   budget: plan.budget || 30000, spent: plan.cost || Math.floor((plan.budget || 30000) * 0.3), travelers: plan.travelers || 1,
                   image: plan.image_url || 'https://images.unsplash.com/photo-1488085061387-422e29b40080?w=400',
-                  aiGenerated: !!plan.ai_score, progress: 0, currentDay: 0
+                  aiGenerated: !!plan.ai_score, progress: 0, currentDay: 0,
+                  itineraryItems: plan.itineraryItems || [],
+                  documents: plan.documents || [],
+                  suggestedItinerary: plan.suggested_itinerary || []
                 };
               }).filter(Boolean);
               setLikedTrips(transformedLiked);
@@ -211,97 +217,34 @@ const MyTripsPage = () => {
     fetchTrips();
   }, []);
 
-  const [itineraryItems] = useState([
-    {
-      id: '1',
-      tripId: '1',
-      day: 1,
-      time: '08:00',
-      type: 'flight',
-      title: 'Flight to Tokyo',
-      description: 'Departure from JFK Airport',
-      location: 'JFK Airport → Haneda Airport',
-      duration: '14h 30m',
-      cost: 850,
-      status: 'confirmed'
-    },
-    {
-      id: '2',
-      tripId: '1',
-      day: 1,
-      time: '14:30',
-      type: 'hotel',
-      title: 'Check-in at Hotel Shibuya',
-      description: 'Modern hotel in central Tokyo',
-      location: 'Shibuya District, Tokyo',
-      cost: 120,
-      status: 'confirmed'
-    },
-    {
-      id: '3',
-      tripId: '1',
-      day: 2,
-      time: '09:00',
-      type: 'activity',
-      title: 'Senso-ji Temple Visit',
-      description: 'Explore ancient Buddhist temple',
-      location: 'Asakusa, Tokyo',
-      duration: '2h',
-      cost: 0,
-      status: 'pending'
-    }
-  ]);
+  const [itineraryItems, setItineraryItems] = useState([]);
+  const [documents, setDocuments] = useState([]);
+  const [itinerarySubTab, setItinerarySubTab] = useState('custom');
 
-  const [documents, setDocuments] = useState([
-    {
-      id: '1',
-      tripId: '1',
-      name: 'US Passport',
-      type: 'passport',
-      category: 'identity',
-      uploadDate: '2025-08-15',
-      expiryDate: '2030-08-15',
-      size: '2.1 MB',
-      url: '#',
-      isPrivate: false
-    },
-    {
-      id: '2',
-      tripId: '1',
-      name: 'Japan Visa',
-      type: 'visa',
-      category: 'travel',
-      uploadDate: '2025-08-20',
-      expiryDate: '2025-12-20',
-      size: '1.8 MB',
-      url: '#',
-      isPrivate: false
-    },
-    {
-      id: '3',
-      tripId: '1',
-      name: 'Flight Tickets',
-      type: 'boarding_pass',
-      category: 'travel',
-      uploadDate: '2025-09-01',
-      size: '956 KB',
-      url: '#',
-      isPrivate: false
-    },
-    {
-      id: '4',
-      tripId: '1',
-      name: 'PAN Card',
-      type: 'pan_card',
-      category: 'identity',
-      uploadDate: '2025-08-10',
-      expiryDate: '2035-12-31',
-      size: '1.2 MB',
-      url: '#',
-      isPrivate: true,
-      notes: 'Important tax document for India travel'
+  // Activity form states
+  const [isAddActivityModalOpen, setIsAddActivityModalOpen] = useState(false);
+  const [activityForm, setActivityForm] = useState({
+    day: 1,
+    time: '09:00',
+    type: 'activity',
+    title: '',
+    description: '',
+    location: '',
+    duration: '',
+    cost: 0,
+    status: 'confirmed'
+  });
+
+  // Sync itinerary and documents when a trip is selected
+  useEffect(() => {
+    if (selectedTrip) {
+      setItineraryItems(selectedTrip.itineraryItems || []);
+      setDocuments(selectedTrip.documents || []);
+    } else {
+      setItineraryItems([]);
+      setDocuments([]);
     }
-  ]);
+  }, [selectedTrip]);
 
   // File upload handlers
   const handleDrag = (e) => {
@@ -326,7 +269,7 @@ const MyTripsPage = () => {
 
   const handleFileSelect = (file) => {
     if (file.size > 10 * 1024 * 1024) { // 10MB limit
-      alert('File size must be less than 10MB');
+      toast.error('File size must be less than 10MB');
       return;
     }
 
@@ -350,49 +293,193 @@ const MyTripsPage = () => {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || !selectedTrip) return;
 
     setUploadingDocument(true);
+    try {
+      const token = await getToken();
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com');
+      
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('name', documentForm.name || selectedFile.name);
+      formData.append('type', documentForm.type);
+      formData.append('category', documentForm.category);
+      formData.append('expiryDate', documentForm.expiryDate);
+      formData.append('notes', documentForm.notes);
+      formData.append('isPrivate', documentForm.isPrivate);
 
-    // Simulate upload process
-    setTimeout(() => {
-      const newDocument = {
-        id: Date.now().toString(),
-        tripId: selectedTrip.id,
-        name: documentForm.name || selectedFile.name,
-        type: documentForm.type,
-        category: documentForm.category,
-        uploadDate: new Date().toISOString(),
-        expiryDate: documentForm.expiryDate,
-        size: (selectedFile.size / 1024 / 1024).toFixed(2) + ' MB',
-        url: documentPreview || '#',
-        notes: documentForm.notes,
-        isPrivate: documentForm.isPrivate,
-        ocrText: ocrText,
-        fileType: selectedFile.type,
-        fileName: selectedFile.name
-      };
-
-      // Add to documents array
-      setDocuments(prev => [...prev, newDocument]);
-
-      // Reset form
-      setSelectedFile(null);
-      setDocumentPreview(null);
-      setDocumentForm({
-        name: '',
-        type: 'passport',
-        category: 'identity',
-        expiryDate: '',
-        notes: '',
-        isPrivate: false,
-        password: ''
+      const res = await fetch(`${backendUrl}/api/v1/plans/${selectedTrip.id}/documents`, {
+        method: 'POST',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: formData
       });
-      setOcrText('');
-      setUploadingDocument(false);
 
-      alert('Document uploaded successfully!');
-    }, 1500);
+      if (res.ok) {
+        const responseData = await res.json();
+        if (responseData.status === 'Success') {
+          const updatedDocs = responseData.data;
+          setDocuments(updatedDocs);
+          
+          // Update selectedTrip and trips list in state
+          const updatedTrip = { ...selectedTrip, documents: updatedDocs };
+          setSelectedTrip(updatedTrip);
+          setTrips(prev => prev.map(t => t.id === selectedTrip.id ? updatedTrip : t));
+
+          // Reset form
+          setSelectedFile(null);
+          setDocumentPreview(null);
+          setDocumentForm({
+            name: '',
+            type: 'passport',
+            category: 'identity',
+            expiryDate: '',
+            notes: '',
+            isPrivate: false,
+            password: ''
+          });
+          setOcrText('');
+          setShowAddForm(false);
+          toast.success('Document uploaded successfully!');
+        } else {
+          toast.error(responseData.message || 'Failed to upload document');
+        }
+      } else {
+        toast.error('Failed to upload document');
+      }
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      toast.error('An error occurred during file upload.');
+    } finally {
+      setUploadingDocument(false);
+    }
+  };
+
+  const handleDeleteDocument = async (docId) => {
+    if (!selectedTrip) return;
+    try {
+      const token = await getToken();
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com');
+      
+      const res = await fetch(`${backendUrl}/api/v1/plans/${selectedTrip.id}/documents/${docId}`, {
+        method: 'DELETE',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      });
+
+      if (res.ok) {
+        const responseData = await res.json();
+        if (responseData.status === 'Success') {
+          const updatedDocs = responseData.data;
+          setDocuments(updatedDocs);
+
+          const updatedTrip = { ...selectedTrip, documents: updatedDocs };
+          setSelectedTrip(updatedTrip);
+          setTrips(prev => prev.map(t => t.id === selectedTrip.id ? updatedTrip : t));
+
+          toast.success('Document deleted successfully!');
+        } else {
+          toast.error(responseData.message || 'Failed to delete document');
+        }
+      } else {
+        toast.error('Failed to delete document');
+      }
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast.error('An error occurred during deletion.');
+    }
+  };
+
+  const handleAddActivity = async (e) => {
+    e.preventDefault();
+    if (!selectedTrip) return;
+    
+    try {
+      const token = await getToken();
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com');
+      
+      const res = await fetch(`${backendUrl}/api/v1/plans/${selectedTrip.id}/activities`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(activityForm)
+      });
+
+      if (res.ok) {
+        const responseData = await res.json();
+        if (responseData.status === 'Success') {
+          const updatedItems = responseData.data;
+          setItineraryItems(updatedItems);
+
+          const updatedTrip = { ...selectedTrip, itineraryItems: updatedItems };
+          setSelectedTrip(updatedTrip);
+          setTrips(prev => prev.map(t => t.id === selectedTrip.id ? updatedTrip : t));
+
+          setIsAddActivityModalOpen(false);
+          // Reset form
+          setActivityForm({
+            day: 1,
+            time: '09:00',
+            type: 'activity',
+            title: '',
+            description: '',
+            location: '',
+            duration: '',
+            cost: 0,
+            status: 'confirmed'
+          });
+          toast.success('Activity added successfully!');
+        } else {
+          toast.error(responseData.message || 'Failed to add activity');
+        }
+      } else {
+        toast.error('Failed to add activity');
+      }
+    } catch (error) {
+      console.error('Error adding activity:', error);
+      toast.error('An error occurred while adding activity.');
+    }
+  };
+
+  const handleDeleteActivity = async (activityId) => {
+    if (!selectedTrip) return;
+    try {
+      const token = await getToken();
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.VITE_BACKEND_URL || 'https://adventure-nexus-backend.onrender.com');
+      
+      const res = await fetch(`${backendUrl}/api/v1/plans/${selectedTrip.id}/activities/${activityId}`, {
+        method: 'DELETE',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      });
+
+      if (res.ok) {
+        const responseData = await res.json();
+        if (responseData.status === 'Success') {
+          const updatedItems = responseData.data;
+          setItineraryItems(updatedItems);
+
+          const updatedTrip = { ...selectedTrip, itineraryItems: updatedItems };
+          setSelectedTrip(updatedTrip);
+          setTrips(prev => prev.map(t => t.id === selectedTrip.id ? updatedTrip : t));
+
+          toast.success('Activity deleted successfully!');
+        } else {
+          toast.error(responseData.message || 'Failed to delete activity');
+        }
+      } else {
+        toast.error('Failed to delete activity');
+      }
+    } catch (error) {
+      console.error('Error deleting activity:', error);
+      toast.error('An error occurred while deleting activity.');
+    }
   };
 
   useEffect(() => {
@@ -1063,105 +1150,328 @@ const MyTripsPage = () => {
               )}
 
               {activeTab === 'itinerary' && (
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-xl font-semibold text-foreground">Trip Itinerary</h3>
-                    <Button>
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-3 duration-300">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-foreground">Trip Itinerary</h3>
+                      <p className="text-sm text-muted-foreground mt-1">Plan and manage your daily activities and events.</p>
+                    </div>
+                    <Button onClick={() => setIsAddActivityModalOpen(true)} className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90">
                       <Plus size={16} className="mr-2" />
                       Add Activity
                     </Button>
                   </div>
-                  <div className="itinerary-container space-y-4">
-                    {itineraryItems.map((item) => (
-                      <Card key={item.id} className="itinerary-item bg-card border-border">
-                        <CardContent className="p-4 flex items-center gap-4">
-                          <div className="p-3 bg-muted rounded-full text-foreground">
-                            {getTypeIcon(item.type)}
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex justify-between">
-                              <h4 className="font-semibold text-foreground">{item.title}</h4>
-                              <span className="text-sm text-muted-foreground">{item.time}</span>
-                            </div>
-                            <p className="text-sm text-muted-foreground">{item.description}</p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+
+                  {/* Toggle subtabs if AI suggested itinerary exists */}
+                  {selectedTrip?.suggestedItinerary && selectedTrip.suggestedItinerary.length > 0 && (
+                    <div className="flex space-x-2 bg-muted/30 p-1.5 rounded-xl max-w-md border border-white/5">
+                      <button
+                        onClick={() => setItinerarySubTab('custom')}
+                        className={`flex-1 py-2.5 px-4 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                          itinerarySubTab === 'custom'
+                            ? 'bg-card text-white shadow-sm border border-white/5'
+                            : 'text-muted-foreground hover:text-white'
+                        }`}
+                      >
+                        My Custom Itinerary
+                      </button>
+                      <button
+                        onClick={() => setItinerarySubTab('ai')}
+                        className={`flex-1 py-2.5 px-4 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                          itinerarySubTab === 'ai'
+                            ? 'bg-card text-white shadow-sm border border-white/5'
+                            : 'text-muted-foreground hover:text-white'
+                        }`}
+                      >
+                        ✨ AI Suggested Guide
+                      </button>
+                    </div>
+                  )}
+
+                  {itinerarySubTab === 'custom' ? (
+                    <div className="itinerary-container space-y-4">
+                      {itineraryItems && itineraryItems.length > 0 ? (
+                        itineraryItems.map((item) => (
+                          <Card key={item.id} className="itinerary-item bg-card border border-border hover:border-primary/30 transition-all duration-200">
+                            <CardContent className="p-4 flex items-center gap-4">
+                              <div className="p-3 bg-muted rounded-xl text-foreground">
+                                {getTypeIcon(item.type)}
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <h4 className="font-semibold text-foreground">{item.title}</h4>
+                                    <p className="text-xs text-muted-foreground mt-0.5">Day {item.day} • {item.time}</p>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {item.cost > 0 && <span className="text-xs bg-muted py-1 px-2.5 rounded-full font-medium text-foreground">₹{item.cost}</span>}
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="text-red-500 hover:text-red-700 hover:bg-red-500/10 p-1.5 h-auto rounded-lg transition-colors"
+                                      onClick={() => handleDeleteActivity(item.id)}
+                                    >
+                                      <Trash2 size={15} />
+                                    </Button>
+                                  </div>
+                                </div>
+                                {item.description && <p className="text-sm text-muted-foreground mt-2">{item.description}</p>}
+                                {item.location && <p className="text-xs text-muted-foreground/80 mt-1 flex items-center gap-1"><MapPin size={12} /> {item.location}</p>}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))
+                      ) : (
+                        <div className="text-center py-12 border border-dashed border-border rounded-2xl bg-card/10">
+                          <Compass className="mx-auto h-12 w-12 text-muted-foreground mb-4 opacity-50" />
+                          <h4 className="font-semibold text-foreground mb-1">Your Custom Schedule is Empty</h4>
+                          <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-4">Click "Add Activity" to plan your flights, check-ins, dining spots, and excursions.</p>
+                          <Button onClick={() => setIsAddActivityModalOpen(true)} variant="outline" className="border-border">
+                            <Plus size={16} className="mr-2" /> Add Your First Activity
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {selectedTrip.suggestedItinerary.map((dayPlan) => (
+                        <Card key={dayPlan.day} className="bg-card border-border overflow-hidden">
+                          <CardHeader className="pb-3 bg-muted/10 border-b border-border">
+                            <CardTitle className="text-lg font-bold text-primary">Day {dayPlan.day}: {dayPlan.title || 'Sightseeing'}</CardTitle>
+                            {dayPlan.description && <CardDescription className="text-xs mt-1">{dayPlan.description}</CardDescription>}
+                          </CardHeader>
+                          <CardContent className="space-y-4 pt-4">
+                            {dayPlan.morning && (
+                              <div className="border-l-2 border-primary/40 pl-4 py-0.5">
+                                <span className="text-[10px] font-bold text-primary tracking-wider uppercase">Morning</span>
+                                <p className="text-foreground text-sm mt-0.5">{dayPlan.morning}</p>
+                              </div>
+                            )}
+                            {dayPlan.afternoon && (
+                              <div className="border-l-2 border-primary/40 pl-4 py-0.5">
+                                <span className="text-[10px] font-bold text-primary tracking-wider uppercase">Afternoon</span>
+                                <p className="text-foreground text-sm mt-0.5">{dayPlan.afternoon}</p>
+                              </div>
+                            )}
+                            {dayPlan.evening && (
+                              <div className="border-l-2 border-primary/40 pl-4 py-0.5">
+                                <span className="text-[10px] font-bold text-primary tracking-wider uppercase">Evening</span>
+                                <p className="text-foreground text-sm mt-0.5">{dayPlan.evening}</p>
+                              </div>
+                            )}
+
+                            {dayPlan.activities && dayPlan.activities.length > 0 && (
+                              <div className="mt-4 pt-4 border-t border-border/80">
+                                <h5 className="text-xs font-bold text-foreground mb-3 uppercase tracking-wider">Planned Excursions</h5>
+                                <div className="space-y-3">
+                                  {dayPlan.activities.map((act, i) => (
+                                    <div key={i} className="flex justify-between items-start text-sm bg-muted/20 p-3 rounded-xl border border-white/5">
+                                      <div>
+                                        <p className="font-semibold text-foreground">{act.name}</p>
+                                        <p className="text-xs text-muted-foreground mt-0.5">{act.description}</p>
+                                      </div>
+                                      <div className="text-right flex flex-col items-end gap-1.5">
+                                        <Badge variant="secondary" className="text-[10px] py-0.5 px-2 bg-muted/65 text-foreground">{act.time}</Badge>
+                                        {act.cost && <p className="text-xs font-semibold text-muted-foreground">{act.cost}</p>}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
               {activeTab === 'documents' && (
-                <div className="space-y-6">
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-3 duration-300">
                   <div className="flex justify-between items-center">
-                    <h3 className="text-xl font-semibold text-foreground">Trip Documents</h3>
-                    <Button onClick={() => setShowAddForm(true)}>
-                      <Upload size={16} className="mr-2" />
-                      Upload Document
+                    <div>
+                      <h3 className="text-xl font-bold text-foreground">Trip Documents</h3>
+                      <p className="text-sm text-muted-foreground mt-1">Keep copies of your travel credentials, tickets, and bookings secure.</p>
+                    </div>
+                    <Button onClick={() => setShowAddForm(prev => !prev)} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                      {showAddForm ? 'Cancel' : 'Upload Document'}
                     </Button>
                   </div>
 
-                  {/* Document Categories */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {documents.map(doc => (
-                      <Card key={doc.id} className="bg-card border-border">
-                        <CardContent className="p-4 flex justify-between items-center">
-                          <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${getDocumentTypeColor(doc.type).split(' ')[0]}`}>
-                              <FileText className={getDocumentTypeColor(doc.type).split(' ')[1]} size={20} />
-                            </div>
-                            <div>
-                              <p className="font-medium text-foreground">{doc.name}</p>
-                              <p className="text-xs text-muted-foreground">{doc.size} • {new Date(doc.uploadDate).toLocaleDateString()}</p>
-                            </div>
-                          </div>
-                          <Button variant="ghost" size="sm">
-                            <Download size={16} />
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-
                   {showAddForm && (
-                    <Card className="bg-card border-border mt-6">
+                    <Card className="bg-card border-border mt-6 overflow-hidden">
                       <CardHeader>
-                        <CardTitle className="text-foreground">Upload New Document</CardTitle>
+                        <CardTitle className="text-lg text-foreground font-semibold">Upload New Document</CardTitle>
+                        <CardDescription className="text-xs">Add metadata and store document securely.</CardDescription>
                       </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div
-                            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${dragActive ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50'}`}
-                            onDragEnter={handleDrag}
-                            onDragLeave={handleDrag}
-                            onDragOver={handleDrag}
-                            onDrop={handleDrop}
-                            onClick={() => document.getElementById('file-upload').click()}
-                          >
-                            <input
-                              id="file-upload"
-                              type="file"
-                              className="hidden"
-                              onChange={(e) => e.target.files[0] && handleFileSelect(e.target.files[0])}
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="grid gap-2">
+                            <Label htmlFor="doc-name" className="text-white">Document Name</Label>
+                            <Input
+                              id="doc-name"
+                              value={documentForm.name}
+                              onChange={(e) => setDocumentForm({ ...documentForm, name: e.target.value })}
+                              placeholder="e.g. Passport, Boarding Pass, Hotel Booking"
+                              className="bg-background/50 border-white/10 text-white"
                             />
-                            <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                            <p className="text-foreground font-medium">Click to upload or drag and drop</p>
-                            <p className="text-sm text-muted-foreground mt-1">PDF, JPG, PNG up to 10MB</p>
                           </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="doc-type" className="text-white">Document Type</Label>
+                            <select
+                              id="doc-type"
+                              value={documentForm.type}
+                              onChange={(e) => setDocumentForm({ ...documentForm, type: e.target.value })}
+                              className="flex h-10 w-full rounded-md border border-white/10 bg-background/50 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-card"
+                            >
+                              <option value="passport" className="bg-card text-white">Passport</option>
+                              <option value="visa" className="bg-card text-white">Visa</option>
+                              <option value="boarding_pass" className="bg-card text-white">Boarding Pass</option>
+                              <option value="hotel_booking" className="bg-card text-white">Hotel Booking</option>
+                              <option value="id" className="bg-card text-white">Identity Card</option>
+                              <option value="other" className="bg-card text-white">Other Document</option>
+                            </select>
+                          </div>
+                        </div>
 
-                          {selectedFile && (
-                            <div className="flex items-center justify-between bg-muted p-3 rounded-lg">
-                              <span className="text-foreground">{selectedFile.name}</span>
-                              <Button size="sm" onClick={handleUpload} disabled={uploadingDocument}>
-                                {uploadingDocument ? 'Uploading...' : 'Upload'}
-                              </Button>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="grid gap-2">
+                            <Label htmlFor="doc-expiry" className="text-white">Expiry Date</Label>
+                            <Input
+                              id="doc-expiry"
+                              type="date"
+                              value={documentForm.expiryDate}
+                              onChange={(e) => setDocumentForm({ ...documentForm, expiryDate: e.target.value })}
+                              className="bg-background/50 border-white/10 text-white"
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="doc-category" className="text-white">Category</Label>
+                            <select
+                              id="doc-category"
+                              value={documentForm.category}
+                              onChange={(e) => setDocumentForm({ ...documentForm, category: e.target.value })}
+                              className="flex h-10 w-full rounded-md border border-white/10 bg-background/50 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                            >
+                              <option value="identity" className="bg-card text-white">Identity</option>
+                              <option value="travel" className="bg-card text-white">Travel</option>
+                              <option value="medical" className="bg-card text-white">Medical</option>
+                              <option value="other" className="bg-card text-white">Other</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="grid gap-2">
+                          <Label htmlFor="doc-notes" className="text-white">Notes</Label>
+                          <Textarea
+                            id="doc-notes"
+                            value={documentForm.notes}
+                            onChange={(e) => setDocumentForm({ ...documentForm, notes: e.target.value })}
+                            placeholder="Add brief details about the document..."
+                            className="bg-background/50 border-white/10 text-white min-h-[60px]"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between rounded-lg border border-white/10 p-3 bg-white/5">
+                          <div className="space-y-0.5">
+                            <Label className="text-sm text-white">Keep Private</Label>
+                            <p className="text-xs text-muted-foreground">Encrypt the file link and hide from public profiles.</p>
+                          </div>
+                          <Switch
+                            checked={documentForm.isPrivate}
+                            onCheckedChange={(checked) => setDocumentForm({ ...documentForm, isPrivate: checked })}
+                          />
+                        </div>
+
+                        <div
+                          className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${dragActive ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50'}`}
+                          onDragEnter={handleDrag}
+                          onDragLeave={handleDrag}
+                          onDragOver={handleDrag}
+                          onDrop={handleDrop}
+                          onClick={() => document.getElementById('file-upload').click()}
+                        >
+                          <input
+                            id="file-upload"
+                            type="file"
+                            className="hidden"
+                            onChange={(e) => e.target.files[0] && handleFileSelect(e.target.files[0])}
+                          />
+                          <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                          {selectedFile ? (
+                            <div>
+                              <p className="text-foreground font-semibold text-sm">Selected File: {selectedFile.name}</p>
+                              <p className="text-xs text-muted-foreground mt-1">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                            </div>
+                          ) : (
+                            <div>
+                              <p className="text-foreground font-medium">Click to select or drag and drop a file</p>
+                              <p className="text-sm text-muted-foreground mt-1">PDF, JPG, PNG up to 10MB</p>
                             </div>
                           )}
                         </div>
+
+                        {selectedFile && (
+                          <div className="flex justify-end gap-3 mt-4">
+                            <Button variant="ghost" onClick={() => setSelectedFile(null)} disabled={uploadingDocument}>
+                              Clear File
+                            </Button>
+                            <Button onClick={handleUpload} disabled={uploadingDocument} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                              {uploadingDocument ? 'Uploading...' : 'Save & Upload'}
+                            </Button>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   )}
+
+                  {/* Document Categories */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {documents && documents.length > 0 ? (
+                      documents.map(doc => (
+                        <Card key={doc.id} className="bg-card border-border hover:border-primary/20 transition-all duration-200">
+                          <CardContent className="p-4 flex justify-between items-center gap-4">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className={`p-3 rounded-xl ${getDocumentTypeColor(doc.type).split(' ')[0]}`}>
+                                <FileText className={getDocumentTypeColor(doc.type).split(' ')[1]} size={20} />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-semibold text-foreground truncate">{doc.name}</p>
+                                <p className="text-xs text-muted-foreground truncate">{doc.size} • {new Date(doc.uploadDate || new Date()).toLocaleDateString()}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {doc.url && doc.url !== '#' && (
+                                <a href={doc.url} target="_blank" rel="noopener noreferrer" download>
+                                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white p-1.5 h-auto rounded-lg">
+                                    <Download size={16} />
+                                  </Button>
+                                </a>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-500 hover:text-red-700 hover:bg-red-500/10 p-1.5 h-auto rounded-lg"
+                                onClick={() => handleDeleteDocument(doc.id)}
+                              >
+                                <Trash2 size={15} />
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                    ) : (
+                      <div className="col-span-1 md:col-span-2 text-center py-12 border border-dashed border-border rounded-2xl bg-card/10">
+                        <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4 opacity-50" />
+                        <h4 className="font-semibold text-foreground mb-1">No Documents Stored</h4>
+                        <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-4">Store visas, identity cards, reservation PDF files, and receipts securely.</p>
+                        <Button onClick={() => setShowAddForm(true)} variant="outline" className="border-border">
+                          <Plus size={16} className="mr-2" /> Upload First Document
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -1246,6 +1556,129 @@ const MyTripsPage = () => {
               Save Changes
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Activity Modal */}
+      <Dialog open={isAddActivityModalOpen} onOpenChange={setIsAddActivityModalOpen}>
+        <DialogContent className="sm:max-w-[450px] bg-card border border-white/10 text-white shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Add New Itinerary Activity</DialogTitle>
+            <DialogDescription className="text-muted-foreground text-sm">
+              Add a custom flight, check-in, restaurant, activity, or transport to your schedule.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleAddActivity} className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="act-day" className="text-white">Day of Trip</Label>
+                <Input
+                  id="act-day"
+                  type="number"
+                  min="1"
+                  max={selectedTrip?.totalDays || 30}
+                  value={activityForm.day}
+                  onChange={(e) => setActivityForm({ ...activityForm, day: Number(e.target.value) })}
+                  className="bg-background/50 border-white/10 text-white"
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="act-time" className="text-white">Time</Label>
+                <Input
+                  id="act-time"
+                  type="time"
+                  value={activityForm.time}
+                  onChange={(e) => setActivityForm({ ...activityForm, time: e.target.value })}
+                  className="bg-background/50 border-white/10 text-white"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="act-type" className="text-white">Activity Type</Label>
+              <select
+                id="act-type"
+                value={activityForm.type}
+                onChange={(e) => setActivityForm({ ...activityForm, type: e.target.value })}
+                className="flex h-10 w-full rounded-md border border-white/10 bg-background/50 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-card"
+                required
+              >
+                <option value="activity" className="bg-card text-white">Activity / Sightseeing</option>
+                <option value="flight" className="bg-card text-white">Flight</option>
+                <option value="hotel" className="bg-card text-white">Hotel / Check-in</option>
+                <option value="restaurant" className="bg-card text-white">Restaurant / Dining</option>
+                <option value="transport" className="bg-card text-white">Transport / Transfer</option>
+              </select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="act-title" className="text-white">Title</Label>
+              <Input
+                id="act-title"
+                value={activityForm.title}
+                onChange={(e) => setActivityForm({ ...activityForm, title: e.target.value })}
+                placeholder="e.g. Check-in, Breakfast at Cafe, Eiffel Tower Visit"
+                className="bg-background/50 border-white/10 text-white"
+                required
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="act-description" className="text-white">Description</Label>
+              <Textarea
+                id="act-description"
+                value={activityForm.description}
+                onChange={(e) => setActivityForm({ ...activityForm, description: e.target.value })}
+                placeholder="Details about what you will do..."
+                className="bg-background/50 border-white/10 text-white min-h-[60px]"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="act-location" className="text-white">Location / Address</Label>
+              <Input
+                id="act-location"
+                value={activityForm.location}
+                onChange={(e) => setActivityForm({ ...activityForm, location: e.target.value })}
+                placeholder="e.g. Shibuya Station, Tokyo"
+                className="bg-background/50 border-white/10 text-white"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="act-duration" className="text-white">Duration</Label>
+                <Input
+                  id="act-duration"
+                  value={activityForm.duration}
+                  onChange={(e) => setActivityForm({ ...activityForm, duration: e.target.value })}
+                  placeholder="e.g. 2h, 45m"
+                  className="bg-background/50 border-white/10 text-white"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="act-cost" className="text-white">Estimated Cost (₹)</Label>
+                <Input
+                  id="act-cost"
+                  type="number"
+                  value={activityForm.cost}
+                  onChange={(e) => setActivityForm({ ...activityForm, cost: Number(e.target.value) })}
+                  className="bg-background/50 border-white/10 text-white"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="pt-2">
+              <Button type="button" variant="outline" onClick={() => setIsAddActivityModalOpen(false)} className="border-white/10 text-white hover:bg-white/10">
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                Add Activity
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

@@ -47,7 +47,7 @@ export const updatePlan = async (
         }
 
         // 2. Authorization: Check if the plan belongs to the user
-        if (plan.user.toString() !== (req as any).user._id) {
+        if (plan.userId.toString() !== (req as any).user._id.toString()) {
             return next(
                 createError(
                     403,

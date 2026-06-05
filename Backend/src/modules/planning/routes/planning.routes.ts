@@ -11,6 +11,11 @@ import { createPlan } from '../controllers/newPlanController';
 import { getMyPlans } from '../controllers/getMyPlansController';
 import { updatePlan } from '../controllers/updatePlanController';
 import { matchTravelers } from '../controllers/matchTravelers.controller';
+import { addActivity } from '../controllers/addActivityController';
+import { deleteActivity } from '../controllers/deleteActivityController';
+import { uploadDocument } from '../controllers/uploadDocumentController';
+import { deleteDocument } from '../controllers/deleteDocumentController';
+import { upload } from '../../../shared/middleware/multer';
 import protect from '../../../shared/middleware/firebaseAuthMiddleware';
 import { cacheMiddleware } from '../../../shared/middleware/cacheMiddleware';
 import { CACHE_CONFIG } from '../../../shared/config/cache.config';
@@ -84,5 +89,29 @@ route.delete("/:id", protect, deletePlanById);
  * @desc Match travelers for a specific travel plan
  */
 route.get("/travel/match/:planId", protect, matchTravelers);
+
+/**
+ * @route POST /api/v1/plans/:id/activities
+ * @desc Add an activity (itinerary item) to a plan.
+ */
+route.post("/:id/activities", protect, addActivity);
+
+/**
+ * @route DELETE /api/v1/plans/:id/activities/:activityId
+ * @desc Delete an activity (itinerary item) from a plan.
+ */
+route.delete("/:id/activities/:activityId", protect, deleteActivity);
+
+/**
+ * @route POST /api/v1/plans/:id/documents
+ * @desc Upload a travel document to a plan.
+ */
+route.post("/:id/documents", protect, upload.single('file'), uploadDocument);
+
+/**
+ * @route DELETE /api/v1/plans/:id/documents/:documentId
+ * @desc Delete a travel document from a plan.
+ */
+route.delete("/:id/documents/:documentId", protect, deleteDocument);
 
 export default route;
