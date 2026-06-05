@@ -77,8 +77,7 @@ const AccessibilityPage = lazy(() => import('./features/legal/pages/Accessibilit
 // Support
 const HelpPage = lazy(() => import('./features/support/pages/HelpPage'));
 
-// Modules
-const ARPreviewPage = lazy(() => import('./modules/arPreview/ARPreviewPage'));
+
 
 // Shared
 const PageNotFound = lazy(() => import('./features/shared/pages/PageNotFound'));
@@ -177,7 +176,7 @@ const AppContent = () => {
               <Route path="/accessibility" element={<PageTransition><AccessibilityPage /></PageTransition>} />
               <Route path="/contact" element={<PageTransition><ContactPage /></PageTransition>} />
               <Route path="/shared-plan/:id" element={<PageTransition><SharedPlanPage /></PageTransition>} />
-              <Route path="/ar-preview" element={<PageTransition><ARPreviewPage /></PageTransition>} />
+
 
               {/* ── Protected Routes ── */}
               <Route path="/profile" element={

@@ -523,3 +523,337 @@ export const sendExpenseReportEmail = async (req: Request, res: Response) => {
         });
     }
 };
+
+/**
+ * Fetch all expense items where the logged in user is either payer or participant
+ */
+export const getUserExpenses = async (req: Request, res: Response) => {
+    try {
+        const authUserId = (req as any).user?._id;
+        
+        const items = await ExpenseItem.find({
+            $or: [
+                { paidBy: authUserId },
+                { 'splitDetails.userId': authUserId }
+            ]
+        })
+        .populate('paidBy', 'username fullname profilepicture')
+        .populate('splitDetails.userId', 'username fullname profilepicture')
+        .sort({ createdAt: -1 });
+
+        return res.status(StatusCodes.OK).json({
+            status: 'Success',
+            data: items
+        });
+    } catch (error) {
+        logger.error('[getUserExpenses Error]:', error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            status: 'Failed',
+            message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR)
+        });
+    }
+};
+
+/**
+ * Update an existing expense item
+ */
+export const updateExpense = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const {
+            amount,
+            description,
+            splitType,
+            participants,
+            splitDetails: inputSplitDetails
+        } = req.body;
+        
+        const authUserId = (req as any).user?._id;
+
+        const expenseItem = await ExpenseItem.findById(id);
+        if (!expenseItem) {
+            return res.status(StatusCodes.NOT_FOUND).json({
+                status: 'Failed',
+                message: 'Expense item not found'
+            });
+        }
+
+        const groupExpense = await GroupExpense.findById(expenseItem.expenseId);
+        if (!groupExpense) {
+            return res.status(StatusCodes.NOT_FOUND).json({
+                status: 'Failed',
+                message: 'Associated Group Expense container not found'
+            });
+        }
+
+        const groupId = groupExpense.groupId.toString();
+
+        const group = await Group.findById(groupId);
+        if (!group) {
+            return res.status(StatusCodes.NOT_FOUND).json({
+                status: 'Failed',
+                message: 'Group not found'
+            });
+        }
+
+        const isMember = group.members.some(mId => mId.toString() === authUserId);
+        if (!isMember) {
+            return res.status(StatusCodes.FORBIDDEN).json({
+                status: 'Failed',
+                message: 'Access denied. You are not a member of this travel group.'
+            });
+        }
+
+        const oldAmount = expenseItem.amount;
+        let finalSplitDetails = expenseItem.splitDetails;
+        let newAmount = expenseItem.amount;
+
+        if (amount !== undefined) {
+            newAmount = parseFloat(Number(amount).toFixed(2));
+            expenseItem.amount = newAmount;
+        }
+
+        const currentSplitType = splitType || expenseItem.splitType;
+        const currentParticipants = participants || expenseItem.splitDetails.map(d => d.userId.toString());
+
+        if (splitType !== undefined) {
+            expenseItem.splitType = splitType;
+        }
+
+        if (currentSplitType === 'equal') {
+            const participantCount = currentParticipants.length;
+            const equalAmount = parseFloat((newAmount / participantCount).toFixed(2));
+            const residue = parseFloat((newAmount - (equalAmount * participantCount)).toFixed(2));
+
+            finalSplitDetails = currentParticipants.map((pId: string, idx: number) => {
+                const isLast = idx === participantCount - 1;
+                return {
+                    userId: new mongoose.Types.ObjectId(pId),
+                    amount: isLast ? parseFloat((equalAmount + residue).toFixed(2)) : equalAmount
+                };
+            }) as any;
+        } else if (currentSplitType === 'custom') {
+            if (!inputSplitDetails || !Array.isArray(inputSplitDetails) || inputSplitDetails.length === 0) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    status: 'Failed',
+                    message: 'Split details are required for custom split type.'
+                });
+            }
+
+            const sumOfSplits = inputSplitDetails.reduce((sum, item) => sum + (item.amount || 0), 0);
+            if (Math.abs(sumOfSplits - newAmount) > 0.02) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    status: 'Failed',
+                    message: `Sum of custom splits (${sumOfSplits}) must equal the total amount (${newAmount}).`
+                });
+            }
+
+            finalSplitDetails = inputSplitDetails.map(item => ({
+                userId: new mongoose.Types.ObjectId(item.userId),
+                amount: parseFloat(Number(item.amount).toFixed(2))
+            })) as any;
+        }
+
+        expenseItem.splitDetails = finalSplitDetails;
+        if (description !== undefined) {
+            expenseItem.description = description;
+        }
+
+        await expenseItem.save();
+
+        groupExpense.totalAmount = parseFloat((groupExpense.totalAmount - oldAmount + newAmount).toFixed(2));
+        
+        const currentParticipantsSet = groupExpense.participants.map(p => p.toString());
+        currentParticipants.forEach((pId: string) => {
+            if (!currentParticipantsSet.includes(pId)) {
+                groupExpense?.participants.push(new mongoose.Types.ObjectId(pId));
+            }
+        });
+
+        await groupExpense.save();
+
+        await recalculateGroupBalances(groupId);
+        const settlements = await calculateSettlements(groupId);
+        await invalidateGroupExpenseCache(groupId);
+
+        const populatedExpense = await ExpenseItem.findById(expenseItem._id)
+            .populate('paidBy', 'username fullname profilepicture')
+            .populate('splitDetails.userId', 'username fullname profilepicture');
+
+        try {
+            const io = getIO();
+            if (io) {
+                io.to(`group:${groupId}`).emit('expense:updated', populatedExpense);
+            }
+        } catch (socketError) {
+            logger.warn('Socket broadcast skipped.');
+        }
+
+        return res.status(StatusCodes.OK).json({
+            status: 'Success',
+            message: 'Expense item updated and group balances recalculated.',
+            data: populatedExpense
+        });
+
+    } catch (error) {
+        logger.error('[updateExpense Error]:', error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            status: 'Failed',
+            message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR)
+        });
+    }
+};
+
+/**
+ * Delete an existing expense item
+ */
+export const deleteExpense = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const authUserId = (req as any).user?._id;
+
+        const expenseItem = await ExpenseItem.findById(id);
+        if (!expenseItem) {
+            return res.status(StatusCodes.NOT_FOUND).json({
+                status: 'Failed',
+                message: 'Expense item not found'
+            });
+        }
+
+        const groupExpense = await GroupExpense.findById(expenseItem.expenseId);
+        if (!groupExpense) {
+            return res.status(StatusCodes.NOT_FOUND).json({
+                status: 'Failed',
+                message: 'Associated Group Expense container not found'
+            });
+        }
+
+        const groupId = groupExpense.groupId.toString();
+
+        const group = await Group.findById(groupId);
+        if (!group) {
+            return res.status(StatusCodes.NOT_FOUND).json({
+                status: 'Failed',
+                message: 'Group not found'
+            });
+        }
+
+        const isMember = group.members.some(mId => mId.toString() === authUserId);
+        if (!isMember) {
+            return res.status(StatusCodes.FORBIDDEN).json({
+                status: 'Failed',
+                message: 'Access denied. You are not a member of this travel group.'
+            });
+        }
+
+        const amount = expenseItem.amount;
+
+        await ExpenseItem.findByIdAndDelete(id);
+
+        groupExpense.totalAmount = Math.max(0, parseFloat((groupExpense.totalAmount - amount).toFixed(2)));
+        await groupExpense.save();
+
+        await recalculateGroupBalances(groupId);
+        const settlements = await calculateSettlements(groupId);
+        await invalidateGroupExpenseCache(groupId);
+
+        try {
+            const io = getIO();
+            if (io) {
+                io.to(`group:${groupId}`).emit('expense:deleted', id);
+            }
+        } catch (socketError) {
+            logger.warn('Socket broadcast skipped.');
+        }
+
+        return res.status(StatusCodes.OK).json({
+            status: 'Success',
+            message: 'Expense item deleted and group balances recalculated.'
+        });
+
+    } catch (error) {
+        logger.error('[deleteExpense Error]:', error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            status: 'Failed',
+            message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR)
+        });
+    }
+};
+
+/**
+ * Fetch expense splitting graph data for a group
+ */
+export const getExpenseGraph = async (req: Request, res: Response) => {
+    try {
+        const { groupId } = req.params;
+        const authUserId = (req as any).user?._id;
+
+        // Verify membership
+        const group = await Group.findById(groupId).populate('members', 'username fullname profilepicture');
+        if (!group) {
+            return res.status(StatusCodes.NOT_FOUND).json({
+                status: 'Failed',
+                message: 'Group not found'
+            });
+        }
+
+        const isMember = group.members.some((m: any) => m._id.toString() === authUserId.toString());
+        if (!isMember) {
+            return res.status(StatusCodes.FORBIDDEN).json({
+                status: 'Failed',
+                message: 'Access denied. You are not a member of this travel group.'
+            });
+        }
+
+        // Recalculate balances to ensure freshness
+        const balances = await recalculateGroupBalances(groupId);
+        const settlements = await calculateSettlements(groupId);
+
+        // Map nodes
+        const nodesMap = new Map<string, any>();
+        
+        // Initialize nodes for all group members
+        group.members.forEach((member: any) => {
+            nodesMap.set(member._id.toString(), {
+                id: member._id.toString(),
+                name: member.fullname || member.username,
+                username: member.username,
+                profilepicture: member.profilepicture || 'https://via.placeholder.com/150',
+                balance: 0
+            });
+        });
+
+        // Update balances for members present in UserBalances
+        balances.forEach((b: any) => {
+            const userIdStr = b.userId?._id?.toString() || b.userId?.toString();
+            if (nodesMap.has(userIdStr)) {
+                const node = nodesMap.get(userIdStr);
+                node.balance = b.netBalance;
+            }
+        });
+
+        const nodes = Array.from(nodesMap.values());
+
+        // Map edges
+        const edges = settlements.map(s => ({
+            from: s.from._id,
+            to: s.to._id,
+            amount: s.amount
+        }));
+
+        return res.status(StatusCodes.OK).json({
+            status: 'Success',
+            data: {
+                nodes,
+                edges
+            }
+        });
+
+    } catch (error) {
+        logger.error('[getExpenseGraph Error]:', error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            status: 'Failed',
+            message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR)
+        });
+    }
+};

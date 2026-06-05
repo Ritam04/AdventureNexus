@@ -81,6 +81,7 @@ redis.on('connect', (): void => {
 // Serve static files from 'public' directory
 app.use(express.static('public')); // Checks 'public' first
 app.use(express.static(path.resolve('./Public'))); // Fallback/Alternative
+app.use(express.static(path.join(__dirname, 'Public'))); // Serve uploads from Backend/src/Public
 
 // Security Headers
 app.use(
@@ -210,9 +211,7 @@ app.use('/api/v1/trust', trustRoutes);
 import expenseRoutes from './modules/expenses/routes/expense.routes';
 app.use('/api/v1/expenses', expenseRoutes);
 
-// AR Travel Preview System Routes
-import arRoutes from './modules/ar/ar.routes';
-app.use('/api/v1/ar', arRoutes);
+
 
 
 

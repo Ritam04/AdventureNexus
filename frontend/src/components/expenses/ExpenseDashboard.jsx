@@ -20,6 +20,7 @@ import ExpenseList from './ExpenseList';
 import BalanceSummary from './BalanceSummary';
 import SettlementCard from './SettlementCard';
 import toast from 'react-hot-toast';
+import ExpenseGraph from './ExpenseGraph';
 import {
     ResponsiveContainer,
     PieChart,
@@ -50,6 +51,9 @@ export default function ExpenseDashboard({ groupId, members }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isSendingEmail, setIsSendingEmail] = useState(false);
+    const [editingExpense, setEditingExpense] = useState(null);
+    const [vizMode, setVizMode] = useState('graph');
+    const [token, setToken] = useState(null);
 
     const handleSendEmailReport = async () => {
         if (expenses.length === 0) {
@@ -77,10 +81,12 @@ export default function ExpenseDashboard({ groupId, members }) {
 
     // Fetch initial expenses and summary details
     const fetchData = async () => {
+        setIsLoading(true);
         try {
-            const token = await getToken();
-            const expensesRes = await expenseService.getGroupExpenses(groupId, token);
-            const summaryRes = await expenseService.getExpenseSummary(groupId, token);
+            const activeToken = await getToken();
+            setToken(activeToken);
+            const expensesRes = await expenseService.getGroupExpenses(groupId, activeToken);
+            const summaryRes = await expenseService.getExpenseSummary(groupId, activeToken);
 
             if (expensesRes.status === 'Success') {
                 setExpenses(expensesRes.data);
@@ -115,7 +121,18 @@ export default function ExpenseDashboard({ groupId, members }) {
                     if (prev.some(e => e._id === newExpense._id)) return prev;
                     return [newExpense, ...prev];
                 });
-                // Trigger summary recalculation fetch
+                fetchData();
+            };
+
+            // Expense Updated Event
+            const handleExpenseUpdated = (updatedExpense) => {
+                setExpenses(prev => prev.map(e => e._id === updatedExpense._id ? updatedExpense : e));
+                fetchData();
+            };
+
+            // Expense Deleted Event
+            const handleExpenseDeleted = (deletedId) => {
+                setExpenses(prev => prev.filter(e => e._id !== deletedId));
                 fetchData();
             };
 
@@ -129,10 +146,14 @@ export default function ExpenseDashboard({ groupId, members }) {
             };
 
             socket.on('expense:added', handleExpenseAdded);
+            socket.on('expense:updated', handleExpenseUpdated);
+            socket.on('expense:deleted', handleExpenseDeleted);
             socket.on('balance:updated', handleBalanceUpdated);
 
             return () => {
                 socket.off('expense:added', handleExpenseAdded);
+                socket.off('expense:updated', handleExpenseUpdated);
+                socket.off('expense:deleted', handleExpenseDeleted);
                 socket.off('balance:updated', handleBalanceUpdated);
             };
         }
@@ -161,6 +182,49 @@ export default function ExpenseDashboard({ groupId, members }) {
             console.error('Error adding expense:', error);
             toast.error(error.response?.data?.message || 'Failed to add expense');
             throw error;
+        }
+    };
+
+    const handleEditExpense = (expense) => {
+        setEditingExpense(expense);
+        setIsModalOpen(true);
+    };
+
+    const handleUpdateExpenseSubmit = async (expenseId, expensePayload) => {
+        try {
+            const token = await getToken();
+            const res = await expenseService.updateExpense(expenseId, expensePayload, token);
+
+            if (res.status === 'Success') {
+                setExpenses(prev => prev.map(e => e._id === expenseId ? res.data : e));
+                const summaryRes = await expenseService.getExpenseSummary(groupId, token);
+                if (summaryRes.status === 'Success') {
+                    setSummary(summaryRes.data);
+                }
+            }
+        } catch (error) {
+            console.error('Error updating expense:', error);
+            toast.error(error.response?.data?.message || 'Failed to update expense');
+            throw error;
+        }
+    };
+
+    const handleDeleteExpense = async (expenseId) => {
+        try {
+            const token = await getToken();
+            const res = await expenseService.deleteExpense(expenseId, token);
+
+            if (res.status === 'Success') {
+                toast.success('Expense deleted successfully!');
+                setExpenses(prev => prev.filter(e => e._id !== expenseId));
+                const summaryRes = await expenseService.getExpenseSummary(groupId, token);
+                if (summaryRes.status === 'Success') {
+                    setSummary(summaryRes.data);
+                }
+            }
+        } catch (error) {
+            console.error('Error deleting expense:', error);
+            toast.error(error.response?.data?.message || 'Failed to delete expense');
         }
     };
 
@@ -300,83 +364,122 @@ export default function ExpenseDashboard({ groupId, members }) {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 {/* Left panel: Visualizations & Log List */}
                 <div className="lg:col-span-8 space-y-6 min-w-0">
-                    {/* Recharts Visualizations */}
+                    {/* Visualizations Toggle */}
                     {expenses.length > 0 && (
-                        <div className="bg-card/40 backdrop-blur-xl border border-white/5 p-6 rounded-[2rem] shadow-xl space-y-6">
-                            <div>
-                                <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-1 flex items-center gap-1.5">
-                                    <TrendingUp size={12} /> Spend Insights
-                                </h3>
-                                <p className="text-[10px] text-muted-foreground">Who paid what and current net standings.</p>
+                        <div className="space-y-4">
+                            <div className="flex items-center bg-card/25 border border-white/5 p-1 rounded-2xl max-w-[260px] mx-auto sm:mx-0">
+                                <button
+                                    onClick={() => setVizMode('graph')}
+                                    className={`flex-1 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${
+                                        vizMode === 'graph'
+                                            ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/20'
+                                            : 'text-muted-foreground hover:text-foreground'
+                                    }`}
+                                >
+                                    Debt Nexus
+                                </button>
+                                <button
+                                    onClick={() => setVizMode('charts')}
+                                    className={`flex-1 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${
+                                        vizMode === 'charts'
+                                            ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/20'
+                                            : 'text-muted-foreground hover:text-foreground'
+                                    }`}
+                                >
+                                    Spend Charts
+                                </button>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Pie Chart: Distribution of payments */}
-                                {pieData.length > 0 && (
-                                    <div className="space-y-2 bg-white/[0.01] border border-white/5 rounded-2xl p-4 flex flex-col justify-between">
-                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center">Payment Distribution</h4>
-                                        <div className="h-48">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <PieChart>
-                                                    <Pie
-                                                        data={pieData}
-                                                        cx="50%"
-                                                        cy="50%"
-                                                        innerRadius={40}
-                                                        outerRadius={65}
-                                                        paddingAngle={3}
-                                                        dataKey="value"
-                                                    >
-                                                        {pieData.map((entry, index) => (
-                                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                                        ))}
-                                                    </Pie>
-                                                    <Tooltip
-                                                        contentStyle={{
-                                                            backgroundColor: '#121214',
-                                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                            borderRadius: '12px'
-                                                        }}
-                                                    />
-                                                    <Legend wrapperStyle={{ fontSize: '9px' }} />
-                                                </PieChart>
-                                            </ResponsiveContainer>
-                                        </div>
+                            {vizMode === 'graph' ? (
+                                <ExpenseGraph
+                                    groupId={groupId}
+                                    token={token}
+                                    refreshTrigger={expenses}
+                                    currentUser={currentUser}
+                                    onAddExpense={handleAddExpenseSubmit}
+                                />
+                            ) : (
+                                <div className="bg-card/40 backdrop-blur-xl border border-white/5 p-6 rounded-[2rem] shadow-xl space-y-6">
+                                    <div>
+                                        <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-1 flex items-center gap-1.5">
+                                            <TrendingUp size={12} /> Spend Insights
+                                        </h3>
+                                        <p className="text-[10px] text-muted-foreground">Who paid what and current net standings.</p>
                                     </div>
-                                )}
 
-                                {/* Bar Chart: Net Balances */}
-                                {barData.length > 0 && (
-                                    <div className="space-y-2 bg-white/[0.01] border border-white/5 rounded-2xl p-4 flex flex-col justify-between">
-                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center">Net Balance Standings</h4>
-                                        <div className="h-48">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <BarChart data={barData} margin={{ top: 10, right: 10, left: -25, bottom: 5 }}>
-                                                    <XAxis dataKey="name" stroke="#888888" fontSize={9} tickLine={false} axisLine={false} />
-                                                    <YAxis stroke="#888888" fontSize={9} tickLine={false} axisLine={false} />
-                                                    <Tooltip
-                                                        contentStyle={{
-                                                            backgroundColor: '#121214',
-                                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                            borderRadius: '12px'
-                                                        }}
-                                                    />
-                                                    <Bar dataKey="balance" radius={[4, 4, 0, 0]}>
-                                                        {barData.map((entry, index) => {
-                                                            const color = entry.balance >= 0 ? '#10b981' : '#ec4899';
-                                                            return <Cell key={`cell-${index}`} fill={color} />;
-                                                        })}
-                                                    </Bar>
-                                                </BarChart>
-                                            </ResponsiveContainer>
-                                        </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {/* Pie Chart: Distribution of payments */}
+                                        {pieData.length > 0 && (
+                                            <div className="space-y-2 bg-white/[0.01] border border-white/5 rounded-2xl p-4 flex flex-col justify-between">
+                                                <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center">Payment Distribution</h4>
+                                                <div className="h-48">
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <PieChart>
+                                                            <Pie
+                                                                data={pieData}
+                                                                cx="50%"
+                                                                cy="50%"
+                                                                innerRadius={40}
+                                                                outerRadius={65}
+                                                                paddingAngle={3}
+                                                                dataKey="value"
+                                                            >
+                                                                {pieData.map((entry, index) => (
+                                                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                                                ))}
+                                                            </Pie>
+                                                            <Tooltip
+                                                                contentStyle={{
+                                                                    backgroundColor: '#121214',
+                                                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                                    borderRadius: '12px'
+                                                                }}
+                                                            />
+                                                            <Legend wrapperStyle={{ fontSize: '9px' }} />
+                                                        </PieChart>
+                                                    </ResponsiveContainer>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Bar Chart: Net Balances */}
+                                        {barData.length > 0 && (
+                                            <div className="space-y-2 bg-white/[0.01] border border-white/5 rounded-2xl p-4 flex flex-col justify-between">
+                                                <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center">Net Balance Standings</h4>
+                                                <div className="h-48">
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <BarChart data={barData} margin={{ top: 10, right: 10, left: -25, bottom: 5 }}>
+                                                            <XAxis dataKey="name" stroke="#888888" fontSize={9} tickLine={false} axisLine={false} />
+                                                            <YAxis stroke="#888888" fontSize={9} tickLine={false} axisLine={false} />
+                                                            <Tooltip
+                                                                contentStyle={{
+                                                                    backgroundColor: '#121214',
+                                                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                                    borderRadius: '12px'
+                                                                }}
+                                                            />
+                                                            <Bar dataKey="balance" radius={[4, 4, 0, 0]}>
+                                                                {barData.map((entry, index) => {
+                                                                    const color = entry.balance >= 0 ? '#10b981' : '#ec4899';
+                                                                    return <Cell key={`cell-${index}`} fill={color} />;
+                                                                })}
+                                                            </Bar>
+                                                        </BarChart>
+                                                    </ResponsiveContainer>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                            </div>
+                                </div>
+                            )}
                         </div>
                     )}
 
-                    <ExpenseList expenses={expenses} />
+                    <ExpenseList 
+                        expenses={expenses} 
+                        onEdit={handleEditExpense} 
+                        onDelete={handleDeleteExpense} 
+                    />
                 </div>
 
                 {/* Right panel: AI Insights & Standings */}
@@ -415,9 +518,14 @@ export default function ExpenseDashboard({ groupId, members }) {
             {/* Add Expense Modal */}
             <AddExpenseModal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setEditingExpense(null);
+                }}
                 members={members}
                 onAddExpense={handleAddExpenseSubmit}
+                onUpdateExpense={handleUpdateExpenseSubmit}
+                editingExpense={editingExpense}
             />
         </div>
     );

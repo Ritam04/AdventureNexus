@@ -54,13 +54,6 @@ function NavBar() {
             icon: Sparkles, 
             desc: 'Curated local activities and hidden gems.',
             color: 'text-pink-500'
-        },
-        { 
-            name: 'AR Preview', 
-            path: '/ar-preview', 
-            icon: Globe, 
-            desc: 'Preview landmarks in immersive simulated AR.',
-            color: 'text-indigo-400 animate-pulse'
         }
     ];
 

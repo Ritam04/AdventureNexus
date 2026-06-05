@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import toast from 'react-hot-toast';
 
-export default function AddExpenseModal({ isOpen, onClose, members, onAddExpense }) {
+export default function AddExpenseModal({ isOpen, onClose, members, onAddExpense, onUpdateExpense, editingExpense = null }) {
     const [description, setDescription] = useState('');
     const [amount, setAmount] = useState('');
     const [paidBy, setPaidBy] = useState('');
@@ -14,20 +14,39 @@ export default function AddExpenseModal({ isOpen, onClose, members, onAddExpense
     const [customAmounts, setCustomAmounts] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Reset form when modal opens
+    // Reset or pre-fill form when modal state changes
     useEffect(() => {
         if (isOpen) {
-            setDescription('');
-            setAmount('');
-            if (members && members.length > 0) {
-                const firstMemberId = members[0]._id || members[0];
-                setPaidBy(firstMemberId);
-                setSelectedParticipants(members.map(m => m._id || m));
+            if (editingExpense) {
+                setDescription(editingExpense.description || '');
+                setAmount(editingExpense.amount ? editingExpense.amount.toString() : '');
+                setPaidBy(editingExpense.paidBy?._id || editingExpense.paidBy || '');
+                setSplitType(editingExpense.splitType || 'equal');
+                
+                const participantIds = editingExpense.splitDetails?.map(d => d.userId?._id || d.userId) || [];
+                setSelectedParticipants(participantIds);
+                
+                const amountsObj = {};
+                editingExpense.splitDetails?.forEach(d => {
+                    const uId = d.userId?._id || d.userId;
+                    if (uId) {
+                        amountsObj[uId] = d.amount ? d.amount.toString() : '';
+                    }
+                });
+                setCustomAmounts(amountsObj);
+            } else {
+                setDescription('');
+                setAmount('');
+                if (members && members.length > 0) {
+                    const firstMemberId = members[0]._id || members[0];
+                    setPaidBy(firstMemberId);
+                    setSelectedParticipants(members.map(m => m._id || m));
+                }
+                setSplitType('equal');
+                setCustomAmounts({});
             }
-            setSplitType('equal');
-            setCustomAmounts({});
         }
-    }, [isOpen, members]);
+    }, [isOpen, members, editingExpense]);
 
     const handleParticipantToggle = (userId) => {
         if (selectedParticipants.includes(userId)) {
@@ -86,17 +105,29 @@ export default function AddExpenseModal({ isOpen, onClose, members, onAddExpense
 
         setIsSubmitting(true);
         try {
-            await onAddExpense({
-                paidBy,
-                amount: numAmount,
-                description: description.trim(),
-                splitType,
-                participants: selectedParticipants,
-                splitDetails
-            });
+            if (editingExpense) {
+                await onUpdateExpense(editingExpense._id, {
+                    paidBy,
+                    amount: numAmount,
+                    description: description.trim(),
+                    splitType,
+                    participants: selectedParticipants,
+                    splitDetails
+                });
+                toast.success('Expense updated successfully!');
+            } else {
+                await onAddExpense({
+                    paidBy,
+                    amount: numAmount,
+                    description: description.trim(),
+                    splitType,
+                    participants: selectedParticipants,
+                    splitDetails
+                });
+            }
             onClose();
         } catch (error) {
-            console.error('Failed to add expense:', error);
+            console.error('Failed to submit expense:', error);
         } finally {
             setIsSubmitting(false);
         }
@@ -131,8 +162,8 @@ export default function AddExpenseModal({ isOpen, onClose, members, onAddExpense
                         <DollarSign size={20} />
                     </div>
                     <div>
-                        <h2 className="text-xl font-black">Add Trip Expense</h2>
-                        <p className="text-xs text-muted-foreground">Log expenses and let AdventureNexus auto-split them.</p>
+                        <h2 className="text-xl font-black">{editingExpense ? 'Edit Trip Expense' : 'Add Trip Expense'}</h2>
+                        <p className="text-xs text-muted-foreground">{editingExpense ? 'Modify this expense item and recalculate splits.' : 'Log expenses and let AdventureNexus auto-split them.'}</p>
                     </div>
                 </div>
 
@@ -277,7 +308,7 @@ export default function AddExpenseModal({ isOpen, onClose, members, onAddExpense
                         disabled={isSubmitting || (splitType === 'custom' && Math.abs(parseFloat(difference)) > 0.02)}
                         className="w-full h-12 rounded-2xl font-black uppercase tracking-widest text-xs mt-4 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 border-0 text-white flex items-center justify-center gap-1.5 shadow-lg shadow-indigo-500/25 hover:scale-[1.02] transition-all"
                     >
-                        {isSubmitting ? 'Adding Expense...' : 'Add Expense'}
+                        {isSubmitting ? (editingExpense ? 'Saving Changes...' : 'Adding Expense...') : (editingExpense ? 'Save Changes' : 'Add Expense')}
                     </Button>
                 </form>
             </motion.div>

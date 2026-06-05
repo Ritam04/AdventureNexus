@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DollarSign, Calendar, Info, ChevronDown, ChevronUp } from 'lucide-react';
 
-export default function ExpenseList({ expenses }) {
+export default function ExpenseList({ expenses, onEdit, onDelete }) {
     const [expandedExpense, setExpandedExpense] = useState(null);
 
     const toggleExpand = (id) => {
@@ -99,6 +99,32 @@ export default function ExpenseList({ expenses }) {
                                                     );
                                                 })}
                                             </div>
+                                            
+                                            {/* Action Buttons: Edit and Delete */}
+                                            {onEdit && onDelete && (
+                                                <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/5 mt-3">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            onEdit(expense);
+                                                        }}
+                                                        className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-foreground transition-all"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (window.confirm("Are you sure you want to delete this expense? This will recalculate all group balances.")) {
+                                                                onDelete(expense._id);
+                                                            }
+                                                        }}
+                                                        className="px-3 py-1.5 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 text-xs font-black uppercase tracking-wider text-pink-400 hover:text-pink-300 transition-all"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     </motion.div>
                                 )}

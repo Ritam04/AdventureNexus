@@ -1,5 +1,6 @@
 import { NextFunction, Response } from 'express';
 import Plan from '../../../shared/database/models/planModel';
+import User from '../../../shared/database/models/userModel';
 import createError from 'http-errors';
 import logger from '../../../shared/utils/logger';
 import cloudinary from '../../../shared/services/cloudinaryService';
@@ -27,12 +28,27 @@ export const uploadDocument = async (req: any, res: Response, next: NextFunction
             return next(createError(404, 'Plan not found'));
         }
 
+        let targetPlan = plan;
+        let isCloned = false;
+
         // Authorization check: only the owner can modify this plan
         if (plan.userId.toString() !== req.user._id.toString()) {
-            if (fs.existsSync(req.file.path)) {
-                fs.unlinkSync(req.file.path);
-            }
-            return next(createError(403, 'You do not have permission to modify this plan'));
+            // Clone the plan for the current user
+            const clonedData = plan.toObject();
+            delete clonedData._id;
+            clonedData.userId = req.user._id;
+            clonedData.firebaseUid = req.user.firebaseUid;
+            clonedData.name = clonedData.name ? `${clonedData.name} (Copy)` : `Trip to ${clonedData.to}`;
+            
+            targetPlan = new Plan(clonedData);
+            await targetPlan.save();
+
+            // Add the cloned plan to the user's plans list
+            await User.findByIdAndUpdate(req.user._id, {
+                $push: { plans: targetPlan._id }
+            });
+            isCloned = true;
+            logger.info(`Plan ${id} cloned to new plan ${targetPlan._id} for user ${req.user._id} during document upload`);
         }
 
         let fileUrl = '';
@@ -73,17 +89,19 @@ export const uploadDocument = async (req: any, res: Response, next: NextFunction
             notes: notes || ''
         };
 
-        if (!plan.documents) {
-            plan.documents = [];
+        if (!targetPlan.documents) {
+            targetPlan.documents = [];
         }
 
-        plan.documents.push(newDoc);
-        await plan.save();
+        targetPlan.documents.push(newDoc);
+        await targetPlan.save();
 
         return res.status(200).json({
             status: 'Success',
             message: 'Document uploaded successfully.',
-            data: plan.documents
+            data: targetPlan.documents,
+            clonedPlanId: isCloned ? targetPlan._id.toString() : undefined,
+            plan: isCloned ? targetPlan : undefined
         });
 
     } catch (error) {
