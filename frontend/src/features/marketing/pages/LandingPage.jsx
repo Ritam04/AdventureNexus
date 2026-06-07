@@ -377,7 +377,7 @@ const AdventureNexusLanding = () => {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
-                            className="feature-card md:col-span-3 rounded-[3rem] p-12 overflow-hidden relative border border-white/10 bg-[#080808]"
+                            className="feature-card md:col-span-3 md:row-span-2 rounded-[3rem] p-12 overflow-hidden relative border border-white/10 bg-[#080808]"
                         >
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(59,130,246,0.1),transparent)] pointer-events-none"></div>
                             <div className="flex flex-col md:flex-row items-center justify-between gap-12 h-full relative z-10">
@@ -389,7 +389,7 @@ const AdventureNexusLanding = () => {
                                     <p className="text-white/50 text-lg leading-relaxed">From luxury stays to local street food, we map out the perfect journey for every vibe.</p>
                                     <Button className="h-12 px-8 rounded-full bg-white text-black font-bold hover:scale-105 transition-transform">Explore All Features</Button>
                                 </div>
-                                <div className="w-full md:w-1/2 min-h-[250px]">
+                                <div className="w-full md:w-1/2 min-h-[420px] flex items-center">
                                     <CardSlider />
                                 </div>
                             </div>

@@ -1,0 +1,279 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 800" width="100%" height="auto">
+  <defs>
+    <!-- Background Theme -->
+    <linearGradient id="space-dark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#03030c" />
+      <stop offset="50%" stop-color="#080816" />
+      <stop offset="100%" stop-color="#020207" />
+    </linearGradient>
+
+    <!-- Node Glow Filters -->
+    <filter id="glow-react" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="glow-express" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="glow-mongo" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="glow-fastapi" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <!-- Arrow Markers -->
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6" />
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#a855f7" />
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981" />
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#f97316" />
+    </marker>
+  </defs>
+
+  <!-- Canvas Background -->
+  <rect width="1000" height="800" fill="url(#space-dark)" rx="16" />
+
+  <!-- High-Tech Grid Grid Overlay -->
+  <g opacity="0.04" stroke="#ffffff" stroke-width="1">
+    <path d="M 0,100 L 1000,100 M 0,200 L 1000,200 M 0,300 L 1000,300 M 0,400 L 1000,400 M 0,500 L 1000,500 M 0,600 L 1000,600 M 0,700 L 1000,700" />
+    <path d="M 100,0 L 100,800 M 200,0 L 200,800 M 300,0 L 300,800 M 400,0 L 400,800 M 500,0 L 500,800 M 600,0 L 600,800 M 700,0 L 700,800 M 800,0 L 800,800 M 900,0 L 900,800" />
+  </g>
+
+  <!-- TITLE -->
+  <text x="500" y="45" font-family="system-ui, sans-serif" font-size="24" font-weight="800" fill="#ffffff" text-anchor="middle" letter-spacing="2">
+    ADVENTURE NEXUS SYSTEM WORKFLOW
+  </text>
+  <text x="500" y="70" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#94a3b8" text-anchor="middle" letter-spacing="1">
+    End-to-End Encrypted Social Fabric, AI Travel Planning &amp; Settlement Architecture
+  </text>
+
+  <!-- ==================== CONNECTOR PATHS (BG LINES) ==================== -->
+  <g stroke-width="2" fill="none" opacity="0.85">
+    <!-- Client to Express Auth & Enrolment -->
+    <path d="M 280,260 L 400,260" stroke="#3b82f6" marker-end="url(#arrow-blue)" />
+    <path d="M 400,280 L 280,280" stroke="#3b82f6" marker-end="url(#arrow-blue)" />
+
+    <!-- Client E2EE Key Generation -->
+    <path d="M 180,220 L 180,155" stroke="#3b82f6" marker-end="url(#arrow-blue)" />
+    <path d="M 200,155 L 200,220" stroke="#3b82f6" marker-end="url(#arrow-blue)" />
+
+    <!-- Express to MongoDB -->
+    <path d="M 600,260 L 720,260" stroke="#10b981" marker-end="url(#arrow-green)" />
+    <path d="M 720,280 L 600,280" stroke="#10b981" marker-end="url(#arrow-green)" />
+
+    <!-- Socket.io Real-time Relay Loop -->
+    <path d="M 230,320 L 230,420" stroke="#a855f7" marker-end="url(#arrow-purple)" />
+    <path d="M 450,450 L 280,450" stroke="#a855f7" marker-end="url(#arrow-purple)" />
+    <path d="M 450,290 L 450,420" stroke="#a855f7" marker-end="url(#arrow-purple)" />
+
+    <!-- Express to Redis Cache -->
+    <path d="M 540,220 L 540,135 L 720,135" stroke="#10b981" marker-end="url(#arrow-green)" />
+
+    <!-- Express to FastAPI Recommender -->
+    <path d="M 520,320 L 520,490 L 720,490" stroke="#f97316" marker-end="url(#arrow-orange)" />
+
+    <!-- Express to Groq AI -->
+    <path d="M 500,320 L 500,640 L 720,640" stroke="#f97316" marker-end="url(#arrow-orange)" />
+  </g>
+
+  <!-- Labels on Paths -->
+  <g font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#94a3b8" text-anchor="middle">
+    <!-- Auth label -->
+    <rect x="305" y="243" width="70" height="15" rx="3" fill="#03030c" />
+    <text x="340" y="254" fill="#3b82f6">1. Authenticate</text>
+
+    <!-- Public key upload -->
+    <rect x="305" y="282" width="70" height="15" rx="3" fill="#03030c" />
+    <text x="340" y="293" fill="#3b82f6">2. Public Key</text>
+
+    <!-- Local key saving -->
+    <rect x="110" y="175" width="60" height="15" rx="3" fill="#03030c" />
+    <text x="140" y="186" fill="#3b82f6">Encrypt local</text>
+
+    <!-- Socket link -->
+    <rect x="235" y="360" width="70" height="15" rx="3" fill="#03030c" />
+    <text x="270" y="371" fill="#a855f7">Real-time chat</text>
+
+    <!-- DB save -->
+    <rect x="625" y="243" width="70" height="15" rx="3" fill="#03030c" />
+    <text x="660" y="254" fill="#10b981">Save Profile</text>
+
+    <!-- Cache query -->
+    <rect x="580" y="125" width="90" height="15" rx="3" fill="#03030c" />
+    <text x="625" y="136" fill="#10b981">Query Itineraries</text>
+
+    <!-- FastAPI label -->
+    <rect x="580" y="480" width="90" height="15" rx="3" fill="#03030c" />
+    <text x="625" y="491" fill="#f97316">Recommend Users</text>
+
+    <!-- Groq prompt -->
+    <rect x="580" y="630" width="90" height="15" rx="3" fill="#03030c" />
+    <text x="625" y="641" fill="#f97316">AI Plan Structuring</text>
+  </g>
+
+
+  <!-- ==================== CLIENT LAYER NODES ==================== -->
+  
+  <!-- Node: IndexedDB (E2EE) -->
+  <g transform="translate(80, 100)">
+    <rect width="200" height="55" rx="10" fill="#0f172a" stroke="#00bcd4" stroke-width="2" filter="url(#glow-react)" />
+    <!-- Lock Icon -->
+    <g transform="translate(25, 27)">
+      <rect x="-8" y="-4" width="16" height="12" rx="2" fill="#00bcd4" />
+      <path d="M-5,-4 L-5,-9 C-5,-12 5,-12 5,-9 L5,-4" fill="none" stroke="#00bcd4" stroke-width="2" />
+    </g>
+    <text x="50" y="25" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#ffffff">IndexedDB Database</text>
+    <text x="50" y="40" font-family="system-ui, sans-serif" font-size="10" font-weight="500" fill="#00bcd4">TweetNaCl Secure E2EE Keys</text>
+  </g>
+
+  <!-- Node: React Client UI -->
+  <g transform="translate(80, 220)">
+    <rect width="200" height="100" rx="12" fill="#0f172a" stroke="#3b82f6" stroke-width="2.5" filter="url(#glow-react)" />
+    <!-- React Atom Icon -->
+    <g transform="translate(35, 50)">
+      <ellipse rx="16" ry="6" fill="none" stroke="#61dafb" stroke-width="1.5" transform="rotate(30)" />
+      <ellipse rx="16" ry="6" fill="none" stroke="#61dafb" stroke-width="1.5" transform="rotate(90)" />
+      <ellipse rx="16" ry="6" fill="none" stroke="#61dafb" stroke-width="1.5" transform="rotate(150)" />
+      <circle r="3.5" fill="#61dafb" />
+    </g>
+    <text x="70" y="45" font-family="system-ui, sans-serif" font-size="14" font-weight="800" fill="#ffffff">React Client</text>
+    <text x="70" y="62" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#94a3b8">Zustand Local State</text>
+    <text x="70" y="76" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#3b82f6">HTML5 UI &amp; OSM Map</text>
+  </g>
+
+  <!-- Node: Zustand Store -->
+  <g transform="translate(80, 420)">
+    <rect width="200" height="55" rx="10" fill="#0f172a" stroke="#3b82f6" stroke-width="1.5" />
+    <!-- Bear Icon representing Zustand -->
+    <g transform="translate(25, 27)" fill="#eb5e28">
+      <circle cx="0" cy="0" r="10" />
+      <circle cx="-7" cy="-7" r="4.5" />
+      <circle cx="7" cy="-7" r="4.5" />
+      <circle cx="0" cy="1" r="5" fill="#fff" />
+    </g>
+    <text x="50" y="25" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#ffffff">Zustand Stores</text>
+    <text x="50" y="40" font-family="system-ui, sans-serif" font-size="10" font-weight="500" fill="#94a3b8">Active Itinerary Store</text>
+  </g>
+
+
+  <!-- ==================== BACKEND GATEWAY LAYER ==================== -->
+  
+  <!-- Node: Express API Gateway -->
+  <g transform="translate(400, 220)">
+    <rect width="200" height="100" rx="12" fill="#0e0c24" stroke="#a855f7" stroke-width="2.5" filter="url(#glow-express)" />
+    <!-- Express Node Icon -->
+    <g transform="translate(35, 50)">
+      <polygon points="0,-14 12,-7 12,7 0,14 -12,7 -12,-7" fill="#339933" />
+      <text x="0" y="3.5" font-family="sans-serif" font-size="11" font-weight="900" fill="#ffffff" text-anchor="middle">ex</text>
+    </g>
+    <text x="70" y="45" font-family="system-ui, sans-serif" font-size="14" font-weight="800" fill="#ffffff">Express API</text>
+    <text x="70" y="62" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#94a3b8">Router &amp; Middleware</text>
+    <text x="70" y="76" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#a855f7">Firebase Token Audit</text>
+  </g>
+
+  <!-- Node: Socket.io Relay -->
+  <g transform="translate(400, 420)">
+    <rect width="200" height="55" rx="10" fill="#0e0c24" stroke="#a855f7" stroke-width="1.5" />
+    <!-- Socket Connection logo -->
+    <g transform="translate(25, 27)" stroke="#ffffff" stroke-width="1.5" fill="none">
+      <circle cx="0" cy="0" r="10" fill="#000" />
+      <path d="M-5,-4 L-5,0 L-1,4 L5,4 L5,-4 Z" stroke="#a855f7" stroke-width="2" />
+    </g>
+    <text x="50" y="25" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#ffffff">Socket.io Server</text>
+    <text x="50" y="40" font-family="system-ui, sans-serif" font-size="10" font-weight="500" fill="#a855f7">Real-time Peer-to-Peer Relay</text>
+  </g>
+
+
+  <!-- ==================== DATABASE LAYER (GREEN) ==================== -->
+  
+  <!-- Node: Redis Cache -->
+  <g transform="translate(720, 100)">
+    <rect width="200" height="65" rx="10" fill="#02140d" stroke="#DC382D" stroke-width="2" />
+    <!-- Redis Database Icon -->
+    <g transform="translate(30, 32)">
+      <path d="M-12,-8 L0,-14 L12,-8 L0,-2 Z" fill="#DC382D" />
+      <path d="M-12,-1 L0,-7 L12,-1 L0,5 Z" fill="#DC382D" opacity="0.8" />
+      <path d="M-12,6 L0,0 L12,6 L0,12 Z" fill="#DC382D" opacity="0.6" />
+    </g>
+    <text x="60" y="30" font-family="system-ui, sans-serif" font-size="14" font-weight="800" fill="#ffffff">Redis Cache</text>
+    <text x="60" y="48" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#94a3b8">Fast Session Caching</text>
+  </g>
+
+  <!-- Node: MongoDB Database -->
+  <g transform="translate(720, 220)">
+    <rect width="200" height="100" rx="12" fill="#02140d" stroke="#10b981" stroke-width="2.5" filter="url(#glow-mongo)" />
+    <!-- MongoDB Leaf Icon -->
+    <g transform="translate(30, 50)">
+      <path d="M0,-16 C10,-6 10,6 0,16 C-10,6 -10,-6 0,-16" fill="#47A248" />
+      <path d="M0,-16 C3,-6 3,6 0,16 Z" fill="#3F8E3D" />
+    </g>
+    <text x="60" y="42" font-family="system-ui, sans-serif" font-size="14" font-weight="800" fill="#ffffff">MongoDB Atlas</text>
+    <text x="60" y="60" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#94a3b8">Trips &amp; Public Keys</text>
+    <text x="60" y="74" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#10b981">NoSQL Main Storage</text>
+  </g>
+
+
+  <!-- ==================== COGNITIVE SERVICES (ORANGE) ==================== -->
+  
+  <!-- Node: FastAPI Recommender -->
+  <g transform="translate(720, 440)">
+    <rect width="200" height="100" rx="12" fill="#1a0f07" stroke="#009688" stroke-width="2.5" filter="url(#glow-fastapi)" />
+    <!-- FastAPI Logo -->
+    <g transform="translate(30, 50)">
+      <path d="M-12,-14 L12,-14 L12,-4 L0,14 L-12,-4 Z" fill="#009688" />
+      <path d="M-4,-7 L4,-7 L-4,2 L1,2 L-2,9 L4,1 Z" fill="#ffffff" />
+    </g>
+    <text x="60" y="42" font-family="system-ui, sans-serif" font-size="14" font-weight="800" fill="#ffffff">FastAPI Engine</text>
+    <text x="60" y="60" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#94a3b8">ML Recommendation</text>
+    <text x="60" y="74" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#009688">Content-Similarity</text>
+  </g>
+
+  <!-- Node: Groq AI (Llama) -->
+  <g transform="translate(720, 590)">
+    <rect width="200" height="100" rx="12" fill="#1a0f07" stroke="#f97316" stroke-width="2.5" />
+    <!-- Brain/AI chip Icon -->
+    <g transform="translate(30, 50)">
+      <rect x="-12" y="-12" width="24" height="24" rx="4" fill="#f97316" />
+      <circle cx="0" cy="0" r="4" fill="#ffffff" />
+      <line x1="-8" y1="0" x2="8" y2="0" stroke="#ffffff" stroke-width="1.5" />
+      <line x1="0" y1="-8" x2="0" y2="8" stroke="#ffffff" stroke-width="1.5" />
+    </g>
+    <text x="60" y="42" font-family="system-ui, sans-serif" font-size="14" font-weight="800" fill="#ffffff">Groq LLM</text>
+    <text x="60" y="60" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#94a3b8">Llama-3 Structuring</text>
+    <text x="60" y="74" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#f97316">Zero-Shot Itineraries</text>
+  </g>
+
+
+  <!-- ==================== FLOW LEGEND (BOTTOM CARD) ==================== -->
+  <g transform="translate(80, 715)">
+    <rect width="840" height="55" rx="8" fill="#070714" stroke="#94a3b8" stroke-opacity="0.2" stroke-width="1" />
+    
+    <text x="25" y="32" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff">LEGEND:</text>
+    
+    <!-- Legend Item: Client -->
+    <circle cx="120" cy="28" r="6" fill="#3b82f6" />
+    <text x="135" y="32" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#94a3b8">Client Interactions</text>
+
+    <!-- Legend Item: Backend -->
+    <circle cx="300" cy="28" r="6" fill="#a855f7" />
+    <text x="315" y="32" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#94a3b8">Real-time Socket Relay</text>
+
+    <!-- Legend Item: DB / Cache -->
+    <circle cx="510" cy="28" r="6" fill="#10b981" />
+    <text x="525" y="32" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#94a3b8">Database / Cache Logs</text>
+
+    <!-- Legend Item: AI Services -->
+    <circle cx="710" cy="28" r="6" fill="#f97316" />
+    <text x="725" y="32" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#94a3b8">AI / Machine Learning</text>
+  </g>
+</svg>
