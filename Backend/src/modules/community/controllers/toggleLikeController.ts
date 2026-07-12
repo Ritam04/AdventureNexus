@@ -58,7 +58,8 @@ export const toggleLike = async (req: Request, res: Response) => {
             const { createAndSendNotification } = await import('../../../shared/utils/notificationHelper');
             const { NotificationType } = await import('../../../shared/database/models/notificationModel');
             
-            if (target.firebaseUid) {
+            // Only notify if it's not the user liking their own content
+            if (target.firebaseUid && target.firebaseUid !== firebaseUid) {
                 createAndSendNotification({
                     recipientFirebaseUid: target.firebaseUid,
                     senderFirebaseUid: firebaseUid!,

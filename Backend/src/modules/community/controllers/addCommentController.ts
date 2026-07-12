@@ -56,8 +56,8 @@ export const addComment = async (req: Request, res: Response) => {
                 });
             }
         } else {
-            // Direct comment on post
-            if (post.firebaseUid) {
+            // Direct comment on post - only notify if it's not the user's own post
+            if (post.firebaseUid && post.firebaseUid !== firebaseUid) {
                 createAndSendNotification({
                     recipientFirebaseUid: post.firebaseUid,
                     senderFirebaseUid: firebaseUid!,

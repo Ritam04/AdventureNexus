@@ -474,7 +474,7 @@ export const SocialHubPage = () => {
             </Button>
             {user && (
               <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/50 cursor-pointer hover:scale-105 transition-transform">
-                <img src={user.imageUrl} alt="Profile" className="w-full h-full object-cover" />
+              <img src={user.profilepicture || user.imageUrl} alt="Profile" className="w-full h-full object-cover" />
               </div>
             )}
           </div>
@@ -584,7 +584,7 @@ export const SocialHubPage = () => {
                 className="bg-card/60 backdrop-blur-2xl p-4 rounded-[2rem] border border-white/5 shadow-2xl flex items-center gap-4 cursor-pointer group hover:border-primary/30 transition-all duration-300"
               >
                 <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border border-white/10">
-                  <img src={user?.imageUrl} alt="Me" className="w-full h-full object-cover" />
+                  <img src={user?.profilepicture || user?.imageUrl} alt="Me" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 h-12 bg-muted/40 rounded-full flex items-center px-6 text-muted-foreground font-medium group-hover:bg-muted/60 transition-colors border border-transparent group-hover:border-primary/20">
                   Share your latest adventure...

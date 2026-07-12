@@ -190,8 +190,7 @@ export const addExpense = async (req: Request, res: Response) => {
         logger.error('[addExpense Error]:', error);
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             status: 'Failed',
-            message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
-            error
+            message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR)
         });
     }
 };

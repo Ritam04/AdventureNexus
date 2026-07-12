@@ -92,7 +92,6 @@ export const initSocket = (server: HttpServer): Server => {
     }, 300000);
 
     io.on('connection', (socket) => {
-        console.log(`[DEBUG] New client connected: ${socket.id}`);
 
         socket.on('identity', (userId: string) => {
             if (!userId) return;
@@ -120,13 +119,11 @@ export const initSocket = (server: HttpServer): Server => {
         socket.on('group:join', (groupId: string) => {
             if (!groupId) return;
             socket.join(`group:${groupId}`);
-            console.log(`[DEBUG] Socket ${socket.id} joined room group:${groupId}`);
         });
 
         socket.on('group:leave', (groupId: string) => {
             if (!groupId) return;
             socket.leave(`group:${groupId}`);
-            console.log(`[DEBUG] Socket ${socket.id} left room group:${groupId}`);
         });
 
         // Real-time Context-Aware AI Travel Chat Integration
