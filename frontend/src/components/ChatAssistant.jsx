@@ -356,7 +356,7 @@ const ChatAssistant = () => {
                                                 ? 'bg-zinc-800 text-white border border-zinc-700' 
                                                 : 'bg-gradient-to-tr from-violet-600 to-indigo-600 text-white border border-violet-500'
                                         }`}>
-                                            {message.type === 'user' ? (user?.fullName?.charAt(0) || 'U') : <Bot size={16} />}
+                                            {message.type === 'user' ? (user?.fullname?.charAt(0) || user?.fullName?.charAt(0) || 'U') : <Bot size={16} />}
                                         </div>
 
                                         {/* Message Capsule */}

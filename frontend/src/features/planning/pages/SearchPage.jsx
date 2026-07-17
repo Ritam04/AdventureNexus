@@ -155,16 +155,16 @@ const ExploreStaysButton = ({ result, fromDate, toDate, travelers, variant = "ca
 
   // Full modal variant with bigger buttons
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5">
       {HOTEL_PROVIDERS.map((provider) => (
         <button
           key={provider.id}
           onClick={(e) => handleProviderClick(provider.id, e)}
-          className={`group flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-0.5`}
+          className={`group flex flex-col items-center gap-1.5 p-3 rounded-xl border border-border bg-card/80 hover:border-emerald-500/40 hover:bg-emerald-500/5 hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-300 hover:-translate-y-0.5`}
         >
-          <span className="text-2xl group-hover:scale-110 transition-transform duration-300">{provider.emoji}</span>
-          <span className="text-xs font-semibold text-card-foreground group-hover:text-primary transition-colors">{provider.name}</span>
-          <ExternalLink size={10} className="text-muted-foreground group-hover:text-primary transition-colors" />
+          <span className="text-xl group-hover:scale-110 transition-transform duration-300">{provider.emoji}</span>
+          <span className="text-[10px] font-semibold text-card-foreground group-hover:text-emerald-400 transition-colors text-center leading-tight">{provider.name}</span>
+          <ExternalLink size={9} className="text-muted-foreground group-hover:text-emerald-400 transition-colors" />
         </button>
       ))}
     </div>
@@ -1430,75 +1430,73 @@ const SearchPage = () => {
 
       {/* Detailed Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-7xl max-h-[90vh] bg-card border-border text-foreground p-0 overflow-hidden shadow-2xl">
+        <DialogContent showCloseButton={false} className="w-[95vw] max-w-4xl h-[90vh] bg-card border-border text-foreground p-0 overflow-hidden shadow-2xl rounded-2xl flex flex-col gap-0">
           {selectedDestination && (
-            <>
+            <div className="flex flex-col h-full min-h-0">
               {/* Modal Header with Image */}
-              <div className="relative h-72 w-full overflow-hidden">
+              <div className="relative h-64 w-full overflow-hidden flex-shrink-0">
                 <img
                   src={selectedDestination.image_url}
                   alt={selectedDestination.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover object-center"
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80";
                   }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent"></div>
-
+                {/* Multi-layer gradient for better text readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-card/30 via-transparent to-transparent"></div>
 
                 {/* Title Overlay */}
-                <div className="absolute bottom-0 left-0 right-0 p-8">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <Badge className="bg-gradient-to-r from-primary to-secondary text-primary-foreground mb-4 shadow-xl backdrop-blur-sm px-3 py-1">
-                        <Bot className="mr-1.5 animate-pulse" size={14} />
-                        AI Score: {selectedDestination.ai_score}
-                      </Badge>
-                      <h2 className="text-4xl font-bold text-foreground mb-3 font-outfit">
-                        {selectedDestination.name}
-                      </h2>
-                      <div className="flex items-center gap-6 text-sm">
-                        <span className="flex items-center gap-1.5 text-muted-foreground">
-                          <Clock size={16} />
-                          {selectedDestination.days} Days
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                          <Star className="text-yellow-500" size={16} fill="currentColor" />
-                          <span className="font-semibold text-foreground">{selectedDestination.star}</span>
-                          <span className="text-muted-foreground">({selectedDestination.total_reviews} reviews)</span>
-                        </span>
-                        <span className="text-3xl font-bold text-green-600 dark:text-green-400">
-                          ₹{selectedDestination.cost?.toLocaleString()}
-                        </span>
-                      </div>
+                <div className="absolute bottom-0 left-0 right-0 p-5 pr-14">
+                  <div className="flex-1">
+                    <Badge className="bg-black/60 border border-white/20 text-white mb-2.5 shadow-xl backdrop-blur-md px-2.5 py-1 text-xs">
+                      <Bot className="mr-1.5 animate-pulse text-emerald-400" size={12} />
+                      AI Score: {selectedDestination.ai_score}
+                    </Badge>
+                    <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2 font-outfit leading-tight drop-shadow-lg">
+                      {selectedDestination.name}
+                    </h2>
+                    <div className="flex flex-wrap items-center gap-4 text-sm">
+                      <span className="flex items-center gap-1.5 text-white/80">
+                        <Clock size={14} />
+                        {selectedDestination.days} Days
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Star className="text-yellow-400" size={14} fill="currentColor" />
+                        <span className="font-semibold text-white">{selectedDestination.star}</span>
+                        <span className="text-white/60">({selectedDestination.total_reviews} reviews)</span>
+                      </span>
+                      <span className="text-xl font-bold text-emerald-400 drop-shadow">
+                        ₹{selectedDestination.cost?.toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 </div>
-
 
                 {/* Close Button */}
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute top-4 right-4 bg-background/50 hover:bg-background/70 text-foreground rounded-full"
+                  className="absolute top-3 right-3 bg-black/40 hover:bg-black/60 text-white rounded-full w-8 h-8 backdrop-blur-sm border border-white/10"
                   onClick={handleCloseModal}
                 >
-                  <X size={20} />
+                  <X size={16} />
                 </Button>
               </div>
 
 
               {/* Scrollable Content */}
-              <ScrollArea className="h-[calc(90vh-16rem)] px-6 pb-6">
-                <div className="space-y-6 mt-6">
+              <div className="flex-1 min-h-0 overflow-y-auto px-5 pb-6">
+                <div className="space-y-5 mt-4">
                   {/* Overview */}
-                  <div>
-                    <h3 className="text-xl font-semibold mb-4 flex items-center text-foreground font-outfit">
-                      <Info className="mr-2 text-primary" size={22} />
+                  <div className="bg-muted/20 rounded-xl p-4 border border-border/40">
+                    <h3 className="text-base font-semibold mb-2 flex items-center text-foreground font-outfit">
+                      <Info className="mr-2 text-blue-400" size={18} />
                       Overview
                     </h3>
-                    <p className="text-muted-foreground leading-relaxed text-base">
+                    <p className="text-muted-foreground leading-relaxed text-sm">
                       {selectedDestination.destination_overview}
                     </p>
                   </div>
@@ -1507,8 +1505,8 @@ const SearchPage = () => {
                   {/* Perfect For Tags */}
                   {selectedDestination.perfect_for && (
                     <div>
-                      <h3 className="text-xl font-semibold mb-4 text-foreground font-outfit flex items-center">
-                        <Sparkles className="mr-2 text-secondary" size={22} />
+                      <h3 className="text-base font-semibold mb-3 text-foreground font-outfit flex items-center">
+                        <Sparkles className="mr-2 text-purple-400" size={18} />
                         Perfect For
                       </h3>
                       <div className="flex flex-wrap gap-2">
@@ -1516,7 +1514,7 @@ const SearchPage = () => {
                           <Badge
                             key={idx}
                             variant="outline"
-                            className="border-primary/50 text-primary bg-primary/10 px-4 py-2 hover:bg-primary/20 transition-colors"
+                            className="border-white/20 text-foreground bg-white/5 px-3 py-1.5 hover:bg-white/10 transition-colors text-xs"
                           >
                             {tag}
                           </Badge>
@@ -1527,12 +1525,12 @@ const SearchPage = () => {
 
 
                   {/* Explore Stays — Hotel Booking Platforms */}
-                  <div>
-                    <h3 className="text-xl font-semibold mb-4 text-foreground font-outfit flex items-center">
-                      <Bed className="mr-2 text-emerald-500" size={22} />
+                  <div className="bg-emerald-500/5 rounded-xl p-4 border border-emerald-500/15">
+                    <h3 className="text-base font-semibold mb-1.5 text-foreground font-outfit flex items-center">
+                      <Bed className="mr-2 text-emerald-400" size={18} />
                       Explore Stays
                     </h3>
-                    <p className="text-muted-foreground text-sm mb-4">
+                    <p className="text-muted-foreground text-xs mb-3">
                       Find the best hotels and accommodations for your trip
                     </p>
                     <ExploreStaysButton
@@ -1553,29 +1551,29 @@ const SearchPage = () => {
                       fetchTravelerMatches(selectedDestination._id);
                     }
                   }}>
-                    <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 bg-muted/50 backdrop-blur-sm mb-8 p-1 rounded-xl shadow-lg h-auto gap-1">
-                      <TabsTrigger value="highlights" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground cursor-pointer rounded-lg transition-all duration-300 data-[state=active]:shadow-lg font-medium text-xs sm:text-sm py-2">
-                        <Lightbulb className="mr-1 sm:mr-2" size={14} />
+                    <TabsList className="flex w-full overflow-x-auto bg-muted/40 backdrop-blur-sm mb-6 p-1 rounded-xl border border-border/50 shadow-inner h-auto gap-0.5 scrollbar-hide">
+                      <TabsTrigger value="highlights" className="flex-1 min-w-fit data-[state=active]:bg-white data-[state=active]:text-black cursor-pointer rounded-lg transition-all duration-200 data-[state=active]:shadow-sm font-medium text-xs py-2 px-2 sm:px-3 text-muted-foreground whitespace-nowrap">
+                        <Lightbulb className="mr-1" size={13} />
                         Highlights
                       </TabsTrigger>
-                      <TabsTrigger value="itinerary" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground cursor-pointer rounded-lg transition-all duration-300 data-[state=active]:shadow-lg font-medium text-xs sm:text-sm py-2">
-                        <CalendarDays className="mr-1 sm:mr-2" size={14} />
+                      <TabsTrigger value="itinerary" className="flex-1 min-w-fit data-[state=active]:bg-white data-[state=active]:text-black cursor-pointer rounded-lg transition-all duration-200 data-[state=active]:shadow-sm font-medium text-xs py-2 px-2 sm:px-3 text-muted-foreground whitespace-nowrap">
+                        <CalendarDays className="mr-1" size={13} />
                         Itinerary
                       </TabsTrigger>
-                      <TabsTrigger value="budget" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground cursor-pointer rounded-lg transition-all duration-300 data-[state=active]:shadow-lg font-medium text-xs sm:text-sm py-2">
-                        <IndianRupee className="mr-1 sm:mr-2" size={14} />
+                      <TabsTrigger value="budget" className="flex-1 min-w-fit data-[state=active]:bg-white data-[state=active]:text-black cursor-pointer rounded-lg transition-all duration-200 data-[state=active]:shadow-sm font-medium text-xs py-2 px-2 sm:px-3 text-muted-foreground whitespace-nowrap">
+                        <IndianRupee className="mr-1" size={13} />
                         Budget
                       </TabsTrigger>
-                      <TabsTrigger value="tips" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground cursor-pointer rounded-lg transition-all duration-300 data-[state=active]:shadow-lg font-medium text-xs sm:text-sm py-2">
-                        <Lightbulb className="mr-1 sm:mr-2" size={14} />
+                      <TabsTrigger value="tips" className="flex-1 min-w-fit data-[state=active]:bg-white data-[state=active]:text-black cursor-pointer rounded-lg transition-all duration-200 data-[state=active]:shadow-sm font-medium text-xs py-2 px-2 sm:px-3 text-muted-foreground whitespace-nowrap">
+                        <Lightbulb className="mr-1" size={13} />
                         Tips
                       </TabsTrigger>
-                      <TabsTrigger value="gallery" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground cursor-pointer rounded-lg transition-all duration-300 data-[state=active]:shadow-lg font-medium text-xs sm:text-sm py-2">
-                        <ImageIcon className="mr-1 sm:mr-2" size={14} />
+                      <TabsTrigger value="gallery" className="flex-1 min-w-fit data-[state=active]:bg-white data-[state=active]:text-black cursor-pointer rounded-lg transition-all duration-200 data-[state=active]:shadow-sm font-medium text-xs py-2 px-2 sm:px-3 text-muted-foreground whitespace-nowrap">
+                        <ImageIcon className="mr-1" size={13} />
                         Gallery
                       </TabsTrigger>
-                      <TabsTrigger value="matches" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground cursor-pointer rounded-lg transition-all duration-300 data-[state=active]:shadow-lg font-medium text-xs sm:text-sm py-2">
-                        <Users className="mr-1 sm:mr-2" size={14} />
+                      <TabsTrigger value="matches" className="flex-1 min-w-fit data-[state=active]:bg-white data-[state=active]:text-black cursor-pointer rounded-lg transition-all duration-200 data-[state=active]:shadow-sm font-medium text-xs py-2 px-2 sm:px-3 text-muted-foreground whitespace-nowrap">
+                        <Users className="mr-1" size={13} />
                         Matches
                       </TabsTrigger>
                     </TabsList>
@@ -1869,23 +1867,26 @@ const SearchPage = () => {
 
 
                   {/* Action Buttons */}
-                  <div className="flex gap-3 pt-4 border-t border-border mb-12">
-                    <Button className="flex-1 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 cursor-pointer text-primary-foreground">
-                      <Heart className="mr-2" size={18} />
-                      Save to Favorites
+                  <div className="flex gap-3 pt-4 border-t border-border mb-8">
+                    <Button
+                      className="flex-1 bg-white hover:bg-white/90 text-black font-semibold cursor-pointer text-sm"
+                      onClick={(e) => handleLikePlan(selectedDestination._id, e)}
+                    >
+                      <Heart className={`mr-2 ${likedPlans.has(selectedDestination._id) ? 'fill-current text-red-500' : ''}`} size={16} />
+                      {likedPlans.has(selectedDestination._id) ? 'Saved' : 'Save Plan'}
                     </Button>
                     <Button
                       variant="outline"
-                      className="flex-1 border-input text-foreground hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                      className="flex-1 border-white/20 text-foreground hover:bg-white/5 cursor-pointer text-sm"
                       onClick={(e) => handleSharePlan(selectedDestination, e)}
                     >
-                      <Share className="mr-2" size={18} />
+                      <Share className="mr-2" size={16} />
                       Share Trip
                     </Button>
                   </div>
                 </div>
-              </ScrollArea>
-            </>
+              </div>
+            </div>
           )}
         </DialogContent>
       </Dialog>
@@ -1893,7 +1894,7 @@ const SearchPage = () => {
 
       {/* Map Modal */}
       <Dialog open={!!selectedHighlight} onOpenChange={() => setSelectedHighlight(null)}>
-        <DialogContent className="max-w-4xl h-[70vh] bg-card border-border p-0 overflow-hidden shadow-2xl">
+        <DialogContent showCloseButton={false} className="max-w-4xl h-[70vh] bg-card border-border p-0 overflow-hidden shadow-2xl gap-0">
           <div className="relative w-full h-full">
             <Button
               variant="ghost"
@@ -1951,7 +1952,7 @@ const SearchPage = () => {
       )}
       {/* Map View Dialog */}
       <Dialog open={isFullMapOpen} onOpenChange={setIsFullMapOpen}>
-        <DialogContent className="max-w-[95vw] h-[95vh] bg-card border-border p-0 overflow-hidden shadow-2xl">
+        <DialogContent showCloseButton={false} className="max-w-[95vw] h-[95vh] bg-card border-border p-0 overflow-hidden shadow-2xl gap-0">
           <div className="relative w-full h-full">
             <div className="absolute top-4 left-4 z-50 pointer-events-none">
               <div className="bg-background/90 backdrop-blur-md p-4 rounded-2xl border border-border shadow-xl pointer-events-auto">
@@ -1989,7 +1990,7 @@ const SearchPage = () => {
 
       {/* Origin Location Picker Modal */}
       <Dialog open={isLocationModalOpen} onOpenChange={setIsLocationModalOpen}>
-        <DialogContent className="max-w-[70vw] h-[70vh] bg-card border-border p-0 overflow-hidden shadow-2xl">
+        <DialogContent showCloseButton={false} className="max-w-[70vw] h-[70vh] bg-card border-border p-0 overflow-hidden shadow-2xl gap-0">
           <div className="relative w-full h-full flex flex-col">
             <div className="absolute top-4 left-4 z-50 pointer-events-none">
               <div className="bg-background/90 backdrop-blur-md p-4 rounded-2xl border border-border shadow-xl pointer-events-auto">

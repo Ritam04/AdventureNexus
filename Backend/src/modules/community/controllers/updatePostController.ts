@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import CommunityPost from '../../../shared/database/models/communityPostModel';
+import CommunityComment from '../../../shared/database/models/communityCommentModel';
 import logger from '../../../shared/utils/logger';
 import { deleteFromCloudinary } from '../../../shared/services/cloudinaryService';
 
@@ -77,6 +78,9 @@ export const deletePost = async (req: Request, res: Response) => {
                 await deleteFromCloudinary(imgUrl);
             }
         }
+
+        // Delete all associated comments to prevent orphaned data
+        await CommunityComment.deleteMany({ postId: id });
 
         await CommunityPost.findByIdAndDelete(id);
 
