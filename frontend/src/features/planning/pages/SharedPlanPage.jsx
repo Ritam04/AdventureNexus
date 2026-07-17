@@ -663,7 +663,7 @@ const SharedPlanPage = () => {
 
             {/* Highlight Map Dialog */}
             <Dialog open={!!selectedHighlight} onOpenChange={() => setSelectedHighlight(null)}>
-                <DialogContent className="max-w-4xl h-[70vh] bg-card border-border p-0 overflow-hidden shadow-2xl">
+                <DialogContent showCloseButton={false} className="max-w-4xl h-[70vh] bg-card border-border p-0 overflow-hidden shadow-2xl gap-0">
                     <div className="relative w-full h-full">
                         <Button
                             variant="ghost"
@@ -685,7 +685,7 @@ const SharedPlanPage = () => {
 
             {/* Full Itinerary Map Dialog */}
             <Dialog open={isFullMapOpen} onOpenChange={setIsFullMapOpen}>
-                <DialogContent className="max-w-5xl h-[85vh] bg-card border-border p-0 overflow-hidden shadow-2xl">
+                <DialogContent showCloseButton={false} className="max-w-5xl h-[85vh] bg-card border-border p-0 overflow-hidden shadow-2xl gap-0">
                     <div className="relative w-full h-full">
                         <div className="absolute top-4 left-4 z-50 pointer-events-none">
                             <div className="bg-background/90 backdrop-blur-md p-4 rounded-2xl border border-border shadow-xl pointer-events-auto">
